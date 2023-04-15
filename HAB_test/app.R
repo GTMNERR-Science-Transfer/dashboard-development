@@ -20,6 +20,8 @@ load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/
 # Alternatively, with .Rds you can give it a different name
 #HAB_data <- readRDS("HAB.Rds")
 
+project_list <- c("HAB data - FWC", "Other data")
+
 ############################################
 #  Shiny user interface (ui)
 # This part determines what users see on their
@@ -28,7 +30,29 @@ load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/
 ui <- fluidPage(
 
     # Layout for user options
-    
+    navbarPage(title = "FWC Harmful Algae Bloom (HAB) data",
+               theme = bslib::bs_theme(version = 5, bootswatch = "cerulean" ),
+               # Station dropdown menu
+               div(style="display:inline-block;vertical-align:top;",
+                   selectInput(inputId = "Species",
+                               label = "Pick an algae species:",
+                               choices = c("species 1" = "Odontella aurita",
+                                           "species 2" = "Coscinodiscus sp.",
+                                           "species 3" = "Tropidoneis sp."), 
+                               selected = "Odontella aurita", 
+                               width = "350px")),
+               
+               # # Horizontal space
+               # div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
+               # # Variable dropdown menu
+               # div(style="display:inline-block;vertical-align:top;",
+               #     selectInput(inputId = "variable", 
+               #                 label = "Variable",
+               #                 choices = vars,
+               #                 selected = "cells/L*")
+               # )
+    ),
+
     # Application title
         titlePanel("FWC HAB Data"),
 
