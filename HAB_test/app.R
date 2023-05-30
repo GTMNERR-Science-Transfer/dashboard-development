@@ -31,7 +31,7 @@ ui <- fluidPage(
 
     # Layout for user options
     navbarPage(title = "FWC Harmful Algae Bloom (HAB) data",
-               theme = bslib::bs_theme(version = 5, bootswatch = "cerulean" ),
+               theme = bslib::bs_theme(version = 5, bootswatch = "darkly" ),
                # Station dropdown menu
                div(style="display:inline-block;vertical-align:top;",
                    selectInput(inputId = "Species",

@@ -26,7 +26,18 @@ HAB <- HAB %>%
   pivot_longer(cols = c("cells/L*", "Temperature (C)", "Salinity", 
                         "DO (%)", "DO (mg/L)", "pH"),
                names_to = "vars", values_to = "vals")
+HAB$Date <- dmy(HAB$`Sample Date`)
+
 save(HAB, file = "HAB.RData")
+
+# Check all unique categories
+unique(HAB$Description)
+unique(HAB$Site) # Also get coordinates
+unique(HAB$`Collection Agency`)
+unique(HAB$County)
+#unique(HAB$Proofed)
+unique(HAB$Date)
+unique(HAB$vars)
 
 # Histogram
 hist(HAB[which(HAB$vars == "Temperature (C)"),"vals"], breaks = 6, col = 'darkgray', border = 'white',
@@ -35,3 +46,29 @@ hist(HAB[which(HAB$vars == "Temperature (C)"),"vals"], breaks = 6, col = 'darkgr
 
 ggplot(HAB %>% filter(vars == "Temperature (C)"), aes(x = vals))+
   geom_histogram(bins = 10)
+
+# Algae counts over time
+# NOTE: some only have "present" but no count
+# Make a list of algae that have counts, and those that only have "present"
+
+
+
+algae_present <- HAB %>% filter(Description == "present")
+algae_count <- HAB %>% filter(Description != "present")
+
+algae_time <- ggplot(HAB %>% filter(vars == "cells/L*"), aes(x = Date, y = vals,
+                                               color = Species))+
+  geom_point()+
+  theme(legend.position = "none")
+
+algae_time
+
+
+# Algae counts overall
+
+
+# Algae vs other variables
+ggplot(HAB %>% filter(vars == "cells/L*"))
+
+
+
