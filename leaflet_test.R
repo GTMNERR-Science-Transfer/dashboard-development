@@ -8,7 +8,7 @@ library(tidyverse)
 # clearBounds() clears the bound, so that the view will be automatically 
 # determined by the range of latitude/longitude data in the map layers 
 # if provided;
-GTMNERR <- st_read("shapefiles/GTMNERR.shp")# CRS: Albers Conical Equal Area
+GTMNERR <- st_read("leaflet_test1/shapefiles/GTMNERR.shp")# CRS: Albers Conical Equal Area
 
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
