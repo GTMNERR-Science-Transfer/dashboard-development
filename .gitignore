@@ -1,4 +1,9 @@
+# Ignore certain R files - NOT .RData (for now) as I am using it to save data
 .Rhistory
 .Rproj.user/
+
+# Ignore Mac related files
 .DS_Store
+
+# Ignore the folder with all the original (large) shapefiles:
 /shapefiles

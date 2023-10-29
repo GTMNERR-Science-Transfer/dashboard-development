@@ -15,15 +15,15 @@ register_google(key = "AIzaSyBBgPDaJao2MVa0yvlULKvAbE7lEosOthQ")
 
 #### GTMNERR boundary and aquatic preserves ####
 # From Nikki Dix
-GTMNERR <- st_read("shapefiles_original/GTMNERR Boundary_query update 2021/GTM_RB_2016_Merge (1).shp")
+GTMNERR <- st_read("shapefiles/GTMNERR Boundary_query update 2021/GTM_RB_2016_Merge (1).shp")
 # CRS: NAD83 / UTM zone 17N
 
 # Check what the 8 polygons are
 ggplot()+
   geom_sf(data=GTMNERR, aes(fill = Res_Name)) # Hmmm
 
-st_write(GTMNERR, "shapefiles/GTMNERR.shp")
-st_write(GTMNERR, "leaflet_test1/shapefiles/GTMNERR.shp")
+st_write(GTMNERR, "shapefiles_new/GTMNERR.shp")
+st_write(GTMNERR, "leaflet_test1/shapefiles_new/GTMNERR.shp")
 
 # Get min/max coordinates for selecting from other shapefiles
 st_bbox(GTMNERR)
@@ -47,10 +47,10 @@ bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 # test <- ggmap(google_base)
 # test
 # 
-# st_write(google_base, "shapefiles/google_base.shp")
+# st_write(google_base, "shapefiles_new/google_base.shp")
 
 ##### Counties #####
-counties <- st_read("shapefiles_original/countyshore_areas_sep15/countyshore_areas_sep15.shp")
+counties <- st_read("shapefiles/countyshore_areas_sep15/countyshore_areas_sep15.shp")
 # CRS: Albers Conical Equal Area
 counties <- st_transform(counties, crs = st_crs(GTMNERR))
 
@@ -64,10 +64,10 @@ ggplot()+
   #geom_sf(data = aqua_preserve, fill = NA, color = "red")+
   theme_bw()
 
-st_write(counties_select, "shapefiles/counties_GTMNERR.shp")
+st_write(counties_select, "shapefiles_new/counties_GTMNERR.shp")
 
 ##### Salt marshes #####
-salt_marsh <- st_read("shapefiles_original/salt_marsh_2020/salt_marsh_2020.shp")
+salt_marsh <- st_read("shapefiles/salt_marsh_2020/salt_marsh_2020.shp")
 # CRS: NAD83(HARN) / Florida GDL Albers
 salt_marsh <- st_transform(salt_marsh, crs = st_crs(GTMNERR))
 salt_marsh <- st_crop(salt_marsh, bound_box) 
@@ -75,10 +75,10 @@ ggplot()+
   geom_sf(data = salt_marsh, fill = "red")+
   geom_sf(data=GTMNERR, fill = "blue", alpha = 0.3)
 
-st_write(salt_marsh, "shapefiles/salt_marsh_GTMNERR.shp")
+st_write(salt_marsh, "shapefiles_new/salt_marsh_GTMNERR.shp")
 
 ##### Hydrology (several shapefiles) #####
-hydro_6 <- st_read("shapefiles_original/nhdwbd_huc6_dec17/nhdwbd_huc6_dec17.shp")
+hydro_6 <- st_read("shapefiles/nhdwbd_huc6_dec17/nhdwbd_huc6_dec17.shp")
 # CRS: Albers Conical Equal Area 
 hydro_6 <- st_transform(hydro_6, crs = st_crs(GTMNERR))
 hydro_6 <- st_crop(hydro_6, bound_box) 
@@ -86,21 +86,21 @@ ggplot()+
   geom_sf(data = hydro_6)
 
 # Transform and crop straightaway (large file)
-hydro_8 <- st_crop(st_transform(st_read("shapefiles_original/nhdwbd_huc8_dec17/nhdwbd_huc8_dec17.shp"),
+hydro_8 <- st_crop(st_transform(st_read("shapefiles/nhdwbd_huc8_dec17/nhdwbd_huc8_dec17.shp"),
                                 crs = st_crs(GTMNERR)),
                    bound_box) 
 ggplot()+
   geom_sf(data = hydro_8)
 # About same as 6
 
-hydro_10 <- st_crop(st_transform(st_read("shapefiles_original/nhdwbd_huc10_dec17/nhdwbd_huc10_dec17.shp"),
+hydro_10 <- st_crop(st_transform(st_read("shapefiles/nhdwbd_huc10_dec17/nhdwbd_huc10_dec17.shp"),
                                 crs = st_crs(GTMNERR)),
                    bound_box) 
 ggplot()+
   geom_sf(data = hydro_10)
 # higher resolution
 
-hydro_12 <- st_crop(st_transform(st_read("shapefiles_original/nhdwbd_huc12_dec17/nhdwbd_huc12_dec17.shp"),
+hydro_12 <- st_crop(st_transform(st_read("shapefiles/nhdwbd_huc12_dec17/nhdwbd_huc12_dec17.shp"),
                                  crs = st_crs(GTMNERR)),
                     bound_box) 
 ggplot()+
@@ -114,10 +114,10 @@ ggplot()+
   geom_sf(data = hydro_12, fill = NA)
 
 # Look up differences between HUCs to add to metadata
-st_write(hydro_6, "shapefiles/nhdwbd_huc6_dec17_GTMNERR.shp")
-st_write(hydro_8, "shapefiles/nhdwbd_huc8_dec17_GTMNERR.shp")
-st_write(hydro_10, "shapefiles/nhdwbd_huc10_dec17_GTMNERR.shp")
-st_write(hydro_12, "shapefiles/nhdwbd_huc12_dec17_GTMNERR.shp")
+st_write(hydro_6, "shapefiles_new/nhdwbd_huc6_dec17_GTMNERR.shp")
+st_write(hydro_8, "shapefiles_new/nhdwbd_huc8_dec17_GTMNERR.shp")
+st_write(hydro_10, "shapefiles_new/nhdwbd_huc10_dec17_GTMNERR.shp")
+st_write(hydro_12, "shapefiles_new/nhdwbd_huc12_dec17_GTMNERR.shp")
 #### CHECK WARNINGS of some values not being written (too long) #####
 
 
@@ -129,14 +129,14 @@ ggplot()+
   geom_sf(data = waterbodies, aes(fill = DESCRIPT))
 
 #### Land use ####
-landuse1 <- st_crop(st_transform(st_read("shapefiles_original/lu_sjrwmd_2014/lu_sjrwmd_2014.shp"),
+landuse1 <- st_crop(st_transform(st_read("shapefiles/lu_sjrwmd_2014/lu_sjrwmd_2014.shp"),
                                  crs = st_crs(GTMNERR)),
                     bound_box)
 
 ggplot()+
   geom_sf(data = landuse1, aes(fill = LEVEL1))
 
-st_write(landuse1, "shapefiles/lu_sjrwmd_2014_GTMNERR.shp")
+st_write(landuse1, "shapefiles_new/lu_sjrwmd_2014_GTMNERR.shp")
 
 #### Mangroves ####
 mangrove <- st_crop(st_read("shapefiles/mangroves_2020/mangroves_2020.shp"), minmax_coords)

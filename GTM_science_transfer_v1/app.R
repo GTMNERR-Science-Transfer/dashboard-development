@@ -9,6 +9,7 @@
 
 if(!require(shiny)){ install.packages("shiny") } ;  library(shiny)
 if(!require(tidyverse)){ install.packages("tidyverse") } ;  library(tidyverse)
+if(!require(bslib)){ install.packages("bslib") } ;  library(bslib)
 
 # For some reason I need to specify my whole path to the data here (even though
 # I am working in an Rproject)
@@ -22,69 +23,75 @@ load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/
 #  Shiny user interface (ui)
 ############################################
 ui <- fluidPage(
-    # Layout for user options
-    
-    navbarPage(title = "FWC Harmful Algae Bloom (HAB) data",
-               theme = bs_theme( version = 5, bootswatch = "cerulean" ),
-               # Station dropdown menu
-               div(style="display:inline-block;vertical-align:top;",
-                   selectInput(inputId = "site",
-                               label = "Location",
-                               choices = Site, 
-                               selected = "North Ponte Vedra", 
-                               width = "350px")),
-               
-               # Horizontal space
-               div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
-               # Variable dropdown menu
-               div(style="display:inline-block;vertical-align:top;",
-                   selectInput(inputId = "variable", 
-                               label = "Variable",
-                               choices = vars,
-                               selected = "cells/L*")),
-            
-               ###### ADD SPECIES HERE???    
-               # # Horizontal space
-               #  div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
-               #  # Trend period radio buttons
-               #  div(style="display:inline-block;vertical-align:top;",
-               #      radioButtons( "trendperiod", "Trend Period"
-               #                    , choiceNames  = list('5 years','10 years')
-               #                    , choiceValues = list('5y','10y')
-               #                    , selected = list('5y')
-               #                    , inline = TRUE)),
-               # ),
-    # # Layout for map and plots
-    # fluidRow(
-    #     # Map occupies 1st column
-    #     column( width = 5, leafletOutput("basemap",height=750),
-    #     ),
-    #     # GAM and trend plots occupy rows in the 2nd column
-    #     column( width = 7, ecs.output("gam"),
-    #             fluidRow(
-    #                 column( width = 12, ecs.output("trend") )
-    #             )
-    #     )
-    # )
-)
-
-#     # Application title
-#     titlePanel("FWC HAB Data"),
-# 
-#     # Sidebar with a slider input for number of bins 
-#     sidebarLayout(
-#         sidebarPanel(
-#             sliderInput("bins",
-#                         "Number of bins:",
-#                         min = 1,
-#                         max = 50,
-#                         value = 30)
+#     # Layout for user options
+#     
+#     navbarPage(title = "FWC Harmful Algae Bloom (HAB) data",
+#                theme = bs_theme( version = 5, bootswatch = "cerulean" ),
+#                # Station dropdown menu
+#                # div(style="display:inline-block;vertical-align:top;",
+#                #     selectInput(inputId = "site",
+#                #                 label = "Location",
+#                #                 choices = Site, 
+#                #                 selected = "North Ponte Vedra", 
+#                #                 width = "350px")),
+#                # 
+#                # # Horizontal space
+#                div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>"))
+#                # Variable dropdown menu
+#                # div(style="display:inline-block;vertical-align:top;",
+#                #     selectInput(inputId = "variable", 
+#                #                 label = "Variable",
+#                #                 choices = vars,
+#                #                 selected = "cells/L*")))
+#                # 
+#                ###### ADD SPECIES HERE???    
+#                # # Horizontal space
+#                #  div(style="display: inline-block;vertical-align:top; width: 20px;",HTML("<br>")),
+#                #  # Trend period radio buttons
+#                #  div(style="display:inline-block;vertical-align:top;",
+#                #      radioButtons( "trendperiod", "Trend Period"
+#                #                    , choiceNames  = list('5 years','10 years')
+#                #                    , choiceValues = list('5y','10y')
+#                #                    , selected = list('5y')
+#                #                    , inline = TRUE)),
+#                # ),
+#     # Layout for map and plot
+#     fluidRow(
+#         # Map occupies 1st column
+#         column( width = 5, leafletOutput("map",height=750),
 #         ),
-# 
-#         # Show a plot of the generated distribution
-#         mainPanel(
-#            plotOutput("distPlot")
+#         # plots occupy rows in the 2nd column
+#         column( width = 7, ecs.output("gam"),
+#                 fluidRow(
+#                     column( width = 12, ecs.output("trend") )
+#                 )
 #         )
+#     )
+# ))
+
+    # Application title
+    titlePanel("FWC HAB Data"),
+
+    # Sidebar with a slider input for number of bins
+    sidebarLayout(sidebarPanel(sliderInput("bins",
+                                           "Number of bins:",
+                                           min = 1,
+                                           max = 50,
+                                           value = 30)),
+    
+                  
+
+        # Show a plot of the generated distribution
+        mainPanel(
+           plotOutput("distPlot")
+        )
+    )
+)
+    # fluidRow(
+    #             # Map occupies 1st column
+    #             column(width = 5, leafletOutput("map",height=750)),
+    #             # plot occupy rows in the 2nd column
+    #             column(width = 7, plotOutput("distPlot"))
 #     )
 # )
 
@@ -95,7 +102,7 @@ server <- function(input, output) {
 
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
-        x    <- HAB$`Temperature (C)`
+        x    <- filter(HAB,  vars == "Temperature (C)") %>% select(vals) %>% pull()
         bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
                     length.out = input$bins + 1)
 
@@ -103,6 +110,31 @@ server <- function(input, output) {
         hist(x, breaks = bins, col = 'darkgray', border = 'white',
              xlab = 'Temperature (degrees Celsius)',
              main = 'Histogram of water temperatures')
+    })
+    
+    output$map <- renderLeaflet({
+        leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+            #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
+            clearBounds() %>% # centers map on all min/max coords
+            # Base map
+            addTiles() %>%  # Add default OpenStreetMap map tiles
+            # Polygons, add groups
+            addPolygons(data = GTMNERR, color = "purple", fill = NA, 
+                        weight = 2, opacity = 1, group = "GTMNERR boundaries") %>% 
+            addPolygons(data = counties_select, 
+                        color = "black", weight = 2, opacity = 1,
+                        fill = TRUE, fillColor = "white", fillOpacity = 0.01,
+                        highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                            bringToFront = TRUE),
+                        group = "Counties", popup = ~NAME) %>% 
+            addMarkers(data = HAB_data_locations,
+                       popup = ~paste("Site: ", Site, "<br>",
+                                      "County: ", County),
+                       group = "HAB") %>% 
+            # # Layers control (turning layers on and off)
+            addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "HAB"),
+                             options = layersControlOptions(collapsed = FALSE)) %>%
+            addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
 }
 
