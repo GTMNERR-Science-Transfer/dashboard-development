@@ -24,7 +24,7 @@ m
 counties_select <- st_read("shapefiles_new/counties_GTMNERR.shp")
 counties_select <- st_transform(counties_select, crs = 4326)
 
-HAB_data <- readRDS("HAB.Rds")
+HAB_data <- readRDS("Data_for_app/HAB.Rds")
 HAB_data_locations <- HAB_data %>% 
   select(Latitude, Longitude, Site, `Collection Agency`, County) %>% # took out `HAB ID`
   distinct() %>% 
