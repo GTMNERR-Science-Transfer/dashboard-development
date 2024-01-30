@@ -1,4 +1,6 @@
 
+# Test to make an interactive map with leaflet (not in Shiny)
+
 library(leaflet)
 library(leaflet.extras)
 library(sf)
@@ -9,7 +11,7 @@ library(tidyverse)
 # clearBounds() clears the bound, so that the view will be automatically 
 # determined by the range of latitude/longitude data in the map layers 
 # if provided;
-GTMNERR <- st_read("shapefiles_new/GTMNERR.shp")# CRS: Albers Conical Equal Area
+GTMNERR <- st_read("03_Data_for_app/shapefiles_new/GTMNERR.shp")# CRS: Albers Conical Equal Area
 
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
@@ -21,10 +23,10 @@ m <- leaflet(data = GTMNERR, options = leafletOptions(minZoom = 9, maxZoom = 18)
   #addMarkers(lng=-81.347388, lat=30.075, popup="Guana")
 m 
 
-counties_select <- st_read("shapefiles_new/counties_GTMNERR.shp")
+counties_select <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 counties_select <- st_transform(counties_select, crs = 4326)
 
-HAB_data <- readRDS("Data_for_app/HAB.Rds")
+HAB_data <- readRDS("03_Data_for_app/HAB.Rds")
 HAB_data_locations <- HAB_data %>% 
   select(Latitude, Longitude, Site, `Collection Agency`, County) %>% # took out `HAB ID`
   distinct() %>% 
