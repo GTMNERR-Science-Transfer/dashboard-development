@@ -11,12 +11,12 @@
 
 library(tidyverse)
 
-HAB <- read_csv("../Data/Datasets/HAB_FWC.csv")
+HAB <- read_csv("01_Data_raw/HAB/HAB_FWC.csv")
 
 # Save it as an .Rdata file so it can be read into the Shiny app
-save(HAB, file = "HAB.RData")
+save(HAB, file = "03_Data_for_app/HAB.RData")
 
-saveRDS(HAB, "HAB.Rds")
+saveRDS(HAB, "03_Data_for_app/HAB.Rds")
 
 
 
@@ -28,7 +28,7 @@ HAB <- HAB %>%
                names_to = "vars", values_to = "vals")
 HAB$Date <- dmy(HAB$`Sample Date`)
 
-save(HAB, file = "HAB.RData")
+save(HAB, file = "03_Data_for_app/HAB.RData")
 
 # Check all unique categories
 unique(HAB$Description)
