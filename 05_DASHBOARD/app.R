@@ -10,12 +10,33 @@
 if(!require(shiny)){ install.packages("shiny") } ;  library(shiny)
 if(!require(tidyverse)){ install.packages("tidyverse") } ;  library(tidyverse)
 if(!require(bslib)){ install.packages("bslib") } ;  library(bslib)
+if(!require(leaflet)){ install.packages("leaflet") } ;  library(leaflet)
+if(!require(sf)){ install.packages("sf") } ;  library(sf)
 
+### READ IN DATA ---------------------------------------------
 # For some reason I need to specify my whole path to the data here (even though
 # I am working in an Rproject)
 
 # NOTE: .RData restores the object to the name it had when you saved it as .RData
-load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/HAB.RData") 
+#load("03_Data_for_app/HAB.RData") 
+
+#### HAB data ------------------------------------------------
+load("~/github/GTMNERR Science Transfer/App_dev/03_Data_for_app/HAB.RData")
+HAB_data_locations <- HAB %>% 
+    select(Latitude, Longitude, Site, `Collection Agency`, County) %>% # took out `HAB ID` (otherwise 1172 instead of 17 locations)
+    distinct() %>% 
+    st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+
+#### GTMNERR shapefile ------------------------------------------------
+GTMNERR <- st_read("~/github/GTMNERR Science Transfer/App_dev/03_Data_for_app/shapefiles_new/GTMNERR.shp")
+GTMNERR <- st_transform(GTMNERR, crs = 4326)
+
+#### county shapefiles ------------------------------------------------
+counties_select <- st_read("~/github/GTMNERR Science Transfer/App_dev/03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
+counties_select <- st_transform(counties_select, crs = 4326)
+
+
+
 # Alternatively, with .Rds you can give it a different name
 #HAB_data <- readRDS("HAB.Rds")
 
@@ -24,7 +45,7 @@ load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/
 ############################################
 ui <- fluidPage(
 #     # Layout for user options
-#     
+#     Code from another app, as example
 #     navbarPage(title = "FWC Harmful Algae Bloom (HAB) data",
 #                theme = bs_theme( version = 5, bootswatch = "cerulean" ),
 #                # Station dropdown menu
@@ -55,45 +76,19 @@ ui <- fluidPage(
 #                #                    , selected = list('5y')
 #                #                    , inline = TRUE)),
 #                # ),
-#     # Layout for map and plot
-#     fluidRow(
-#         # Map occupies 1st column
-#         column( width = 5, leafletOutput("map",height=750),
-#         ),
-#         # plots occupy rows in the 2nd column
-#         column( width = 7, ecs.output("gam"),
-#                 fluidRow(
-#                     column( width = 12, ecs.output("trend") )
-#                 )
-#         )
-#     )
-# ))
-
     # Application title
-    titlePanel("FWC HAB Data"),
-
-    # Sidebar with a slider input for number of bins
-    sidebarLayout(sidebarPanel(sliderInput("bins",
-                                           "Number of bins:",
-                                           min = 1,
-                                           max = 50,
-                                           value = 30)),
-    
-                  
-
-        # Show a plot of the generated distribution
-        mainPanel(
-           plotOutput("distPlot")
-        )
+    titlePanel("FWC Harmful Algal Bloom Data"),
+    fluidRow(
+        # Map occupies 1st column
+        column(width = 7, leafletOutput("map", height=750)),
+        # histogram occupies rows in the 2nd column
+        column(width = 5, plotOutput("distPlot"),
+               sliderInput("bins", "Number of bins:", 
+                           min = 1, max = 50, value = 30))
     )
 )
-    # fluidRow(
-    #             # Map occupies 1st column
-    #             column(width = 5, leafletOutput("map",height=750)),
-    #             # plot occupy rows in the 2nd column
-    #             column(width = 7, plotOutput("distPlot"))
-#     )
-# )
+                  
+    
 
 ############################################
 #  Shiny server
