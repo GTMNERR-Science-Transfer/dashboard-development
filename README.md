@@ -1,6 +1,6 @@
 ## Data dashboard development for the Guana Tolomato Matanzas National Estuary Research Reserve (GTMNERR)
-##### University of Florida, 2023-2024
-###### Geraldine Klarenberg, Kristie Perez, Nikki Dix, Nia Morales, Shirley Baker, Christopher Marais, Chad Palmer
+#### University of Florida, 2023-2024
+##### Geraldine Klarenberg, Kristie Perez, Nikki Dix, Nia Morales, Shirley Baker, Christopher Marais, Chad Palmer
 
 This repository holds data and scripts involved in creating a data dashboard (Shiny app) for the GTMNERR.
 
@@ -12,4 +12,5 @@ In its current setup (Jan 2024, to be updated into different development and dep
 5. `05_DASHBOARD`: Current, latest version of the dashboard
 
 For a description of the project, see https://nerrssciencecollaborative.org/project/Klarenberg22
+
 For the GTMNERR website: https://gtmnerr.org/

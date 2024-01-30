@@ -1,11 +1,8 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
+
+# This is a Shiny web application. 
+
+# Test with HAB data to create a dropdown menu for species
+# Played around with a different theme as well
 
 if(!require(shiny)){ install.packages("shiny") } ;  library(shiny)
 if(!require(tidyverse)){ install.packages("tidyverse") } ;  library(tidyverse)
@@ -16,11 +13,9 @@ if(!require(tidyverse)){ install.packages("tidyverse") } ;  library(tidyverse)
 # I am working in an Rproject)
 
 # NOTE: .RData restores the object to the name it had when you saved it as .RData
-load("~/Library/CloudStorage/OneDrive-UniversityofFlorida/NERRS project/App_dev/HAB.RData") 
+load("~/github/GTMNERR Science Transfer/App_dev/03_Data_for_app/HAB.RData") 
 # Alternatively, with .Rds you can give it a different name
 #HAB_data <- readRDS("HAB.Rds")
-
-project_list <- c("HAB data - FWC", "Other data")
 
 ############################################
 #  Shiny user interface (ui)
@@ -77,12 +72,21 @@ ui <- fluidPage(
     #  Shiny server
     ############################################
     server <- function(input, output) {
+        # Filter for algal species
+        filtered_HAB <- reactive({
+            selected_species <- input$Species
+            filtered_data <- HAB[HAB$Species == selected_species, ]
+            return(filtered_data)
+        })
         
         output$distPlot <- renderPlot({
+            species_data = filtered_HAB()
+            species_name = input$Species
             # draw the histogram with the specified number of bins using input$bins from ui.R
-            ggplot(HAB %>% filter(vars == "Temperature (C)"), aes(x = vals))+
+            ggplot(species_data %>% filter(vars == "Temperature (C)"), aes(x = vals))+
                 geom_histogram(bins = input$bins) +
-                labs(x = "Temperature (degrees Celsius)",
+                labs(title = paste0("Temperature distribution for ", species_name),
+                     x = "Temperature (degrees Celsius)",
                      y = "Count")
 
         })
