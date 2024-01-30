@@ -6,4 +6,4 @@
 .DS_Store
 
 # Ignore the folder with all the original (large) shapefiles:
-/Data/shapefiles
+/01_Data_raw/shapefiles
