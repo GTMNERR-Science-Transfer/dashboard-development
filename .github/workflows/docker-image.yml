@@ -38,9 +38,13 @@ jobs:
       #     tags: your_dockerhub_username/your_repository:${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.sha }}
       #     # This tag includes the branch name, the current date, and the commit SHA
 
-      # build the docker image and give it the name main
-      - name: Build image
-        run: docker build -t main . 
+      - name: Build Docker image
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          file: ./05_DASHBOARD/Dockerfile
+          push: false
+          # Removed the tags parameter since we're not pushing the image
         
       # run the docker image supply the secrets from the github secrets store.  
       - name: execute
