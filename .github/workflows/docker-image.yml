@@ -19,17 +19,18 @@ jobs:
         id: date
         run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
 
-      - name: Login to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
+# Uncoimment this to also push to dockerhub
+      # - name: Login to DockerHub
+      #   uses: docker/login-action@v1
+      #   with:
+      #     username: ${{ secrets.DOCKERHUB_USERNAME }}
+      #     password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
       - name: Build and push
         uses: docker/build-push-action@v2
         with:
           context: .
           file: ./05_DASHBOARD/Dockerfile
-          push: true
+          push: false # true
           tags: your_dockerhub_username/your_repository:${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.sha }}
           # This tag includes the branch name, the current date, and the commit SHA
