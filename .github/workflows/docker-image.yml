@@ -29,7 +29,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./Dockerfile
+          file: ./05_DASHBOARD/Dockerfile
           push: true
           tags: your_dockerhub_username/your_repository:${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.sha }}
           # This tag includes the branch name, the current date, and the commit SHA
