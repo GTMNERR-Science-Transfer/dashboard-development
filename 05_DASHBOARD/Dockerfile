@@ -1,6 +1,6 @@
-FROM rocker/shiny:4.2.1
-RUN install2.r rsconnect tibble dplyr stringr rtweet htmltools lubridate bslib reactable
-WORKDIR /home/shinytweet
+FROM rocker/shiny:4.3.2
+RUN install2.r rsconnect shiny tidyverse bslib leaflet sf
+WORKDIR /home/dashboard
 COPY app.R 
 COPY server.R server.R 
 COPY likes.rds likes.rds
