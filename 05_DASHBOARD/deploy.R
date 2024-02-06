@@ -8,4 +8,4 @@ rsconnect::setAccountInfo(
     secret = Sys.getenv("SECRET"))
 
 # Deploy
-deployApp(appFiles = c("app.R"))
+deployApp(appFiles = c("/usr/src/dashboard-development/05_DASHBOARD/app.R"))
