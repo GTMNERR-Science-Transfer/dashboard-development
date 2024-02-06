@@ -5,7 +5,7 @@ ARG BRANCH_NAME
 ENV BRANCH_NAME=${BRANCH_NAME}
 RUN install2.r rsconnect shiny tidyverse bslib leaflet sf
 WORKDIR /usr/src/dashboard-development
-# Copy the 'app' directory contents into the container at /usr/src/app
+# Copy the 'app' directory contents into the container
 COPY ./03_Data_for_app /usr/src/dashboard-development/
 COPY ./04_Tests /usr/src/dashboard-development/
 COPY ./05_DASHBOARD /usr/src/dashboard-development/
