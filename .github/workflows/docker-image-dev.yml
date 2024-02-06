@@ -30,7 +30,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./05_DASHBOARD/Dockerfile
+          file: ./05_DASHBOARD/Dockerfile-dev
           push: true
           tags: gtmnerr/dashboard-dev:latest
         
