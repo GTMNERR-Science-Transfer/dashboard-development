@@ -7,5 +7,8 @@ rsconnect::setAccountInfo(
     token = Sys.getenv("TOKEN"),
     secret = Sys.getenv("SECRET"))
 
+# Print the current working directory
+print(getwd())
+
 # Deploy
-deployApp(appFiles = c("/usr/src/dashboard-development/05_DASHBOARD/app.R"))
+deployApp(appFiles = c("./app.R"))
