@@ -1,9 +1,10 @@
-name: Build Docker Image & Publish Dashboard
+name: Build & Publish Dashboard-dev
 
 on:
   push:
     branches:
-      - main
+      - hotfix/**  # Matches any branch with prefix 'hotfix/'
+      - release/** # Matches any branch with prefix 'release/'
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
@@ -21,7 +22,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: gtmnerr
+          username: gtmnerr # CHANGE THIS TO BE A SECRET ON GITHUB ###
           password: dckr_pat__hEdxbRrtLePYXseurTdnZ7da6M # CHANGE THIS TO BE A SECRET ON GITHUB ###
 
       # Build and push the Docker image to dockerhub    
@@ -29,15 +30,18 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ./05_DASHBOARD/Dockerfile
+          file: ./05_DASHBOARD/Dockerfile-dev
           push: true
-          tags: gtmnerr/dashboard:latest
+          tags: gtmnerr/dashboard-dev:latest
           no-cache: true
           build-args: |
             BRANCH_NAME=${{ github.ref_name }}
+
+      - name: List contents of the app directory
+        run: docker run --rm gtmnerr/dashboard-dev:latest ls /usr/src/dashboard-development/
         
       # run the docker image to publish to shinyapps.io 
       - name: Run docker image
         # CHANGE ALL VARIABLES TO BE SECRETS ON GITHUB ###
         run: >
-          docker run -e SHINY_ACC_NAME=gtmnerr -e TOKEN=C45D396CDEDC0F87E0415BDDCB10D264 -e SECRET=amOf/66XsI1PtjFXGhEmWaBcuIzlhY6WLBirWL2y gtmnerr/dashboard:latest
+          docker run -e SHINY_ACC_NAME=gtmnerr -e TOKEN=C45D396CDEDC0F87E0415BDDCB10D264 -e SECRET=amOf/66XsI1PtjFXGhEmWaBcuIzlhY6WLBirWL2y gtmnerr/dashboard-dev:latest
