@@ -22,7 +22,7 @@ jobs:
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:
-          username: gtmnerr
+          username: gtmnerr # CHANGE THIS TO BE A SECRET ON GITHUB ###
           password: dckr_pat__hEdxbRrtLePYXseurTdnZ7da6M # CHANGE THIS TO BE A SECRET ON GITHUB ###
 
       # Build and push the Docker image to dockerhub    
