@@ -9,5 +9,6 @@ rsconnect::setAccountInfo(
 
 # Deploy
 rsconnect::deployApp(
-    appFiles = "./05_DASHBOARD/app.R",
+    appDir = "./05_DASHBOARD",
+    appFiles = "app.R",
     appName = "Dashboard")
