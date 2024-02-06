@@ -35,7 +35,7 @@ jobs:
           context: .
           file: ./05_DASHBOARD/Dockerfile
           push: true
-          tags: gtmnerr/dashboard:${{ github.ref_name }}-${{ steps.date.outputs.date }}-${{ github.sha }}
+          tags: gtmnerr/dashboard:${{steps.date.outputs.date}}-${{github.sha}}
           # This tag includes the branch name, the current date, and the commit SHA
         
       # run the docker image to publish to shinyapps.io 
@@ -46,4 +46,4 @@ jobs:
           -e SHINY_ACC_NAME=gtmnerr \
           -e TOKEN=C45D396CDEDC0F87E0415BDDCB10D264 \
           -e SECRET=amOf/66XsI1PtjFXGhEmWaBcuIzlhY6WLBirWL2y \
-          gtmnerr/dashboard:${{github.ref_name}}-${{steps.date.outputs.date}}-${{github.sha}}
+          gtmnerr/dashboard:${{steps.date.outputs.date}}-${{github.sha}}
