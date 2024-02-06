@@ -32,6 +32,8 @@ jobs:
           file: ./05_DASHBOARD/Dockerfile
           push: true
           tags: gtmnerr/dashboard:latest
+          build-args: |
+            BRANCH_NAME=${{ github.ref_name }}
         
       # run the docker image to publish to shinyapps.io 
       - name: Run docker image
