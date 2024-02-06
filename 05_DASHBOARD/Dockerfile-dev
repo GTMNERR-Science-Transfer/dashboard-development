@@ -9,5 +9,4 @@ WORKDIR /usr/src/dashboard-development
 COPY ./03_Data_for_app /usr/src/dashboard-development/
 COPY ./04_Tests /usr/src/dashboard-development/
 COPY ./05_DASHBOARD /usr/src/dashboard-development/
-COPY ./05_DASHBOARD/deploy-dev.R /usr/src/dashboard-development/05_DASHBOARD/
 CMD Rscript /usr/src/dashboard-development/05_DASHBOARD/deploy-dev.R
