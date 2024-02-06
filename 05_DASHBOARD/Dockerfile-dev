@@ -3,11 +3,11 @@ FROM rocker/shiny:4.3.2
 ARG BRANCH_NAME
 # You can use the ARG value as an environment variable if needed
 ENV BRANCH_NAME=${BRANCH_NAME}
-COPY ./05_DASHBOARD/deploy-dev.R /usr/src/dashboard-development/
 RUN install2.r rsconnect shiny tidyverse bslib leaflet sf
 WORKDIR /usr/src/dashboard-development
 # Copy the 'app' directory contents into the container at /usr/src/app 
 COPY ./03_Data_for_app /usr/src/dashboard-development/
 COPY ./04_Tests /usr/src/dashboard-development/
 COPY ./05_DASHBOARD /usr/src/dashboard-development/
+COPY ./05_DASHBOARD/deploy-dev.R /usr/src/dashboard-development/05_DASHBOARD/
 CMD Rscript /usr/src/dashboard-development/05_DASHBOARD/deploy-dev.R
