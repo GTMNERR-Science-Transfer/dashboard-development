@@ -37,4 +37,7 @@ jobs:
       - name: Run docker image
         # CHANGE ALL VARIABLES TO BE SECRETS ON GITHUB ###
         run: >
-          docker run -e SHINY_ACC_NAME=gtmnerr -e TOKEN=C45D396CDEDC0F87E0415BDDCB10D264 -e SECRET=amOf/66XsI1PtjFXGhEmWaBcuIzlhY6WLBirWL2y gtmnerr/dashboard:latest
+          docker run -e SHINY_ACC_NAME=gtmnerr \
+          -e TOKEN=C45D396CDEDC0F87E0415BDDCB10D264 \
+          -e SECRET=amOf/66XsI1PtjFXGhEmWaBcuIzlhY6WLBirWL2y \
+          gtmnerr/dashboard:latest
