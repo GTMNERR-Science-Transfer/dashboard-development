@@ -33,6 +33,7 @@ jobs:
           file: ./05_DASHBOARD/Dockerfile-dev
           push: true
           tags: gtmnerr/dashboard-dev:latest
+          no-cache: true
           build-args: |
             BRANCH_NAME=${{ github.ref_name }}
         
