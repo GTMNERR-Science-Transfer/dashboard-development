@@ -24,18 +24,18 @@ setwd("..")
 print(getwd())
 
 #### HAB data ------------------------------------------------
-load(paste0(getwd(), "/03_Data_for_app/HAB.RData"))
+load("./03_Data_for_app/HAB.RData")
 HAB_data_locations <- HAB %>% 
     select(Latitude, Longitude, Site, `Collection Agency`, County) %>% # took out `HAB ID` (otherwise 1172 instead of 17 locations)
     distinct() %>% 
     st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
 #### GTMNERR shapefile ------------------------------------------------
-GTMNERR <- st_read(paste0(getwd(), "/03_Data_for_app/shapefiles_new/GTMNERR.shp"))
+GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
 #### county shapefiles ------------------------------------------------
-counties_select <- st_read(paste0(getwd(), "/03_Data_for_app/shapefiles_new/counties_GTMNERR.shp"))
+counties_select <- st_read("./03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 counties_select <- st_transform(counties_select, crs = 4326)
 
 
