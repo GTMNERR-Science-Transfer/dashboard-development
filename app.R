@@ -39,14 +39,14 @@ find_directory_of_file <- function(file_name, start_dir=getwd()) {
 
 # find file_name from current working directory
 # before trying from a shallower directory
-file_name <- "*app.R" # The file you are searching for
+file_name <- "*/app.R" # The file you are searching for
 
 try({
   found_dir <- find_directory_of_file(file_name)
   # Check if found_dir is NULL or empty, indicating the file was not found
   if (is.null(found_dir) || length(found_dir) == 0) {
     # print error
-    print("app.R not found from current working directory!")
+    print("/app.R not found from current working directory!")
     print("trying again from shallower directory")
     # trying again from great grandparent directory of working directory
     setwd("../../..")
