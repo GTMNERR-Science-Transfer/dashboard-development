@@ -39,20 +39,20 @@ find_directory_of_file <- function(file_name, start_dir=getwd()) {
 
 # find file_name from current working directory
 # before trying from a shallower directory
-file_name <- "*DASHBOARD/app.R" # The file you are searching for
+file_name <- "*app.R" # The file you are searching for
 
 try({
   found_dir <- find_directory_of_file(file_name)
   # Check if found_dir is NULL or empty, indicating the file was not found
   if (is.null(found_dir) || length(found_dir) == 0) {
     # print error
-    print("05_DASHBOARD/app.R not found from current working directory!")
+    print("app.R not found from current working directory!")
     print("trying again from shallower directory")
     # trying again from great grandparent directory of working directory
     setwd("../../..")
     found_dir <- find_directory_of_file(file_name)
     if (is.null(found_dir) || length(found_dir) == 0) {
-      print("05_DASHBOARD/app.R likely does not exist in filesystem!")
+      print("app.R likely does not exist in filesystem!")
     }
     # Set working directory to parent directory of found dir
     setwd(fs::path_dir(found_dir[1]))
@@ -60,7 +60,7 @@ try({
     print(paste0("Working dir: ", getwd()))
   }
   # Set working directory to parent directory of found dir
-  setwd(fs::path_dir(found_dir[1]))
+  setwd(found_dir[1])
   # Print working directory
   print(paste0("Working dir: ", getwd()))
 }, silent = FALSE) # Setting silent = FALSE will print the error message to the console

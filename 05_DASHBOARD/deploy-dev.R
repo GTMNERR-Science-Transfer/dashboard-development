@@ -31,7 +31,7 @@ rsconnect::setAccountInfo(
 # Deploy
 req_files <- list_all_files(c("./04_Tests", "./03_Data_for_app")) # get all the required files
 rsconnect::deployApp(
-    appDir = "./05_DASHBOARD",
-    appFiles = c("app.R", req_files),
+    # appDir = "./05_DASHBOARD",
+    # appFiles = c("app.R", req_files),
     appName = "Dashboard-dev",
     forceUpdate = TRUE)
