@@ -39,7 +39,7 @@ find_directory_of_file <- function(file_name, start_dir=getwd()) {
 
 # find file_name from current working directory
 # before trying from a shallower directory
-file_name <- "*05_DASHBOARD/app.R" # The file you are searching for
+file_name <- "*DASHBOARD/app.R" # The file you are searching for
 
 try({
   found_dir <- find_directory_of_file(file_name)
