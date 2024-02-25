@@ -12,6 +12,7 @@ if(!require(tidyverse)){ install.packages("tidyverse") } ;  library(tidyverse)
 if(!require(bslib)){ install.packages("bslib") } ;  library(bslib)
 if(!require(leaflet)){ install.packages("leaflet") } ;  library(leaflet)
 if(!require(sf)){ install.packages("sf") } ;  library(sf)
+if(!require(fs)){ install.packages("fs") } ;  library(fs)
 
 ### READ IN DATA ---------------------------------------------
 # For some reason I need to specify my whole path to the data here (even though
@@ -20,8 +21,50 @@ if(!require(sf)){ install.packages("sf") } ;  library(sf)
 # NOTE: .RData restores the object to the name it had when you saved it as .RData
 #load("03_Data_for_app/HAB.RData")
 
-setwd("..")
-print(getwd())
+#### Get app.R file dir and set work dir ---------------------
+# Function to find the directory of a file named app.R
+find_directory_of_file <- function(file_name, start_dir=getwd()) {
+  # Recursively list all files starting from the start_dir
+  app_dir <- fs::dir_ls(start_dir, recurse = TRUE, glob=file_name)
+  
+  # Check if any file named app.R is found
+  if (length(app_dir) > 0) {
+    # Assuming you want the directory of the first matching file
+    file_dir <- fs::path_dir(app_dir[1])
+    return(file_dir)
+  } else {
+    return(NULL) # Return NULL if the file is not found
+  }
+}
+
+# find file_name from current working directory
+# before trying from a shallower directory
+file_name <- "*05_DASHBOARD/app.R" # The file you are searching for
+
+try({
+  found_dir <- find_directory_of_file(file_name)
+  # Check if found_dir is NULL or empty, indicating the file was not found
+  if (is.null(found_dir) || length(found_dir) == 0) {
+    # print error
+    print("05_DASHBOARD/app.R not found from current working directory!")
+    print("trying again from shallower directory")
+    # trying again from great grandparent directory of working directory
+    setwd("../../..")
+    found_dir <- find_directory_of_file(file_name)
+    if (is.null(found_dir) || length(found_dir) == 0) {
+      print("05_DASHBOARD/app.R likely does not exist in filesystem!")
+    }
+    # Set working directory to parent directory of found dir
+    setwd(fs::path_dir(found_dir[1]))
+    # Print working directory
+    print(paste0("Working dir: ", getwd()))
+  }
+  # Set working directory to parent directory of found dir
+  setwd(fs::path_dir(found_dir[1]))
+  # Print working directory
+  print(paste0("Working dir: ", getwd()))
+}, silent = FALSE) # Setting silent = FALSE will print the error message to the console
+
 
 #### HAB data ------------------------------------------------
 load("./03_Data_for_app/HAB.RData")
