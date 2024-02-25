@@ -9,6 +9,5 @@ rsconnect::setAccountInfo(
 
 # Deploy
 rsconnect::deployApp(
-    
-    appFiles = "app.R",
-    appName = "Dashboard")
+    appName = "Dashboard",
+    forceUpdate = TRUE)
