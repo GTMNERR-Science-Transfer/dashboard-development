@@ -15,7 +15,13 @@ library(readxl)
 ### 1. Read in data -----------------------------------------------------------
 WQ <- read_excel("01_Data_raw/Guana_WQ/Guana_masterdata.xlsx",
                  sheet = 1, # There is only one sheet, but just to be safe
-                 col_types = c("#RQ" = "text")) # If not specified you get
+                 guess_max = 13000) # This is not ideal + cols 14 and 16 have a 
+# mix of logical and numbers. Lord.
+                 
+# CHECK if also add the following? PIA because you need to specify *every*
+# column data type... Not just the one that is not working. Right now these two
+# cols do not show up okay
+#col_types = c("SampleDate" = "date", "#RQ" = "text")) # If not specified you get
 # warnings (as it expects logical; text only starts after row 1445)
 
 WQ_meta <- read_csv("01_Data_raw/Guana_WQ/guana_data_dictionary_updateGK.csv")
@@ -56,7 +62,7 @@ names(WQ_meta)[names(WQ_meta) == "station_code"] <- "StationCode"
 
 WQ <- WQ %>% 
   left_join(WQ_meta) %>% 
-  select(-lat, -long)
+  select(-Lat, -Long)
 
 # Stations missing from metadata: GL1.5, GL2.5 and GL3.5 -> emailed Nikki
 
