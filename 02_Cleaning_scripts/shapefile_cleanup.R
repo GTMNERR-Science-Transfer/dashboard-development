@@ -20,9 +20,19 @@ GTMNERR <- st_read("01_Data_raw/shapefiles/GTMNERR Boundary_query update 2021/GT
 
 # Check what the 8 polygons are
 ggplot()+
-  geom_sf(data=GTMNERR, aes(fill = Res_Name)) # Hmmm
+  geom_sf(data = GTMNERR, aes(fill = as.factor(Area_ha))) # Hmmm
 
-st_write(GTMNERR, "03_Data_for_app/shapefiles_new/GTMNERR.shp")
+# Keep only the one large shapefile
+GTMNERR_all <- GTMNERR %>% filter(Area_ha == 0 & Res_Name == "Guana Tolomato Matanzas")
+
+# Keep only the small polygons, but remove the part that's in the sea
+GTMNERR_small <- GTMNERR %>% filter(Area_ha > 0 & Area_ha < 10000)
+
+ggplot()+
+  geom_sf(data = GTMNERR_small, aes(fill = as.factor(Area_ha)))
+
+st_write(GTMNERR_small, "03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp")
+st_write(GTMNERR_all, "03_Data_for_app/shapefiles_new/GTMNERR.shp", append = FALSE)
 
 # Get min/max coordinates for selecting from other shapefiles
 st_bbox(GTMNERR)
