@@ -13,4 +13,4 @@ In its current setup (Jan 2024, to be updated into different development and dep
 
 For a description of the project, see https://nerrssciencecollaborative.org/project/Klarenberg22
 
-For the GTMNERR website: https://gtmnerr.org/ 
+For the GTMNERR website: https://gtmnerr.org/
