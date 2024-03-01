@@ -18,7 +18,7 @@ WQ <- read_excel("01_Data_raw/Guana_WQ/Guana_masterdata.xlsx",
                  col_types = c("#RQ" = "text")) # If not specified you get
 # warnings (as it expects logical; text only starts after row 1445)
 
-WQ_meta <- read_csv("01_Data_raw/Guana_WQ/guana_data_dictionary.csv")
+WQ_meta <- read_csv("01_Data_raw/Guana_WQ/guana_data_dictionary_updateGK.csv")
 # Some stations have two codes due to a name change (see Word doc with metadata)
 # Don't remove
 
