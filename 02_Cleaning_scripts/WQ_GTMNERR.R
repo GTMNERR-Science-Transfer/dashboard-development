@@ -64,7 +64,14 @@ WQ <- WQ %>%
   left_join(WQ_meta) %>% 
   select(-Lat, -Long)
 
-# Stations missing from metadata: GL1.5, GL2.5 and GL3.5 -> emailed Nikki
+# Stations missing from metadata: GL1.5, GL2.5 and GL3.5 -> added manually and
+# emailed Nikki
+
+which(is.na(WQ$lat))
+which(is.na(WQ$long))
+
+WQ[which(is.na(WQ$lat)),] # duplicates?? Remove for now; emailed Nikki
+WQ <- WQ[-which(is.na(WQ$lat)),]
 
 ### 4. Save data ---------------------------------------------------------------
 
