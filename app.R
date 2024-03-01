@@ -129,7 +129,7 @@ ui <- fluidPage(
         column(width = 7, leafletOutput("map", height=750)),
         # histogram occupies rows in the 2nd column
         column(width = 5, plotOutput("distPlot"),
-               sliderInput("bins", "Number of bins:", 
+               sliderInput("bins", "Number of bins (CHRIS WAS HERE):", 
                            min = 1, max = 50, value = 30))
     )
 )
