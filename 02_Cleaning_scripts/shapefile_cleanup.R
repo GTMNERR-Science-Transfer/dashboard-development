@@ -10,13 +10,14 @@
 
 library(sf)
 library(tidyverse)
-library(ggmap)
-register_google(key = "AIzaSyBBgPDaJao2MVa0yvlULKvAbE7lEosOthQ")
 
 #### GTMNERR boundary and aquatic preserves ####
 # From Nikki Dix
 GTMNERR <- st_read("01_Data_raw/shapefiles/GTMNERR Boundary_query update 2021/GTM_RB_2016_Merge (1).shp")
 # CRS: NAD83 / UTM zone 17N
+
+# Transform to WGS84, EPGS 4326
+GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
 # Check what the 8 polygons are
 ggplot()+
@@ -36,11 +37,11 @@ st_write(GTMNERR_all, "03_Data_for_app/shapefiles_new/GTMNERR.shp", append = FAL
 
 # Get min/max coordinates for selecting from other shapefiles
 st_bbox(GTMNERR)
-# UTM is in meters. Add/subtract 5 km (5000 m)
-xmin <- st_bbox(GTMNERR)$xmin - 5000
-xmax <- st_bbox(GTMNERR)$xmax + 5000
-ymin <- st_bbox(GTMNERR)$ymin - 5000
-ymax <- st_bbox(GTMNERR)$ymax + 5000
+# UTM is in meters. Add/subtract 5 km (more or less 0.05 degrees)
+xmin <- st_bbox(GTMNERR)$xmin - 0.05
+xmax <- st_bbox(GTMNERR)$xmax + 0.05
+ymin <- st_bbox(GTMNERR)$ymin - 0.05
+ymax <- st_bbox(GTMNERR)$ymax + 0.05
 # Create points from these coordinates
 pt1 <- st_point(c(xmin, ymin))
 pt2 <- st_point(c(xmax, ymin))
@@ -48,15 +49,6 @@ pt3 <- st_point(c(xmin, ymax))
 pt4 <- st_point(c(xmax, ymax))
 # Put together as sf object and get bounding box
 bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
-
-#### Google base map ####
-# # For now I am getting a Google base map. But for the Shiny app we should use
-# # leaflet to make it interactive.
-# google_base <- get_map(location = c(lon = -81.347388, lat = 30.075), zoom = 12, maptype = 'roadmap')
-# test <- ggmap(google_base)
-# test
-# 
-# st_write(google_base, "shapefiles_new/google_base.shp")
 
 ##### Counties #####
 counties <- st_read("01_Data_raw/shapefiles/countyshore_areas_sep15/countyshore_areas_sep15.shp")
