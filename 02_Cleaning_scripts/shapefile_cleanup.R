@@ -32,7 +32,7 @@ GTMNERR_small <- GTMNERR %>% filter(Area_ha > 0 & Area_ha < 10000)
 ggplot()+
   geom_sf(data = GTMNERR_small, aes(fill = as.factor(Area_ha)))
 
-st_write(GTMNERR_small, "03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp")
+st_write(GTMNERR_small, "03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp", append = FALSE)
 st_write(GTMNERR_all, "03_Data_for_app/shapefiles_new/GTMNERR.shp", append = FALSE)
 
 # Get min/max coordinates for selecting from other shapefiles
@@ -55,6 +55,10 @@ counties <- st_read("01_Data_raw/shapefiles/countyshore_areas_sep15/countyshore_
 # CRS: Albers Conical Equal Area
 counties <- st_transform(counties, crs = st_crs(GTMNERR))
 
+# Because of conversion there are some polygons overlapping now (which causes issues)
+# Fix:
+counties <- st_make_valid(counties) # Takes a minute
+
 # Select area -> base on GTMNERR shapefiles
 counties_select <- st_crop(counties, bound_box) %>% 
   filter(NAME != "WATER")
@@ -65,7 +69,8 @@ ggplot()+
   #geom_sf(data = aqua_preserve, fill = NA, color = "red")+
   theme_bw()
 
-st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
+st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp",
+         append = FALSE)
 
 ##### Salt marshes #####
 salt_marsh <- st_read("01_Data_raw/shapefiles/salt_marsh_2020/salt_marsh_2020.shp")
