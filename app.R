@@ -19,7 +19,6 @@ if(!require(fs)){ install.packages("fs") } ;  library(fs)
 # I am working in an Rproject)
 
 # NOTE: .RData restores the object to the name it had when you saved it as .RData
-#load("03_Data_for_app/HAB.RData")
 
 #### Get app.R file dir and set work dir ---------------------
 # Function to find the directory of a file named app.R
@@ -73,6 +72,12 @@ HAB_data_locations <- HAB %>%
     distinct() %>% 
     st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
+#### WQ data ------------------------------------------------
+load("./03_Data_for_app/WQ.RData")
+WQ_data_locations <- WQ %>% 
+  distinct() %>% 
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+
 #### GTMNERR shapefile ------------------------------------------------
 GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
@@ -80,8 +85,6 @@ GTMNERR <- st_transform(GTMNERR, crs = 4326)
 #### county shapefiles ------------------------------------------------
 counties_select <- st_read("./03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 counties_select <- st_transform(counties_select, crs = 4326)
-
-
 
 # Alternatively, with .Rds you can give it a different name
 #HAB_data <- readRDS("HAB.Rds")
@@ -123,7 +126,7 @@ ui <- fluidPage(
 #                #                    , inline = TRUE)),
 #                # ),
     # Application title
-    titlePanel("FWC Harmful Algal Bloom Data"),
+    titlePanel("Guana River Water Quality Data"),
     fluidRow(
         # Map occupies 1st column
         column(width = 7, leafletOutput("map", height=750)),
@@ -143,14 +146,15 @@ server <- function(input, output) {
 
     output$distPlot <- renderPlot({
         # generate bins based on input$bins from ui.R
-        x    <- filter(HAB,  vars == "Temperature (C)") %>% select(vals) %>% pull()
+        x    <- filter(WQ,  ComponentShort == "ATEMP") %>% select(Result) %>% pull()
+        x <- as.numeric(x) # stop-gap measure because everything is characters
         bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
                     length.out = input$bins + 1)
 
         # draw the histogram with the specified number of bins
         hist(x, breaks = bins, col = 'darkgray', border = 'white',
-             xlab = 'Temperature (degrees Celsius)',
-             main = 'Histogram of water temperatures')
+             xlab = 'Air temperature (degrees Celsius)',
+             main = 'Histogram of air temperatures')
     })
     
     output$map <- renderLeaflet({
@@ -168,12 +172,17 @@ server <- function(input, output) {
                         highlightOptions = highlightOptions(color = "white", weight = 2,
                                                             bringToFront = TRUE),
                         group = "Counties", popup = ~NAME) %>% 
-            addMarkers(data = HAB_data_locations,
-                       popup = ~paste("Site: ", Site, "<br>",
-                                      "County: ", County),
-                       group = "HAB") %>% 
+            # addMarkers(data = HAB_data_locations,
+            #            popup = ~paste("Site: ", Site, "<br>",
+            #                           "County: ", County),
+            #            group = "HAB") %>% 
+            addMarkers(data = WQ_data_locations,
+                   popup = ~paste("Station: ", site_friendly, "<br>",
+                                  "Location: ", wbid,
+                                  "Sample type: ", SampleType),
+                   group = "WQ") %>% 
             # # Layers control (turning layers on and off)
-            addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "HAB"),
+            addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
                              options = layersControlOptions(collapsed = FALSE)) %>%
             addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
