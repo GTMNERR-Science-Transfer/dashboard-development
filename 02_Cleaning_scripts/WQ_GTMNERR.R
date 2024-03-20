@@ -73,9 +73,25 @@ which(is.na(WQ$long))
 WQ[which(is.na(WQ$lat)),] # duplicates?? Remove for now; emailed Nikki
 WQ <- WQ[-which(is.na(WQ$lat)),]
 
+# Create a separate dataframe with only station info, not the data (makes map
+# too heavy)
+WQ_locations <- WQ %>% 
+  mutate(Year = year(SampleDate)) %>% 
+  select(site_friendly, Year, site_acronym, lat, long, wbid, location) %>% 
+  group_by(site_friendly, site_acronym, lat, long, wbid, location) %>% 
+  summarize(maxYear = max(Year), minYear = min(Year)) 
+
+WQ_data_available <- WQ %>% 
+  mutate(Year = year(SampleDate)) %>% 
+  select(StationCode, Year, SampleType, ComponentShort, ComponentLong, site_friendly, 
+         site_acronym, lat, long, wbid, location) %>% 
+  distinct()
+
 ### 4. Save data ---------------------------------------------------------------
 
 # Save it as an .Rdata (and .Rds?) file so it can be read into the Shiny app
 save(WQ, file = "03_Data_for_app/WQ.RData")
-
 saveRDS(WQ, "03_Data_for_app/WQ.Rds")
+
+save(WQ_locations, file = "03_Data_for_app/WQ_locations.RData")
+saveRDS(WQ_locations, "03_Data_for_app/WQ_locations.Rds")

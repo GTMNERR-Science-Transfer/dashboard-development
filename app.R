@@ -72,11 +72,13 @@ HAB_data_locations <- HAB %>%
     distinct() %>% 
     st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
+#### WQ locations data ------------------------------------------------
+load("./03_Data_for_app/WQ_locations.RData")
+WQ_data_locations <- WQ_locations %>% 
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+
 #### WQ data ------------------------------------------------
 load("./03_Data_for_app/WQ.RData")
-WQ_data_locations <- WQ %>% 
-  distinct() %>% 
-  st_as_sf(coords = c("long", "lat"), crs = 4326)
 
 #### GTMNERR shapefile ------------------------------------------------
 GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
@@ -178,8 +180,9 @@ server <- function(input, output) {
             #            group = "HAB") %>% 
             addMarkers(data = WQ_data_locations,
                    popup = ~paste("Station: ", site_friendly, "<br>",
-                                  "Location: ", wbid,
-                                  "Sample type: ", SampleType),
+                                  "Location: ", wbid, "<br>",
+                                  "Latest year of sampling: ", maxYear, "<br",
+                                  "Sampling start year: ", minYear, "<br"),
                    group = "WQ") %>% 
             # # Layers control (turning layers on and off)
             addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
