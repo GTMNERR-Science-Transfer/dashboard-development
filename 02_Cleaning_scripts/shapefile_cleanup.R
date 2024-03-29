@@ -16,19 +16,36 @@ library(tidyverse)
 GTMNERR <- st_read("01_Data_raw/shapefiles/GTMNERR Boundary_query update 2021/GTM_RB_2016_Merge (1).shp")
 # CRS: NAD83 / UTM zone 17N
 
+# Transform to WGS84, EPGS 4326
+GTMNERR <- st_transform(GTMNERR, crs = 4326)
+
+# Make valid 
+# This has to be done if some polygons overlap
+GTMNERR <- st_make_valid(GTMNERR)
+
 # Check what the 8 polygons are
 ggplot()+
-  geom_sf(data=GTMNERR, aes(fill = Res_Name)) # Hmmm
+  geom_sf(data = GTMNERR, aes(fill = as.factor(Area_ha))) # Hmmm
 
-st_write(GTMNERR, "03_Data_for_app/shapefiles_new/GTMNERR.shp")
+# Keep only the one large shapefile
+GTMNERR_all <- GTMNERR %>% filter(Area_ha == 0 & Res_Name == "Guana Tolomato Matanzas")
+
+# Keep only the small polygons, but remove the part that's in the sea
+GTMNERR_small <- GTMNERR %>% filter(Area_ha > 0 & Area_ha < 10000)
+
+ggplot()+
+  geom_sf(data = GTMNERR_small, aes(fill = as.factor(Area_ha)))
+
+st_write(GTMNERR_small, "03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp", append = FALSE)
+st_write(GTMNERR_all, "03_Data_for_app/shapefiles_new/GTMNERR.shp", append = FALSE)
 
 # Get min/max coordinates for selecting from other shapefiles
 st_bbox(GTMNERR)
-# UTM is in meters. Add/subtract 5 km (5000 m)
-xmin <- st_bbox(GTMNERR)$xmin - 5000
-xmax <- st_bbox(GTMNERR)$xmax + 5000
-ymin <- st_bbox(GTMNERR)$ymin - 5000
-ymax <- st_bbox(GTMNERR)$ymax + 5000
+# UTM is in meters. Add/subtract 5 km (more or less 0.05 degrees)
+xmin <- st_bbox(GTMNERR)$xmin - 0.05
+xmax <- st_bbox(GTMNERR)$xmax + 0.05
+ymin <- st_bbox(GTMNERR)$ymin - 0.05
+ymax <- st_bbox(GTMNERR)$ymax + 0.05
 # Create points from these coordinates
 pt1 <- st_point(c(xmin, ymin))
 pt2 <- st_point(c(xmax, ymin))
@@ -41,15 +58,20 @@ bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 counties <- st_read("01_Data_raw/shapefiles/countyshore_areas_sep15/countyshore_areas_sep15.shp")
 # CRS: Albers Conical Equal Area
 counties <- st_transform(counties, crs = st_crs(GTMNERR))
+# Make valid (this takes a short while to run)
+# This has to be done if some polygons overlap
+counties <- st_make_valid(counties)
 
-# Select area -> base on GTMNERR shapefiles
-counties_select <- st_crop(counties, bound_box) %>% 
-  filter(NAME != "WATER")
+# Select counties within which GTMNERR falls
+counties_select <- st_intersection(counties, GTMNERR)
+counties_keep <- unique(counties_select$NAME)
+counties_keep <- counties_keep[counties_keep != "WATER"]
+counties_select <- counties %>% 
+  filter(NAME %in% counties_keep)
 
 ggplot()+
   geom_sf(data=counties_select, fill = NA)+
   geom_sf(data=GTMNERR, fill = "blue", alpha = 0.3)+
-  #geom_sf(data = aqua_preserve, fill = NA, color = "red")+
   theme_bw()
 
 st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
