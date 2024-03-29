@@ -4,14 +4,12 @@
 
 # Geraldine Klarenberg, PhD
 # gklarenberg@ufl.edu
-# 5 June 2023
+# 29 March 2024
 
 # Cleaning up (modifying) shapefiles needed
 
 library(sf)
 library(tidyverse)
-library(ggmap)
-register_google(key = "AIzaSyBBgPDaJao2MVa0yvlULKvAbE7lEosOthQ")
 
 #### GTMNERR boundary and aquatic preserves ####
 # From Nikki Dix
@@ -38,15 +36,6 @@ pt3 <- st_point(c(xmin, ymax))
 pt4 <- st_point(c(xmax, ymax))
 # Put together as sf object and get bounding box
 bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
-
-#### Google base map ####
-# # For now I am getting a Google base map. But for the Shiny app we should use
-# # leaflet to make it interactive.
-# google_base <- get_map(location = c(lon = -81.347388, lat = 30.075), zoom = 12, maptype = 'roadmap')
-# test <- ggmap(google_base)
-# test
-# 
-# st_write(google_base, "shapefiles_new/google_base.shp")
 
 ##### Counties #####
 counties <- st_read("01_Data_raw/shapefiles/countyshore_areas_sep15/countyshore_areas_sep15.shp")
