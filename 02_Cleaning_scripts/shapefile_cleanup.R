@@ -74,7 +74,9 @@ ggplot()+
   geom_sf(data=GTMNERR, fill = "blue", alpha = 0.3)+
   theme_bw()
 
-st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
+st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp",
+         append = FALSE)
+# Ignore warnings when writing data: checked saved shapefile and it is correct
 
 ##### Salt marshes #####
 salt_marsh <- st_read("01_Data_raw/shapefiles/salt_marsh_2020/salt_marsh_2020.shp")
