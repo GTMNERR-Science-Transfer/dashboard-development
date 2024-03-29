@@ -1,0 +1,8 @@
+"CENSOR_DECISION_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Data are not usable for verified listing"|"01-JAN-2014 00:00:00"|"29-JAN-2020 05:00:00"|"ZIMMERMAN_JM"|"29-JAN-2020 11:47:33"
+"2"|"Data are not usable for Standards development"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Data are not usable for IWR development"|"01-JAN-2014 00:00:00"|"29-JAN-2020 05:00:00"|"ZIMMERMAN_JM"|"29-JAN-2020 11:44:49"
+"4"|"Data are not usable for IWR verified listing"|"29-JAN-2020 00:00:00"|""|""|""
+"5"|"Data are not usable for BMAP development or analysis"|"29-JAN-2020 00:00:00"|""|""|""
+"6"|"Data are not usable for TMDL development"|"29-JAN-2020 00:00:00"|""|""|""
+"7"|"Data are not usable for any IWR assessment"|"29-JAN-2020 00:00:00"|""|""|""

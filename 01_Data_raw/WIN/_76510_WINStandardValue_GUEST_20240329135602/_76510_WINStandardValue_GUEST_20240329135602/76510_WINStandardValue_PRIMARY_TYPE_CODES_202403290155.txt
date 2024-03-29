@@ -1,0 +1,4 @@
+"PRIMARY_TYPE_ID"|"LONG_NAME"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Surface Water"|""|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Spring"|"Spring"|"01-JAN-2014 00:00:00"|"03-OCT-2018 17:17:38"|"PARIDA_A"|"03-OCT-2018 17:17:38"
+"3"|"Ground Water"|"Well"|"01-JAN-2014 00:00:00"|""|""|""

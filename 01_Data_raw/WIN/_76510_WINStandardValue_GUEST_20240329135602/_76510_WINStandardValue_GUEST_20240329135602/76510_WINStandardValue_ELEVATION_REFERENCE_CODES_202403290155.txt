@@ -1,0 +1,5 @@
+"ELEVATION_REFERENCE_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Top Of Casing"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Bottom Of Meter Box"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Shutoff Valve"|"01-JAN-2014 00:00:00"|""|""|""
+"4"|"Measuring Point"|"17-OCT-2017 00:00:00"|""|"ZIMMERMAN_JM"|"18-OCT-2017 15:21:32"

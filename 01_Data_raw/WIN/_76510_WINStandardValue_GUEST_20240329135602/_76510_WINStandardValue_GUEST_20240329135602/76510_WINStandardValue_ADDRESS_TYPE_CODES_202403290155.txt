@@ -1,0 +1,3 @@
+"ADDRESS_TYPE_ID"|"LONG_NAME"|"DESCRIPTION"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Location"|"Physical location of the entity."|"Location"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Mailing"|"Postal mailing address of the entity."|"Mailing"|"01-JAN-2014 00:00:00"|""|""|""

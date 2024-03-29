@@ -1,0 +1,7 @@
+"ANOMALY_RESPONSE_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Waiting for Data Provider"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Reviewed - no changes needed"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Under Review by Data Provider"|"01-JAN-2014 00:00:00"|""|""|""
+"4"|"Insufficient Information to Resolve"|"01-JAN-2014 00:00:00"|""|""|""
+"5"|"Resolved - changes implemented"|"01-JAN-2014 00:00:00"|""|""|""
+"6"|"Request Coordinator Assistance"|"27-JUL-2022 00:00:00"|""|""|""

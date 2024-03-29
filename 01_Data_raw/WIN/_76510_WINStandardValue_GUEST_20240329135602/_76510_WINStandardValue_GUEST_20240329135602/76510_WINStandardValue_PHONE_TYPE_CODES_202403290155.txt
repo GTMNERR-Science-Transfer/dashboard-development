@@ -1,0 +1,4 @@
+"PHONE_TYPE_ID"|"LONG_NAME"|"DESCRIPTION"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Fax"|"Type of phone number is for a facsimile machine."|"Fax"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Mobile"|"Type of phone number is for a mobile phone."|"Mobile"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Office"|"Type of phone number is for an office phone."|"Office"|"01-JAN-2014 00:00:00"|""|""|""

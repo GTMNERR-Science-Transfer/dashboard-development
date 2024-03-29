@@ -1,0 +1,4 @@
+"RESULT_VALUE_TYPE_ID"|"LONG_NAME"|"DESCRIPTION"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Actual"|"existing now; present; current:"|"Actual"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Calculated"|"To ascertain by computation or determined by mathematical calculation, evaluating, and reasoning."|"Calculated"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Estimated"|"Approximation, educated guess, or projection of a quantity based on experience and/or information available at the time, and the cheapest (and least accurate) type of modeling."|"Estimated"|"01-JAN-2014 00:00:00"|""|""|""

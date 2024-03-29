@@ -1,0 +1,5 @@
+"AQUIFER_CONFINEMENT_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Confined"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"Unconfined"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"Semi-confined"|"01-JAN-2014 00:00:00"|""|""|""
+"4"|"Unknown"|"01-JAN-2014 00:00:00"|""|""|""

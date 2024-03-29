@@ -1,0 +1,6 @@
+"NHD_FEATURE_TYPE_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"Estuary"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"CanalDitch"|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"LakePond"|"01-JAN-2014 00:00:00"|""|""|""
+"4"|"StreamRiver"|"01-JAN-2014 00:00:00"|""|""|""
+"5"|"Reservoir"|"01-JAN-2014 00:00:00"|""|""|""

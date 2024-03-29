@@ -1,0 +1,5 @@
+"WATER_LEVEL_RECORDER_ID"|"SHORT_NAME"|"LONG_NAME"|"DESCRIPTION"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
+"1"|"A"|"Active"|"'Active'  if well is currently a water level monitor well"|"01-JAN-2014 00:00:00"|""|""|""
+"2"|"I"|"Inactive"|"'Inactive' if the well, at one time, had a water level recorder installed, but is not currently being used for continuous water level recording."|"01-JAN-2014 00:00:00"|""|""|""
+"3"|"N"|"Never a Recorder Well"|"'Never a Recorder Well' is used for those wells known to have never been used as a continuous water level recorder well."|"01-JAN-2014 00:00:00"|""|""|""
+"4"|"U"|"Unknown"|"'Unknown' is used use to identify wells for which it is unknown if they had water level recorders on them."|"01-JAN-2014 00:00:00"|""|""|""
