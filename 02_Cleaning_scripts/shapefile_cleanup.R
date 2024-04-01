@@ -82,12 +82,16 @@ st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp",
 salt_marsh <- st_read("01_Data_raw/shapefiles/salt_marsh_2020/salt_marsh_2020.shp")
 # CRS: NAD83(HARN) / Florida GDL Albers
 salt_marsh <- st_transform(salt_marsh, crs = st_crs(GTMNERR))
+salt_marsh <- st_make_valid(salt_marsh)
 salt_marsh <- st_crop(salt_marsh, bound_box) 
 ggplot()+
-  geom_sf(data = salt_marsh, fill = "red")+
-  geom_sf(data=GTMNERR, fill = "blue", alpha = 0.3)
+  geom_sf(data=GTMNERR, fill = "blue", alpha = 0.3)+
+  geom_sf(data = salt_marsh, fill = "red", color = "red")
 
-st_write(salt_marsh, "03_Data_for_app/shapefiles_new/salt_marsh_GTMNERR.shp")
+# This one is not ideal as it lots of small shapefiles, but I do not really want 
+# to turn it into one big one (not sure if that will work)
+st_write(salt_marsh, "03_Data_for_app/shapefiles_new/salt_marsh_GTMNERR.shp",
+         append = FALSE)
 
 ##### Hydrology (several shapefiles) #####
 hydro_6 <- st_read("01_Data_raw/shapefiles/nhdwbd_huc6_dec17/nhdwbd_huc6_dec17.shp")
