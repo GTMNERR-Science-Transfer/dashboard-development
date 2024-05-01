@@ -1,6 +1,0 @@
-"CONTACT_STATUS_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
-"1"|"Pending"|"01-JAN-2014 00:00:00"|""|""|""
-"2"|"Declined"|"01-JAN-2014 00:00:00"|""|""|""
-"3"|"Active"|"01-JAN-2014 00:00:00"|""|""|""
-"4"|"Inactive"|"01-JAN-2014 00:00:00"|""|""|""
-"5"|"In Progress"|"01-JAN-2014 00:00:00"|""|""|""

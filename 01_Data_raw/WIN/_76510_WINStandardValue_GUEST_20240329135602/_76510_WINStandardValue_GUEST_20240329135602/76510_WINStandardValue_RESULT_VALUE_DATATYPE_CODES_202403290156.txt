@@ -1,4 +1,0 @@
-"RESULT_VALUE_DATATYPE_ID"|"LONG_NAME"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
-"1"|"Integer"|"01-JAN-2014 00:00:00"|""|""|""
-"2"|"Numeric"|"01-JAN-2014 00:00:00"|""|""|""
-"3"|"Choice List"|"01-JAN-2014 00:00:00"|""|""|""

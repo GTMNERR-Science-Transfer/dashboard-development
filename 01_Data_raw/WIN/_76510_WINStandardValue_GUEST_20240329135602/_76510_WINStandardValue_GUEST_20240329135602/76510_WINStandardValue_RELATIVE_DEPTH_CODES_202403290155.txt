@@ -1,7 +1,0 @@
-"RELATIVE_DEPTH_ID"|"LONG_NAME"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
-"1"|"Bottom"|"Bottom"|"01-JAN-2014 00:00:00"|""|""|""
-"2"|"Midwater"|"Midwater"|"01-JAN-2014 00:00:00"|""|""|""
-"3"|"Near Bottom"|"Near Bottom"|"01-JAN-2014 00:00:00"|""|""|""
-"4"|"Photic zone"|"Photic zone"|"01-JAN-2014 00:00:00"|""|""|""
-"5"|"Subbottom"|"Subbottom"|"01-JAN-2014 00:00:00"|""|""|""
-"6"|"Surface"|"Surface"|"01-JAN-2014 00:00:00"|""|""|""

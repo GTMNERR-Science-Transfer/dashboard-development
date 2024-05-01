@@ -1,3 +1,0 @@
-"SAMPLE_FRACTION_ID"|"LONG_NAME"|"DESCRIPTION"|"BEGIN_DATE"|"EPA_CODE_ID"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
-"1"|"Dissolved"|"That portion of the analyte found in the liquid medium. Cannot be removed by filtration."|"01-JAN-2014 00:00:00"|"Dissolved"|""|""|""
-"2"|"Total"|"The total of all fractions of the analyte. The sum of all of the different forms of the analyte present."|"01-JAN-2014 00:00:00"|"Total"|""|"ZIMMERMAN_JM"|"17-MAY-2023 13:00:03"

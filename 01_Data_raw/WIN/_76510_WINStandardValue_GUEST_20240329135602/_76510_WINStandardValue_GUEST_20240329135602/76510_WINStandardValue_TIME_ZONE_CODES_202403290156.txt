@@ -1,5 +1,0 @@
-"TIME_ZONE_ID"|"SHORT_NAME"|"OFFSET_FROM_UTC_CNT"|"LONG_NAME"|"EPA_CODE_ID"|"BEGIN_DATE"|"END_DATE"|"MODIFY_USER_NAME"|"MODIFY_TS"
-"1"|"EST"|"1"|"Eastern Standard Time"|"NULL"|"01-JAN-2014 00:00:00"|""|""|""
-"2"|"EDT"|"1"|"Eastern Daylight Time"|"NULL"|"01-JAN-2014 00:00:00"|""|""|""
-"3"|"CST"|"1"|"Central Standard Time"|"NULL"|"01-JAN-2014 00:00:00"|""|""|""
-"4"|"CDT"|"1"|"Central Daylight Time"|"NULL"|"01-JAN-2014 00:00:00"|""|""|""
