@@ -12,7 +12,6 @@ HABPageServer <- function(id, parentSession) {
     # the id for "tabs"
     ns <- session$ns
     observeEvent(input$go_back, {
-      print("Go back button clicked")
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
       })
   })

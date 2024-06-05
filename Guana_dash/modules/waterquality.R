@@ -86,7 +86,6 @@ WQPageServer <- function(id, parentSession) {
     })
 
     observeEvent(input$go_back, {
-      print("Go back button clicked")
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
     })
   })
