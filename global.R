@@ -55,17 +55,17 @@ try({
 }, silent = FALSE) # Setting silent = FALSE will print the error message to the console
 
 #### WQ locations data ------------------------------------------------
-load("../03_Data_for_app/WQ_locations.RData")
+load("./03_Data_for_app/WQ_locations.RData")
 WQ_data_locations <- WQ_locations %>% 
   st_as_sf(coords = c("long", "lat"), crs = 4326)
 
 #### WQ data ------------------------------------------------
-load("../03_Data_for_app/WQ.RData")
+load("./03_Data_for_app/WQ.RData")
 
 #### GTMNERR shapefile ------------------------------------------------
-GTMNERR <- st_read("../03_Data_for_app/shapefiles_new/GTMNERR.shp")
+GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
 #### county shapefiles ------------------------------------------------
-counties_select <- st_read("../03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
+counties_select <- st_read("./03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 counties_select <- st_transform(counties_select, crs = 4326)
