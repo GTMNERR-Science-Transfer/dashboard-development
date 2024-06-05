@@ -1,4 +1,4 @@
-subPageUI <- function(id) {
+HABPageUI <- function(id) {
   ns <- NS(id)
   tagList(
     h2("Harmful Algal Bloom Data"),
@@ -6,10 +6,14 @@ subPageUI <- function(id) {
   )
 }
 
-subPageServer <- function(input, output, session, parentSession) {
-  ns <- session$ns
-  observeEvent(input$go_back, {
-    print("Go back button clicked")
-    updateTabItems(parentSession, "tabs", selected = "main_page")
+HABPageServer <- function(id, parentSession) {
+  moduleServer(id, function(input, output, session) { # this nested approach is
+    # necessary to be able to us the "back" button, otherwise Shiny cannot find
+    # the id for "tabs"
+    ns <- session$ns
+    observeEvent(input$go_back, {
+      print("Go back button clicked")
+      updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
+      })
   })
 }

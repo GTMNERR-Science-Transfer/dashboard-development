@@ -19,17 +19,17 @@ ui <- dashboardPage(
   ),
   dashboardBody(
     tabItems(
-      tabItem(tabName = "main_page", mainPageUI("main_page")),
-      tabItem(tabName = "waterquality", WQPageUI("waterquality")),
-      tabItem(tabName = "algae", subPageUI("algae"))
+      tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
+      tabItem(tabName = "waterquality", WQPageUI(id = "waterquality")),
+      tabItem(tabName = "algae", HABPageUI(id = "algae"))
     )
   )
 )
 
 server <- function(input, output, session) {
   moduleServer(module = mainPageServer, id = "main_page", session = session)
-  moduleServer(module = WQPageServer, id = "waterquality", session = session)
-  moduleServer(module = subPageServer, id = "algae", session = session)
+  WQPageServer("waterquality", parentSession = session)
+  HABPageServer("algae", parentSession = session)
 }
 
 shinyApp(ui, server)
