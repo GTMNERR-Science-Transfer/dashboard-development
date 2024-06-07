@@ -7,6 +7,7 @@ RUN install2.r rsconnect shiny tidyverse bslib leaflet sf shinydashboard
 WORKDIR /usr/src/dashboard-development
 # Copy the 'app' directory contents into the container
 COPY ./app.R /usr/src/dashboard-development/
+COPY ./global.R /usr/src/dashboard-development/
 COPY ./03_Data_for_app /usr/src/dashboard-development/03_Data_for_app/
 COPY ./04_Tests /usr/src/dashboard-development/04_Tests/
 COPY ./05_DASHBOARD /usr/src/dashboard-development/05_DASHBOARD/
