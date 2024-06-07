@@ -10,4 +10,5 @@ COPY ./app.R /usr/src/dashboard-development/
 COPY ./03_Data_for_app /usr/src/dashboard-development/03_Data_for_app/
 COPY ./04_Tests /usr/src/dashboard-development/04_Tests/
 COPY ./05_DASHBOARD /usr/src/dashboard-development/05_DASHBOARD/
+COPY ./modules /usr/src/dashboard-development/modules/
 CMD Rscript /usr/src/dashboard-development/05_DASHBOARD/deploy-dev.R
