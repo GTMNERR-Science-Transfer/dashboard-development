@@ -1,0 +1,14 @@
+site,alternate_name,site_friendly,station_code,site_acronym,lat,long,start_date,end,wbid,location
+MICKLERS,N,Micklers,GTMMKNUT,MK,30.16073611,-81.36027778,,N,Lake,water_control
+DEPGL1,N,GL1,GTMGL1NUT,GL1,30.1504,-81.3604,,N,Lake,open_water
+DEPGL2,N,GL2,GTMGL2NUT,GL2,30.1161,-81.3511,,N,Lake,open_water
+LAKE MIDDLE,DEPGL3,Lake Middle,GTMLMNUT,LM,30.08302,-81.34286,,N,Lake,open_water
+LAKE MIDDLE,N,Lake Middle,GTMOLNUT,LM,,,,Y,Lake,open_water
+DEPGL4,N,GL4,GTMGL4NUT,GL4,30.0451,-81.3351,,N,Lake,open_water
+LAKE SOUTH,N,Lake South,GTMDNNUT,LS,,,,Y,Lake,water_control
+LAKE SOUTH,N,Lake South,GTMLSNUT,LS,30.023763,-81.327928,,N,Lake,water_control
+RIVER NORTH,N,River North,GTMDSNUT,RN,,,,Y,River,water_control
+RIVER NORTH,N,River North,GTMRNNUT,RN,30.022421,-81.327722,,N,River,water_control
+DEPGR1,N,GR1,GTMGR1NUT,GR1,30.0168,-81.3276,,N,River,open_water
+GUANA RIVER,DEPGR2,Guana River,GTMGRNUT,GR,29.998466,-81.326133,,N,River,open_water
+DEPGR3,N,GR3,GTMGR3NUT,GR3,29.9921,-81.3214,,N,River,open_water
