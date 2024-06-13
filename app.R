@@ -8,6 +8,7 @@ source("global.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
+source("modules/win.R")
 
 ui <- dashboardPage(
   dashboardHeader(title = "Guana River Data Dashboard"),
@@ -15,14 +16,16 @@ ui <- dashboardPage(
     sidebarMenu(id = "tabs",
       menuItem("Main Page", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", icon = icon("link")),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("link"))
+      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("link")),
+      menuItem("Water Infrastructure Network", tabName = "win", icon = icon("link"))
     )
   ),
   dashboardBody(
     tabItems(
       tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
       tabItem(tabName = "waterquality", WQPageUI(id = "waterquality")),
-      tabItem(tabName = "algae", HABPageUI(id = "algae"))
+      tabItem(tabName = "algae", HABPageUI(id = "algae")),
+      tabItem(tabName = "win", WINPageUI(id = "win"))
     )
   )
 )
@@ -31,6 +34,7 @@ server <- function(input, output, session) {
   moduleServer(module = mainPageServer, id = "main_page", session = session)
   WQPageServer("waterquality", parentSession = session)
   HABPageServer("algae", parentSession = session)
+  WINPageServer("win", parentSession = session)
 }
 
 shinyApp(ui, server)
@@ -44,6 +48,7 @@ source("global.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
+source("modules/win.R")
 
 ui <- dashboardPage(
   dashboardHeader(title = "Guana River Data Dashboard"),
@@ -51,14 +56,16 @@ ui <- dashboardPage(
     sidebarMenu(id = "tabs",
       menuItem("Main Page", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", icon = icon("link")),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("link"))
+      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("link")),
+      menuItem("Water Infrastructure Network", tabName = "win", icon = icon("link"))
     )
   ),
   dashboardBody(
     tabItems(
       tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
       tabItem(tabName = "waterquality", WQPageUI(id = "waterquality")),
-      tabItem(tabName = "algae", HABPageUI(id = "algae"))
+      tabItem(tabName = "algae", HABPageUI(id = "algae")),
+      tabItem(tabName = "win", WINPageUI(id = "win"))
     )
   )
 )
@@ -67,6 +74,7 @@ server <- function(input, output, session) {
   moduleServer(module = mainPageServer, id = "main_page", session = session)
   WQPageServer("waterquality", parentSession = session)
   HABPageServer("algae", parentSession = session)
+  WINPageServer("win", parentSession = session)
 }
 
 shinyApp(ui, server)
