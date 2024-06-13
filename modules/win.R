@@ -1,3 +1,8 @@
+# import data for this page
+win_df <- read.csv("./01_Data_raw/WIN/WIN_data_merged_20240501.csv")
+
+global::find_directory_of_file("app.R")
+
 WINPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all sub pages so they use the
   # correct sessions / ID's that connect the ui and server here
