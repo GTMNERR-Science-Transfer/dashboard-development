@@ -1,5 +1,5 @@
 WQPageUI <- function(id) {
-  ns <- NS(id) # This is an important part to add to all subpages so they use the
+  ns <- NS(id) # This is an important part to add to all sub pages so they use the
   # correct sessions / ID's that connect the ui and server here
   tagList(
     h2("Water Quality Data"),

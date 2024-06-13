@@ -1,4 +1,4 @@
-<<<<<<< HEAD
+# <<<<<<< HEAD
 # This is the main app page, which will run and read in all the other pages
 # and modules, and render the dashboard
 
@@ -34,7 +34,7 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
-=======
+# =======
 # This is the main app page, which will run and read in all the other pages
 # and modules, and render the dashboard
 
@@ -70,4 +70,4 @@ server <- function(input, output, session) {
 }
 
 shinyApp(ui, server)
->>>>>>> 11_feature
+# >>>>>>> 11_feature
