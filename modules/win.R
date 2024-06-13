@@ -1,8 +1,8 @@
-WQPageUI <- function(id) {
+WINPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all sub pages so they use the
   # correct sessions / ID's that connect the ui and server here
   tagList(
-    h2("Water Quality Data"),
+    h2("Water Infrastructure Network"),
     fluidRow(
       # Map occupies 1st column
       column(width = 7, leafletOutput(ns("map"), height=750)), # make sure to put the input inside ns()
@@ -16,7 +16,7 @@ WQPageUI <- function(id) {
   )
 }
 
-WQPageServer <- function(id, parentSession) {
+WINPageServer <- function(id, parentSession) {
   moduleServer(id, function(input, output, session) { # this nested approach is 
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
