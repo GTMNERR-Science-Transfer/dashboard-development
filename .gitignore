@@ -7,3 +7,4 @@
 
 # Ignore the folder with all the original (large) shapefiles:
 /01_Data_raw/shapefiles
+/03_Data_for_app/shapefiles_new
