@@ -11,21 +11,6 @@ if(!require(fs)){ install.packages("fs") } ;  library(fs)
 
 
 #### Get app.R file dir and set work dir ---------------------
-# Function to find the directory of a file named app.R
-find_directory_of_file <- function(file_name, start_dir=getwd()) {
-  # Recursively list all files starting from the start_dir
-  app_dir <- fs::dir_ls(start_dir, recurse = TRUE, glob=file_name)
-  
-  # Check if any file named app.R is found
-  if (length(app_dir) > 0) {
-    # Assuming you want the directory of the first matching file
-    file_dir <- fs::path_dir(app_dir[1])
-    return(file_dir)
-  } else {
-    return(NULL) # Return NULL if the file is not found
-  }
-}
-
 # find file_name from current working directory
 # before trying from a shallower directory
 file_name <- "*/app.R" # The file you are searching for
@@ -53,14 +38,6 @@ try({
   # Print working directory
   print(paste0("Working dir: ", getwd()))
 }, silent = FALSE) # Setting silent = FALSE will print the error message to the console
-
-#### WQ locations data ------------------------------------------------
-load("./03_Data_for_app/WQ_locations.RData")
-WQ_data_locations <- WQ_locations %>% 
-  st_as_sf(coords = c("long", "lat"), crs = 4326)
-
-#### WQ data ------------------------------------------------
-load("./03_Data_for_app/WQ.RData")
 
 #### GTMNERR shapefile ------------------------------------------------
 GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
