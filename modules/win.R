@@ -1,7 +1,14 @@
 # import data for this page
 load("./03_Data_for_app/WIN.RData")
+WIN_data_locations <- WIN_df %>%
+  st_as_sf(coords = c("lat", "lon"), crs = 4326)
 
-global::find_directory_of_file("app.R")
+#### Process data further ####
+
+
+#### Run the app #### 
+
+find_directory_of_file("app.R")
 
 WINPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all sub pages so they use the
@@ -10,12 +17,12 @@ WINPageUI <- function(id) {
     h2("Water Infrastructure Network"),
     fluidRow(
       # Map occupies 1st column
-      column(width = 7, leafletOutput(ns("map"), height=750)), # make sure to put the input inside ns()
-      # histogram occupies rows in the 2nd column
-      column(width = 5, plotOutput(ns("distPlot")),
-             sliderInput(ns("bins"), "Number of bins:", 
-                         min = 1, max = 50, value = 30)
-      )
+      column(width = 7, leafletOutput(ns("map"), height=500)), # make sure to put the input inside ns()
+      # # histogram occupies rows in the 2nd column
+      # column(width = 5, plotOutput(ns("distPlot")),
+      #        sliderInput(ns("bins"), "Number of bins:", 
+      #                    min = 1, max = 50, value = 30)
+      # )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
@@ -27,29 +34,28 @@ WINPageServer <- function(id, parentSession) {
     # the id for "tabs"
     ns <- session$ns
 
-    # Create the histogram
-    output$distPlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x <- filter(WQ, ComponentShort == "ATEMP") %>%
-        select(Result) %>%
-        pull()
-      x <- as.numeric(x) # stop-gap measure because everything is characters
-      bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
-        length.out = input$bins + 1
-      )
-
-      # draw the histogram with the specified number of bins
-      hist(x,
-        breaks = bins, col = "darkgray", border = "white",
-        xlab = "Air temperature (degrees Celsius)",
-        main = "Histogram of air temperatures"
-      )
-    })
+    # # Create the histogram
+    # output$distPlot <- renderPlot({
+    #   # generate bins based on input$bins from ui.R
+    #   x <- filter(WIN, ComponentShort == "ATEMP") %>%
+    #     select(Result) %>%
+    #     pull()
+    #   x <- as.numeric(x) # stop-gap measure because everything is characters
+    #   bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
+    #     length.out = input$bins + 1
+    #   )
+    # 
+    #   # draw the histogram with the specified number of bins
+    #   hist(x,
+    #     breaks = bins, col = "darkgray", border = "white",
+    #     xlab = "Air temperature (degrees Celsius)",
+    #     main = "Histogram of air temperatures"
+    #   )
+    # })
 
     # Create the map
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
-        # setView(lng=-81.347388, lat=30.075, zoom = 11) %>%
         clearBounds() %>% # centers map on all min/max coords
         # Base map
         addTiles() %>% # Add default OpenStreetMap map tiles
@@ -68,25 +74,16 @@ WINPageServer <- function(id, parentSession) {
           ),
           group = "Counties", popup = ~NAME
         ) %>%
-        # addMarkers(data = HAB_data_locations,
-        #            popup = ~paste("Site: ", Site, "<br>",
-        #                           "County: ", County),
-        #            group = "HAB") %>%
         addMarkers(
-          data = WQ_data_locations,
-          popup = ~ paste(
-            "Station: ", site_friendly, "<br>",
-            "Location: ", wbid, "<br>",
-            "Latest year of sampling: ", maxYear, "<br",
-            "Sampling start year: ", minYear, "<br"
-          ),
-          group = "WQ"
-        ) %>%
-        # # Layers control (turning layers on and off)
+          data = WIN_data_locations,
+          popup = ~ paste("Station Name: ", Station.Name, "<br>"),
+          group = "WIN"
+        )  %>%
+        # Layers control (turning layers on and off)
         addLayersControl(
-          overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
+          overlayGroups = c("Counties", "GTMNERR boundaries", "WIN"), # 
           options = layersControlOptions(collapsed = FALSE)
-        ) %>%
+        )  %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
 
