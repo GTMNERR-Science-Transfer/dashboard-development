@@ -1,7 +1,6 @@
 # import data for this page
 load("./03_Data_for_app/WIN.RData")
-WIN_data_locations <- WIN_df %>%
-  st_as_sf(coords = c("lat", "lon"), crs = 4326)
+WIN_data_locations <- WIN_df 
 
 #### Process data further ####
 

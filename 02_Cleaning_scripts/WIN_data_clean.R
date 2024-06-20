@@ -58,12 +58,14 @@ print(gps_cropped)
 # Convert the cropped GPS points back to a dataframe and retain original data
 WIN_df <- as.data.frame(gps_cropped)
 
-# If you need to retain only certain columns from the original data
-WIN_df <- gps_data[gps_data$Location_2 %in% st_coordinates(gps_cropped)[,1] & gps_data$Location_1 %in% st_coordinates(gps_cropped)[,2], ]
+# Extract coordinates (latitude and longitude) from the geometry column
+coordinates <- st_coordinates(gps_cropped)
 
-# Rename columns
-names(WIN_df)[names(WIN_df) == "Location_2"] <- "lat"
-names(WIN_df)[names(WIN_df) == "Location_1"] <- "lon"
+# Combine the original data without the geometry column and the coordinates
+WIN_df <- cbind(WIN_df, coordinates)
+
+# Rename the coordinates columns if necessary
+colnames(WIN_df)[(ncol(WIN_df)-1):ncol(WIN_df)] <- c("longitude", "latitude")
 
 #### Keep only columns with varying information ####
 # Function to remove columns with the same value in the whole column
@@ -74,8 +76,14 @@ remove_constant_columns <- function(df) {
 
 WIN_df <- remove_constant_columns(WIN_df)
 
+#### Reformat data to visualize easily ####
+# turn WIN_df into long format with the following columns
+# [dates, location_GPS, key, value] 
+# visualise only unique locations
 #### Save data ####
 # Save the filtered data to a new CSV file
-# write.csv(WIN_df, "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", row.names = FALSE)
+# write.csv(WIN_df, 
+#           "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", 
+#           row.names = FALSE)
 # Save the filtered data to a .RData file
 save(WIN_df, file = "03_Data_for_app/WIN.RData")
