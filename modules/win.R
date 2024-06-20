@@ -8,7 +8,6 @@ WINPageUI <- function(id) {
   # correct sessions / ID's that connect the ui and server here
   tagList(
     h2("Water Infrastructure Network"),
-    h2(check_package("bslib")),
     fluidRow(
       # Map occupies 1st column
       column(width = 7, leafletOutput(ns("map"), height=750)), # make sure to put the input inside ns()
