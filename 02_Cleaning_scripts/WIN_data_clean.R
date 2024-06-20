@@ -1,86 +1,81 @@
-# Load necessary libraries
+#### Import data and packages ####
+
+# Libraries
 library(sf)
-library(dplyr)
-library(leaflet)
+library(tidyverse)
 
-# Import the CSV data
-win_df <- read.csv("./01_Data_raw/WIN/WIN_data_merged_20240501.csv")
+# Data
+# From Nikki Dix
+GTMNERR <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
+# CRS: NAD83 / UTM zone 17N
+# WIN Data
+gps_data <- read.csv("./01_Data_raw/WIN/WIN_data_merged_20240501.csv")
 
-# Convert the coordinate columns to numeric and remove rows with missing coordinates
-win_df <- win_df %>%
-  mutate(Location_1 = as.numeric(Location_1),
-         Location_2 = as.numeric(Location_2)) %>%
-  filter(!is.na(Location_1) & !is.na(Location_2))
+#### GTMNERR boundary and aquatic preserves ####
 
-# Convert the CSV data to a spatial object
-win_sf <- win_df %>%
-  st_as_sf(coords = c("Location_1", "Location_2"), crs = 4326)
+# Transform to WGS84, EPGS 4326
+GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
-# Import and transform the GTMNERR shapefile, ensuring geometries are valid
-GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp") %>%
-  st_transform(crs = 4326) %>%
-  st_make_valid()
+# Make valid 
+# This has to be done if some polygons overlap
+GTMNERR <- st_make_valid(GTMNERR)
 
-# Import and transform the counties shapefile, ensuring geometries are valid
-counties_select <- st_read("./03_Data_for_app/shapefiles_new/counties_GTMNERR.shp") %>%
-  st_transform(crs = 4326) %>%
-  st_make_valid()
+# Check what the polygons are
+ggplot()+
+  geom_sf(data = GTMNERR) # Hmmm
 
-# Filter the CSV data to only include locations within the GTMNERR shapefile
-filtered_win_sf_GTMNERR <- win_sf[st_within(win_sf, GTMNERR, sparse = FALSE), ]
+# Get min/max coordinates for selecting from other shapefiles
+st_bbox(GTMNERR)
+# UTM is in meters. Add/subtract 5 km (more or less 0.05 degrees)
+xmin <- st_bbox(GTMNERR)$xmin - 0.05
+xmax <- st_bbox(GTMNERR)$xmax + 0.05
+ymin <- st_bbox(GTMNERR)$ymin - 0.05
+ymax <- st_bbox(GTMNERR)$ymax + 0.05
+# Create points from these coordinates
+pt1 <- st_point(c(xmin, ymin))
+pt2 <- st_point(c(xmax, ymin))
+pt3 <- st_point(c(xmin, ymax))
+pt4 <- st_point(c(xmax, ymax))
+# Put together as sf object and get bounding box
+bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 
-# Filter the CSV data to only include locations within the counties shapefile
-filtered_win_sf_counties <- win_sf[st_within(win_sf, counties_select, sparse = FALSE), ]
+# Filter GPS coordinates
+# Convert to sf object
+gps_sf <- st_as_sf(gps_data, coords = c("Location_2", "Location_1"), crs = 4326)
 
-# Convert the filtered spatial objects back to data frames and extract coordinates
-filtered_win_df_GTMNERR <- filtered_win_sf_GTMNERR %>%
-  mutate(Location_1 = st_coordinates(filtered_win_sf_GTMNERR)[,2],
-         Location_2 = st_coordinates(filtered_win_sf_GTMNERR)[,1]) %>%
-  st_drop_geometry() %>%
-  mutate(Location_1 = as.numeric(Location_1),
-         Location_2 = as.numeric(Location_2))
+# Crop GPS points within the bounding box
+gps_cropped <- st_crop(gps_sf, bound_box)
 
-filtered_win_df_counties <- filtered_win_sf_counties %>%
-  mutate(Location_1 = st_coordinates(filtered_win_sf_counties)[,2],
-         Location_2 = st_coordinates(filtered_win_sf_counties)[,1]) %>%
-  st_drop_geometry() %>%
-  mutate(Location_1 = as.numeric(Location_1),
-         Location_2 = as.numeric(Location_2))
+# Plot the results
+ggplot() +
+  geom_sf(data = GTMNERR, fill = NA, color = "blue") +
+  geom_sf(data = gps_cropped, color = "red") +
+  ggtitle("Filtered GPS Points within GTMNERR Bounding Box")
 
-# Save the filtered data as CSV files
-write.csv(filtered_win_df_GTMNERR, "./01_Data_raw/WIN/filtered_WIN_data_GTMNERR.csv", row.names = FALSE)
-write.csv(filtered_win_df_counties, "./01_Data_raw/WIN/filtered_WIN_data_counties.csv", row.names = FALSE)
+# View the filtered GPS coordinates
+print(gps_cropped)
 
-# Create a leaflet map for GTMNERR filtered points with polygon outlines
-map_GTMNERR <- leaflet() %>%
-  addTiles() %>%
-  addPolygons(data = GTMNERR, color = "blue", weight = 2, fillOpacity = 0.2, group = "GTMNERR") %>%
-  addCircleMarkers(data = filtered_win_df_GTMNERR,
-                   lng = ~Location_2, lat = ~Location_1,
-                   color = "blue", radius = 3,
-                   popup = ~paste("Location:", Location_1, Location_2),
-                   group = "Filtered Points") %>%
-  addLayersControl(overlayGroups = c("GTMNERR", "Filtered Points"),
-                   options = layersControlOptions(collapsed = FALSE))
+# Convert the cropped GPS points back to a dataframe and retain original data
+WIN_df <- as.data.frame(gps_cropped)
 
-# Print the map
-map_GTMNERR
+# If you need to retain only certain columns from the original data
+WIN_df <- gps_data[gps_data$Location_2 %in% st_coordinates(gps_cropped)[,1] & gps_data$Location_1 %in% st_coordinates(gps_cropped)[,2], ]
 
-# Create a leaflet map for county filtered points with polygon outlines
-map_counties <- leaflet() %>%
-  addTiles() %>%
-  addPolygons(data = counties_select, 
-              color = "red",
-              weight = 2, 
-              fillOpacity = 0.2,
-              group = "Counties") %>%
-  addCircleMarkers(data = filtered_win_df_counties,
-                   lng = ~Location_2, lat = ~Location_1,
-                   color = "red", radius = 3,
-                   popup = ~paste("Location:", Location_1, Location_2),
-                   group = "Filtered Points") %>%
-  addLayersControl(overlayGroups = c("Counties", "Filtered Points"),
-                   options = layersControlOptions(collapsed = FALSE))
+# Rename columns
+names(WIN_df)[names(WIN_df) == "Location_2"] <- "lat"
+names(WIN_df)[names(WIN_df) == "Location_1"] <- "lon"
 
-# Print the map
-map_counties
+#### Keep only columns with varying information ####
+# Function to remove columns with the same value in the whole column
+remove_constant_columns <- function(df) {
+  df <- df[, sapply(df, function(col) length(unique(col)) > 1)]
+  return(df)
+}
+
+WIN_df <- remove_constant_columns(WIN_df)
+
+#### Save data ####
+# Save the filtered data to a new CSV file
+# write.csv(WIN_df, "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", row.names = FALSE)
+# Save the filtered data to a .RData file
+save(WIN_df, file = "03_Data_for_app/WIN.RData")

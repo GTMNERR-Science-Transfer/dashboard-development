@@ -1,5 +1,5 @@
 # import data for this page
-win_df <- read.csv("./01_Data_raw/WIN/WIN_data_merged_20240501.csv")
+load("./03_Data_for_app/WIN.RData")
 
 global::find_directory_of_file("app.R")
 
