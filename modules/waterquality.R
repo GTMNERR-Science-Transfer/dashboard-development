@@ -1,3 +1,11 @@
+#### WQ locations data ------------------------------------------------
+load("./03_Data_for_app/WQ_locations.RData")
+WQ_data_locations <- WQ_locations %>% 
+  st_as_sf(coords = c("long", "lat"), crs = 4326)
+
+#### WQ data ------------------------------------------------
+load("./03_Data_for_app/WQ.RData")
+
 WQPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all sub pages so they use the
   # correct sessions / ID's that connect the ui and server here
