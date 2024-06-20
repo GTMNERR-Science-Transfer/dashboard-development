@@ -163,7 +163,47 @@ st_write(hydro_12_select, "03_Data_for_app/shapefiles_new/nhdwbd_huc12_dec17_GTM
 
 
 #### Water bodies ####
-waterbodies <- st_crop(st_read("01_Data_raw/shapefiles/nhd24waterbody_dec17/nhd24waterbody_dec17.shp"), bound_box) 
+waterbodies <- st_read("01_Data_raw/shapefiles/nhd24waterbody_dec17/nhd24waterbody_dec17.shp")
+# metadata/info: https://geodata.dep.state.fl.us/datasets/FDEP::florida-national-hydrography-dataset-nhd-waterbodies-24k/about
+# https://www.arcgis.com/sharing/rest/content/items/121cffac550f4937a98caf615454b595/info/metadata/metadata.xml?format=default&output=html
+
+# Transform to WGS84, EPGS 4326 (original is Albers Conical Equal Area)
+waterbodies <- st_transform(waterbodies, crs = 4326)
+# You will get warnings along the lines of:
+# GDAL Message 1: Sub-geometry 1 has coordinate dimension 2, but container has 3
+# Can be ignored: this shapefile also has a third (Z) dimension, this will
+# automatically be dropped in the next functions
+
+# This dataframe contains over half a million observations (shapefiles), I tried
+# to run st_make_valid on it, but it takes forever (and it needs to be done to use
+# st_crop). I let it run for hours and it never finished.
+# Instead I am going to to use the bound_box coordinates (enlarged) to select
+# the area needed
+# UTM is in meters. Add/subtract 25 km (more or less 0.25 degrees)
+xmin2 <- st_bbox(GTMNERR)$xmin - 0.25
+xmax2 <- st_bbox(GTMNERR)$xmax + 0.25
+ymin2 <- st_bbox(GTMNERR)$ymin - 0.25
+ymax2 <- st_bbox(GTMNERR)$ymax + 0.25
+
+# Extract lat and lon from the geometry column, and use those to make a smaller 
+# sf dataframe (but keep the geometry column so it is still a proper sf dataframe!)
+waterbodies_small <- waterbodies %>% 
+  mutate(lon = sf::st_coordinates(.)[,1],
+         lat = sf::st_coordinates(.)[,2]) %>% 
+  filter(lon >= xmin2 && lon <= xmax2,
+         lat >= ymin2 && lat <= ymax2)
+
+########## Does not work; takes too long. 06/20/2024. Make separate issue on Github
+# to deal with this
+# Make valid 
+# This has to be done if some polygons overlap
+time1 <- Sys.time()
+waterbodies <- st_make_valid(waterbodies)
+time2 <- Sys.time()
+time2 - time1
+# This takes a loooong time 
+
+waterbodies <- st_crop(waterbodies, bound_box) 
 
 ggplot()+
   geom_sf(data = GTMNERR, fill = NA, color = "blue", size = 3)+
@@ -180,14 +220,29 @@ ggplot()+
 st_write(landuse1, "03_Data_for_app/shapefiles_new/lu_sjrwmd_2014_GTMNERR.shp")
 
 #### Mangroves ####
-mangrove <- st_crop(st_read("01_Data_raw/shapefiles/mangroves_2020/mangroves_2020.shp"), minmax_coords)
+mangrove <- st_read("01_Data_raw/shapefiles/mangroves_2020/mangroves_2020.shp")
+mangrove <- st_transform(mangrove, crs = st_crs(GTMNERR))
+mangrove <- st_make_valid(mangrove)
+
+mangrove_select <- st_intersection(mangrove, GTMNERR)
 
 ggplot()+
-  geom_sf(data = GTMNERR, fill = "blue", alpha = 0.3)+
-  geom_sf(data = mangrove)
+  geom_sf(data = GTMNERR, fill = "blue", color = NA, alpha = 0.3)+
+  geom_sf(data = mangrove_select, fill = "green", color = NA)
 
-#### OFW? #### gdb file
+st_write(mangrove_select, "03_Data_for_app/shapefiles_new/mangrove_GTMNERR.shp",
+         append = FALSE)
 
+#### OFW: Outstanding Florida Waters #### gdb file
+ofw <- st_read("01_Data_raw/shapefiles/ofw_other_apr23.gdb")
+ofw <- st_transform(ofw, crs = st_crs(GTMNERR))
+ofw <- st_make_valid(ofw)
 
+ofw_select <- st_intersection(ofw, GTMNERR)
 
+ggplot()+
+  geom_sf(data = GTMNERR, fill = "blue", color = NA, alpha = 0.3)+
+  geom_sf(data = ofw_select, fill = "darkred", color = NA)
 
+st_write(mangrove_select, "03_Data_for_app/shapefiles_new/ofw_GTMNERR.shp",
+         append = FALSE)
