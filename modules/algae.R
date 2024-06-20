@@ -2,7 +2,19 @@ HABPageUI <- function(id) {
   ns <- NS(id)
   tagList(
     h2("Harmful Algal Bloom Data"),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page")
+    fluidRow(
+      #User inputs in 1st column
+      column(width = 3, selectInput(ns("genus"), "What genus of Algae do you want data for?", c("All", unique(GeneraData$genus))),
+             uiOutput("selectSpecies"),
+             uiOutput("selectDate")), #Reserve space for species dropdown input
+      # Map occupies 2nd column
+      column(width = 5, leafletOutput(ns("map"), height=750)),
+      # plot occupies rows in the 3rd column
+      column(width = 4, plotOutput(ns("timePlot")),
+             sliderInput("bins", "Number of bins:", 
+                         min = 1, max = 50, value = 30))
+      ),
+    actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
   )
 }
 
