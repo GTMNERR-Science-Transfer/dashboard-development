@@ -83,7 +83,15 @@ WIN_df <- remove_constant_columns(WIN_df)
 
 # Convert all columns to character before pivoting and retain the original row identifier
 WIN_df <- WIN_df %>%
-  select(-all_of(c("Station.ID", "Station.Name"))) %>%
+  select(-all_of(c("Station.ID", 
+                   "Station.Name", 
+                   "Org.Analyte.Name", 
+                   "DEP.Result.Value.Number", 
+                   "DEP.MDL",
+                   "DEP.PQL",
+                   "Org.Detection.Unit",
+                   "Org.Result.Unit",
+                   "Activity.End.Date.Time"))) %>%
   mutate(across(everything(), as.character)) %>%
   mutate_all(~ na_if(., "")) %>%
   pivot_longer(
