@@ -69,31 +69,35 @@ filter_dataframe <- function(df, filter_value = NULL) {
     group_by(Activity.Start.Date.Time) %>%
     summarize(across(everything(), ~mean(.x, na.rm = TRUE))) %>%
     select(where(~ n_distinct(.) > 2))
-
+  
   return(wide_df)
 }
 
 # create lineplot of recordings
-create_plot <- function(df, units_df, loc_name="GTMNERR", selected_column = NULL) {
+create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column = NULL) {
   # Initialize the plot with the x-axis
-  fig <- plot_ly(df, x = ~Activity.Start.Date.Time)
+  fig <- plot_ly(df, x = ~Activity.Start.Date.Time, source = "A")
   
   # Get the column names except the one for the x-axis
-  column_names <- colnames(df)[colnames(df) != "Activity.Start.Date.Time"]
+  column_names <- sort(colnames(df)[colnames(df) != "Activity.Start.Date.Time"])
+  
+  # Print statements for debugging
+  print(paste("Selected column: ", selected_column))
+  print("Available column names: ")
+  print(column_names)
   
   # Create a named vector for Y-axis titles
   y_axis_titles <- setNames(units_df$DEP.Result.Unit, units_df$DEP.Analyte.Name)
   
-  # Default to the first column if none selected
-  selected_column <- if (is.null(selected_column)) column_names[1] else selected_column
+  # Default to the first column if none selected or if the selected column doesn't exist
+  if (is.null(selected_column) || !selected_column %in% column_names) {
+    selected_column <- column_names[1]
+  }
   
   # Loop through each column and add a trace
   for (i in seq_along(column_names)) {
     fig <- fig %>%
-      add_trace(y = df[[column_names[i]]], 
-                name = column_names[i], 
-                type = 'scatter', 
-                mode = 'lines', 
+      add_trace(y = df[[column_names[i]]], name = column_names[i], type = 'scatter', mode = 'lines',
                 visible = if (column_names[i] == selected_column) TRUE else FALSE)
   }
   
@@ -105,10 +109,7 @@ create_plot <- function(df, units_df, loc_name="GTMNERR", selected_column = NULL
       args = list(
         list(visible = rep(FALSE, length(column_names))),
         list(
-          title = paste("Mean ", 
-                        column_names[i], 
-                        " for ", 
-                        loc_name),
+          title = paste("Mean ", column_names[i], " for ", loc_name),
           yaxis = list(title = y_axis_titles[column_names[i]])
         )
       ),
@@ -124,11 +125,17 @@ create_plot <- function(df, units_df, loc_name="GTMNERR", selected_column = NULL
            title = paste("Mean ", selected_column, " for ", loc_name),
            updatemenus = list(list(
              y = 0.8,
-             buttons = buttons
-           )))
+             buttons = buttons,
+             showactive = TRUE
+           ))) %>%
+    event_register("plotly_relayout") %>%
+    event_register("plotly_click")
   
   return(fig)
 }
+
+
+
 
 
 
@@ -170,7 +177,7 @@ WINPageServer <- function(id, parentSession) {
                   units_df = WIN_data_units, 
                   selected_column = selected_column())
     })
-
+    
     # Create the map
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
@@ -196,7 +203,7 @@ WINPageServer <- function(id, parentSession) {
           data = WIN_data_locations,
           popup = ~ paste("Station Name: ", HUC12.Name, "<br>",
                           "Start Date: ", Start.Date, "<br>"
-                          ),
+          ),
           group = "WIN",
           layerId = ~geometry
         )  %>%
@@ -262,14 +269,40 @@ WINPageServer <- function(id, parentSession) {
       })
     })
     
-    observeEvent(input$plotly_click, {
-      # Update the selected dropdown item based on the clicked plot trace
-      selected_trace <- event_data("plotly_click")$curveNumber
-      if (!is.null(selected_trace)) {
-        selected_column(colnames(WIN_df)[selected_trace + 1])
-      }
-    })
+  observeEvent(event_data("plotly_relayout", source = "A"), {
+    layout <- event_data("plotly_relayout", source = "A")
+    print("plotly_relayout event triggered")
+    print(layout)
+    if (!is.null(layout$'yaxis.title.text')) {
+      print(paste("Updating selected_column to:", layout$'yaxis.title.text'))
+      selected_column(layout$'yaxis.title.text')
+      
+      # Re-render the plot with the updated selected column
+      df <- filter_dataframe(WIN_df)
+      output$plot <- renderPlotly({
+        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+      })
+    }
+  })
 
+  observeEvent(event_data("plotly_click", source = "A"), {
+    selected_trace <- event_data("plotly_click", source = "A")$curveNumber
+    print("plotly_click event triggered")
+    print(selected_trace)
+    if (!is.null(selected_trace)) {
+      print(paste("Updating selected_column to:", names(df)[selected_trace + 1]))
+      selected_column(names(df)[selected_trace + 1])
+      
+      # Re-render the plot with the updated selected column
+      df <- filter_dataframe(WIN_df)
+      output$plot <- renderPlotly({
+        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+      })
+    }
+  })
+
+
+    
     observeEvent(input$go_back, {
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
     })
