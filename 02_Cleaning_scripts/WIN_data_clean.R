@@ -44,7 +44,7 @@ bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 gps_sf <- st_as_sf(gps_data, coords = c("Location_2", "Location_1"), crs = 4326)
 
 # Crop GPS points within the bounding box
-gps_cropped <- st_crop(gps_sf, bound_box)
+gps_cropped <- st_crop(gps_sf, bound_box) 
 
 # Plot the results
 ggplot() +
@@ -79,7 +79,21 @@ WIN_df <- remove_constant_columns(WIN_df)
 #### Reformat data to visualize easily ####
 # turn WIN_df into long format with the following columns
 # [dates, location_GPS, key, value] 
-# visualise only unique locations
+# visualize only unique locations
+
+# Convert all columns to character before pivoting and retain the original row identifier
+WIN_df <- WIN_df %>%
+  select(-all_of(c("Station.ID", "Station.Name"))) %>%
+  mutate(across(everything(), as.character)) %>%
+  mutate_all(~ na_if(., "")) %>%
+  pivot_longer(
+    cols =  -c(RowID), # Exclude the Row_ID column from pivoting
+    names_to = "variable",
+    values_to = "value"
+  ) %>%
+  mutate(value = na_if(value, ""))
+  # filter(!is.na(value) & value != "") # use this if space is an issue
+
 #### Save data ####
 # Save the filtered data to a new CSV file
 # write.csv(WIN_df, 

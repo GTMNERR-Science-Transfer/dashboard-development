@@ -1,9 +1,27 @@
 # import data for this page
 load("./03_Data_for_app/WIN.RData")
-WIN_data_locations <- WIN_df 
 
 #### Process data further ####
-
+# make datframe for map display and hover data
+WIN_data_locations = WIN_df %>%
+  filter(variable %in% c("geometry", 
+                       "HUC12.Name", 
+                       "Start.Date",
+                       "latitude",
+                       "longitude")
+         ) %>%
+  select(c(RowID, variable, value)) %>%
+  distinct(RowID, variable, value) %>%
+  pivot_wider(
+    names_from = variable,
+    values_from = value,
+    values_fill = list(value = NA)
+  ) %>%
+  distinct(geometry, HUC12.Name, Start.Date, latitude, longitude)%>%
+  mutate(
+    latitude = as.numeric(latitude),
+    longitude = as.numeric(longitude)
+  )
 
 #### Run the app #### 
 
@@ -16,12 +34,9 @@ WINPageUI <- function(id) {
     h2("Water Infrastructure Network"),
     fluidRow(
       # Map occupies 1st column
-      column(width = 7, leafletOutput(ns("map"), height=500)), # make sure to put the input inside ns()
-      # # histogram occupies rows in the 2nd column
-      # column(width = 5, plotOutput(ns("distPlot")),
-      #        sliderInput(ns("bins"), "Number of bins:", 
-      #                    min = 1, max = 50, value = 30)
-      # )
+      column(width = 7, leafletOutput(ns("map"), height="500px")), # make sure to put the input inside ns()
+      # histogram occupies rows in the 2nd column
+      column(width = 5, plotOutput(ns("plot"))),
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
@@ -32,25 +47,14 @@ WINPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-
-    # # Create the histogram
-    # output$distPlot <- renderPlot({
-    #   # generate bins based on input$bins from ui.R
-    #   x <- filter(WIN, ComponentShort == "ATEMP") %>%
-    #     select(Result) %>%
-    #     pull()
-    #   x <- as.numeric(x) # stop-gap measure because everything is characters
-    #   bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
-    #     length.out = input$bins + 1
-    #   )
-    # 
-    #   # draw the histogram with the specified number of bins
-    #   hist(x,
-    #     breaks = bins, col = "darkgray", border = "white",
-    #     xlab = "Air temperature (degrees Celsius)",
-    #     main = "Histogram of air temperatures"
-    #   )
-    # })
+    
+    # Reactive value to track popup bubble state
+    popup_visible <- reactiveVal(FALSE)
+    
+    # Default plot
+    output$plot <- renderPlot({
+      plot(1:10, 1:10, main = "Default Plot")
+    })
 
     # Create the map
     output$map <- renderLeaflet({
@@ -71,12 +75,15 @@ WINPageServer <- function(id, parentSession) {
             color = "white", weight = 2,
             bringToFront = TRUE
           ),
-          group = "Counties", popup = ~NAME
+          group = "Counties", popup = ~NAME, layerId = ~NAME
         ) %>%
         addMarkers(
           data = WIN_data_locations,
-          popup = ~ paste("Station Name: ", Station.Name, "<br>"),
-          group = "WIN"
+          popup = ~ paste("Station Name: ", HUC12.Name, "<br>",
+                          "Start Date: ", Start.Date, "<br>"
+                          ),
+          group = "WIN",
+          layerId = ~geometry
         )  %>%
         # Layers control (turning layers on and off)
         addLayersControl(
@@ -84,6 +91,49 @@ WINPageServer <- function(id, parentSession) {
           options = layersControlOptions(collapsed = FALSE)
         )  %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
+    })
+    
+    # Observe marker clicks
+    observeEvent(input$map_marker_click, {
+      click <- input$map_marker_click
+      if (!is.null(click)) {
+        clicked_id <- click$id
+        clicked_data <- WIN_data_locations %>%
+          filter(geometry == clicked_id)
+        
+        popup_visible(TRUE)
+        
+        output$plot <- renderPlot({
+          plot(31:35, 11:15, main = paste("Plot for Station:", clicked_data$HUC12.Name))
+          # Replace with actual plot code using clicked_data
+        })
+      }
+    })
+    
+    # Add observeEvent function for input$map_shape_click
+    observeEvent(input$map_shape_click, {
+      click <- input$map_shape_click
+      if (!is.null(click)) {
+        clicked_id <- click$id
+        clicked_data <- counties_select %>%
+          filter(NAME == clicked_id)
+        
+        popup_visible(TRUE)
+        
+        output$plot <- renderPlot({
+          plot(1:100, 21:120, main = paste("Plot for County:", clicked_data$NAME))
+          # Replace with actual plot code using clicked_data
+        })
+      }
+    })
+    
+    # Observe map clicks to hide the popup
+    observeEvent(input$map_click, {
+      popup_visible(FALSE)
+      
+      output$plot <- renderPlot({
+        plot(1:10, 1:10, main = "Default Plot")
+      })
     })
 
     observeEvent(input$go_back, {
