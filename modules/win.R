@@ -73,24 +73,33 @@ filter_dataframe <- function(df, filter_value = NULL) {
   return(wide_df)
 }
 
-# create lineplot of recordings
-create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column = NULL) {
+# New function to create the dropdown
+create_dropdown <- function(df, ns) {
+  column_names <- sort(colnames(df)[colnames(df) != "Activity.Start.Date.Time"])
+  print(paste("Creating dropdown with choices:", paste(column_names, collapse=", ")))
+  
+  selectInput(
+    inputId = ns("column_selector"),
+    label = "Select a Column",
+    choices = column_names,
+    selected = column_names[1]
+  )
+}
+
+# Modified create_plot function
+create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
+  print(paste("Creating plot for", selected_column))
   # Initialize the plot with the x-axis
-  fig <- plot_ly(df, x = ~Activity.Start.Date.Time, source = "A")
+  fig <- plot_ly(df, x = ~Activity.Start.Date.Time)
   
   # Get the column names except the one for the x-axis
   column_names <- sort(colnames(df)[colnames(df) != "Activity.Start.Date.Time"])
   
-  # Print statements for debugging
-  print(paste("Selected column: ", selected_column))
-  print("Available column names: ")
-  print(column_names)
-  
   # Create a named vector for Y-axis titles
   y_axis_titles <- setNames(units_df$DEP.Result.Unit, units_df$DEP.Analyte.Name)
   
-  # Default to the first column if none selected or if the selected column doesn't exist
-  if (is.null(selected_column) || !selected_column %in% column_names) {
+  # Ensure selected_column is not NULL or empty
+  if (is.null(selected_column) || selected_column == "") {
     selected_column <- column_names[1]
   }
   
@@ -101,90 +110,76 @@ create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column = NU
                 visible = if (column_names[i] == selected_column) TRUE else FALSE)
   }
   
-  # Create the dropdown buttons
-  buttons <- list()
-  for (i in seq_along(column_names)) {
-    buttons[[i]] <- list(
-      method = "update",
-      args = list(
-        list(visible = rep(FALSE, length(column_names))),
-        list(
-          title = paste("Mean ", column_names[i], " for ", loc_name),
-          yaxis = list(title = y_axis_titles[column_names[i]])
-        )
-      ),
-      label = column_names[i]
-    )
-    buttons[[i]]$args[[1]]$visible[i] <- TRUE
-  }
-  
   # Customize the layout
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = paste("Mean ", selected_column, " for ", loc_name),
-           updatemenus = list(list(
-             y = 0.8,
-             buttons = buttons,
-             showactive = TRUE
-           ))) %>%
-    event_register("plotly_relayout") %>%
-    event_register("plotly_click")
+           title = paste("Mean ", selected_column, " for ", loc_name))
   
   return(fig)
 }
 
 
-
-
-
-
 #### Run the app #### 
-
 find_directory_of_file("app.R")
 
+# Updated UI in WINPageUI
 WINPageUI <- function(id) {
-  ns <- NS(id) # This is an important part to add to all sub pages so they use the
-  # correct sessions / ID's that connect the ui and server here
+  ns <- NS(id)
   tagList(
     h2("Water Infrastructure Network"),
     fluidRow(
-      # Map occupies 1st column
-      column(width = 7, leafletOutput(ns("map"), height="500px")), # make sure to put the input inside ns()
-      # histogram occupies rows in the 2nd column
-      column(width = 5, plotlyOutput(ns("plot"), height="500px")),
+      column(width = 7, leafletOutput(ns("map"), height="500px")),
+      column(width = 5, plotlyOutput(ns("plot"), height="500px"))
+    ),
+    fluidRow(
+      column(width = 12, uiOutput(ns("dropdown_ui")))
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
 }
 
+# Updated Server logic in WINPageServer
 WINPageServer <- function(id, parentSession) {
-  moduleServer(id, function(input, output, session) { # this nested approach is 
-    # necessary to be able to us the "back" button, otherwise Shiny cannot find
-    # the id for "tabs"
+  moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # Reactive value to track the selected dropdown item
-    selected_column <- reactiveVal(NULL)
+    # Reactive value for the selected column
+    selected_column <- reactive({
+      print(paste("Selected column changed to:", input$column_selector))
+      input$column_selector
+    })
     
     # Reactive value to track popup bubble state
     popup_visible <- reactiveVal(FALSE)
     
+    # Create the dropdown UI
+    output$dropdown_ui <- renderUI({
+      print("Rendering dropdown UI")
+      df <- filter_dataframe(WIN_df)
+      create_dropdown(df, ns)
+    })
+    
+    # Update plot when dropdown selection changes
+    observeEvent(selected_column(), {
+      print(paste("Updating plot for", selected_column()))
+      output$plot <- renderPlotly({
+        df <- filter_dataframe(WIN_df)
+        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+      })
+    }, ignoreInit = FALSE)
+    
     # Default plot
     output$plot <- renderPlotly({
       df <- filter_dataframe(WIN_df)
-      create_plot(df, 
-                  units_df = WIN_data_units, 
-                  selected_column = selected_column())
+      create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
     })
     
     # Create the map
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
-        clearBounds() %>% # centers map on all min/max coords
-        # Base map
-        addTiles() %>% # Add default OpenStreetMap map tiles
-        # Polygons, add groups
+        clearBounds() %>%
+        addTiles() %>%
         addPolygons(
           data = GTMNERR, color = "purple", fill = NA,
           weight = 2, opacity = 1, group = "GTMNERR boundaries"
@@ -206,12 +201,11 @@ WINPageServer <- function(id, parentSession) {
           ),
           group = "WIN",
           layerId = ~geometry
-        )  %>%
-        # Layers control (turning layers on and off)
+        ) %>%
         addLayersControl(
-          overlayGroups = c("Counties", "GTMNERR boundaries", "WIN"), # 
+          overlayGroups = c("Counties", "GTMNERR boundaries", "WIN"),
           options = layersControlOptions(collapsed = FALSE)
-        )  %>%
+        ) %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
     
@@ -226,12 +220,8 @@ WINPageServer <- function(id, parentSession) {
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WIN_df, 
-                                 filter_value = clicked_data$HUC12.Name)
-          create_plot(df, 
-                      units_df = WIN_data_units, 
-                      loc_name = clicked_data$HUC12.Name, 
-                      selected_column = selected_column())
+          df <- filter_dataframe(WIN_df, filter_value = clicked_data$HUC12.Name)
+          create_plot(df, units_df = WIN_data_units, loc_name = clicked_data$HUC12.Name, selected_column = selected_column())
         })
       }
     })
@@ -247,12 +237,8 @@ WINPageServer <- function(id, parentSession) {
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WIN_df, 
-                                 filter_value = clicked_data$NAME)
-          create_plot(df, 
-                      units_df = WIN_data_units, 
-                      loc_name = clicked_data$NAME, 
-                      selected_column = selected_column())
+          df <- filter_dataframe(WIN_df, filter_value = clicked_data$NAME)
+          create_plot(df, units_df = WIN_data_units, loc_name = clicked_data$NAME, selected_column = selected_column())
         })
       }
     })
@@ -264,44 +250,9 @@ WINPageServer <- function(id, parentSession) {
       # Default plot
       output$plot <- renderPlotly({
         df <- filter_dataframe(WIN_df)
-        create_plot(df, units_df = WIN_data_units, 
-                    selected_column = selected_column())
+        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
       })
     })
-    
-  observeEvent(event_data("plotly_relayout", source = "A"), {
-    layout <- event_data("plotly_relayout", source = "A")
-    print("plotly_relayout event triggered")
-    print(layout)
-    if (!is.null(layout$'yaxis.title.text')) {
-      print(paste("Updating selected_column to:", layout$'yaxis.title.text'))
-      selected_column(layout$'yaxis.title.text')
-      
-      # Re-render the plot with the updated selected column
-      df <- filter_dataframe(WIN_df)
-      output$plot <- renderPlotly({
-        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
-      })
-    }
-  })
-
-  observeEvent(event_data("plotly_click", source = "A"), {
-    selected_trace <- event_data("plotly_click", source = "A")$curveNumber
-    print("plotly_click event triggered")
-    print(selected_trace)
-    if (!is.null(selected_trace)) {
-      print(paste("Updating selected_column to:", names(df)[selected_trace + 1]))
-      selected_column(names(df)[selected_trace + 1])
-      
-      # Re-render the plot with the updated selected column
-      df <- filter_dataframe(WIN_df)
-      output$plot <- renderPlotly({
-        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
-      })
-    }
-  })
-
-
     
     observeEvent(input$go_back, {
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
