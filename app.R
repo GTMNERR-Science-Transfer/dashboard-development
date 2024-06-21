@@ -17,7 +17,7 @@ ui <- dashboardPage(
       menuItem("Main Page", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", icon = icon("link")),
       menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("link")),
-      menuItem("Water Infrastructure Network", tabName = "win", icon = icon("link"))
+      menuItem("Water Infrastructure Network", tabName = "win", icon = icon("bridge-water", lib="font-awesome"))
     )
   ),
   dashboardBody(
