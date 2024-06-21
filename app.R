@@ -3,8 +3,8 @@
 
 # Note: not necessary to load packages here: this all happens in global.R
 
-source("functions.R")
 source("global.R")
+source("functions.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
