@@ -20,7 +20,8 @@ GTMNERR <- st_transform(GTMNERR, crs = 4326)
 epsg4326 <- leafletCRS(crsClass = "L.CRS.EPSG4326")
 # BUT! It actually seems that Leaflet does still want shapefiles in 4326, see
 # https://github.com/Leaflet/Leaflet/issues/4146 I also tried to change GTMNERR 
-# to crs 3857 but that threw errors
+# to crs 3857 but that threw errors. See second paragraph here: 
+# https://rstudio.github.io/leaflet/articles/projections.html
 
 m <- leaflet(data = GTMNERR, 
              options = leafletOptions(#crs = epsg4326,
