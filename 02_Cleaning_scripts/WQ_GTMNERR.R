@@ -13,7 +13,7 @@ library(tidyverse)
 library(readxl)
 
 ### 1. Read in data -----------------------------------------------------------
-WQ <- read_excel("01_Data_raw/Guana_WQ/Guana_masterdata.xlsx",
+WQ <- read_excel("01_Data_raw/Water_Quality/Guana_WQ/Guana_masterdata.xlsx",
                  sheet = 1, # There is only one sheet, but just to be safe
                  guess_max = 13000) # This is not ideal + cols 14 and 16 have a 
 # mix of logical and numbers. Lord.
@@ -24,7 +24,7 @@ WQ <- read_excel("01_Data_raw/Guana_WQ/Guana_masterdata.xlsx",
 #col_types = c("SampleDate" = "date", "#RQ" = "text")) # If not specified you get
 # warnings (as it expects logical; text only starts after row 1445)
 
-WQ_meta <- read_csv("01_Data_raw/Guana_WQ/guana_data_dictionary_updateGK.csv")
+WQ_meta <- read_csv("01_Data_raw/Water_Quality/Guana_WQ/guana_data_dictionary_updateGK.csv")
 # Some stations have two codes due to a name change (see Word doc with metadata)
 # Don't remove
 
@@ -89,9 +89,7 @@ WQ_data_available <- WQ %>%
 
 ### 4. Save data ---------------------------------------------------------------
 
-# Save it as an .Rdata (and .Rds?) file so it can be read into the Shiny app
-save(WQ, file = "03_Data_for_app/WQ.RData")
+# Save it as an .Rds file so it can be read into the Shiny app
 saveRDS(WQ, "03_Data_for_app/WQ.Rds")
 
-save(WQ_locations, file = "03_Data_for_app/WQ_locations.RData")
 saveRDS(WQ_locations, "03_Data_for_app/WQ_locations.Rds")
