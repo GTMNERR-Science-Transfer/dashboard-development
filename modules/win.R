@@ -127,7 +127,7 @@ find_directory_of_file("app.R")
 WINPageUI <- function(id) {
   ns <- NS(id)
   tagList(
-    h2("Water Infrastructure Network"),
+    h2("Water Information Network"),
     fluidRow(
       column(width = 7, leafletOutput(ns("map"), height="500px")),
       column(width = 5, plotlyOutput(ns("plot"), height="500px"))
