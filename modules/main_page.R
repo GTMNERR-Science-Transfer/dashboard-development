@@ -1,17 +1,52 @@
+
+#### Get WIN data locations
+# I am putting this here right now, but I feel we should move this to a cleaning
+# script so it doesn't need to be run every time someone uses the app (as with
+# WQ locations)
+WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
+
+WIN_data_locations = WIN_df %>%
+  filter(variable %in% c("geometry", 
+                         "HUC12.Name", 
+                         "Start.Date",
+                         "latitude",
+                         "longitude")
+  ) %>%
+  select(c(RowID, variable, value)) %>%
+  distinct(RowID, variable, value) %>%
+  pivot_wider(
+    names_from = variable,
+    values_from = value,
+    values_fill = list(value = NA)
+  ) %>%
+  distinct(geometry, HUC12.Name, Start.Date, latitude, longitude) %>%
+  mutate(
+    lat = as.numeric(latitude),
+    long = as.numeric(longitude),
+    dataset = "Watershed Information Network (DEP)"
+  ) %>% 
+  select(-geometry, - latitude, -longitude)
+
+#### WQ locations data ------------------------------------------------
+WQ_data_locations <- readRDS("./03_Data_for_app/WQ_locations.Rds")
+
+# For now, for testing, make WQ_locations the dataframe to be used for filtering
+datasets_location <- full_join(WQ_data_locations, WIN_data_locations)
+datasets_location <- st_as_sf(datasets_location, coords = c("long", "lat"), crs = 4326)
+
+### Define the UI -------------------------------------------------------------
 mainPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all subpages so they use the
   # correct sessions / ID's that connect the ui and server here
   tagList(
     h2("Main Page"),
     p("This is the main page of the Guana River Data Dashboard."),
+    # Dropdown menu for markers is above the map
     fluidRow(
-      # Map occupies 1st column
-      column(width = 10, leafletOutput(ns("map"), height=750)),
-      # histogram occupies rows in the 2nd column
-      # column(width = 5, plotOutput(ns("distPlot")),
-      #        sliderInput(ns("bins"), "Number of bins:", 
-      #                    min = 1, max = 50, value = 30)
-      # )
+      column(width = 7, uiOutput(ns("dropdown_ui"))),
+    ),
+    fluidRow(
+      column(width = 10, leafletOutput(ns("map"), height="500px")),
     ),
     # fluidRow(
     #   column(12, 
@@ -21,23 +56,27 @@ mainPageUI <- function(id) {
   )
 }
 
+### Define the server logic ----------------------------------------------------
 
 mainPageServer <- function(input, output, session) {
   ns <- session$ns
   
-  # Create the histogram
-  # output$distPlot <- renderPlot({
-  #   # generate bins based on input$bins from ui.R
-  #   x    <- filter(WQ,  ComponentShort == "ATEMP") %>% select(Result) %>% pull()
-  #   x <- as.numeric(x) # stop-gap measure because everything is characters
-  #   bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
-  #               length.out = input$bins + 1)
-  #   
-  #   # draw the histogram with the specified number of bins
-  #   hist(x, breaks = bins, col = 'darkgray', border = 'white',
-  #        xlab = 'Air temperature (degrees Celsius)',
-  #        main = 'Histogram of air temperatures')
+  # Reactive value for the selected dataset
+  # selected_dataset <- reactive({
+  #   print(paste("Selected dataset changed to:", input$dataset_selector))
+  #   input$dataset
   # })
+  
+  # Create the dropdown UI
+  output$dropdown_ui <- renderUI({
+    print("Rendering dropdown UI")
+    selectInput(
+      inputId = ns("dataset_selector"),
+      label = "Select a dataset",
+      choices = unique(datasets_location$dataset),
+      selected = unique(datasets_location$dataset)[1]
+    )
+  })
   
   # Create the map
   output$map <- renderLeaflet({
@@ -75,17 +114,7 @@ mainPageServer <- function(input, output, session) {
                   color = "darkblue", weight = 2, opacity = 1,
                   fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
                   group = "HUC12", popup = ~NAME) %>%
-      # addMarkers(data = HAB_data_locations,
-      #            popup = ~paste("Site: ", Site, "<br>",
-      #                           "County: ", County),
-      #            group = "HAB") %>% 
-      addMarkers(data = WQ_data_locations,
-                 popup = ~paste("Station: ", site_friendly, "<br>",
-                                "Location: ", wbid, "<br>",
-                                "Latest year of sampling: ", maxYear, "<br",
-                                "Sampling start year: ", minYear, "<br"),
-                 group = "WQ") %>% 
-      # # Layers control (turning layers on and off)
+      # Layers control (turning layers on and off)
       addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", 
                                          "WQ", "Mangroves", "Salt marshes",
                                          "Outstanding Florida Waters", "HUC10",
@@ -94,6 +123,23 @@ mainPageServer <- function(input, output, session) {
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
   })
   
+  # Select dataset to add markers to the plot
+  observeEvent(input$dataset_selector, {
+    # Filter data based on selected group
+    filtered_data <- datasets_location[datasets_location$dataset == input$dataset_selector,]
+    
+    # Add markers to the map - commented out the popup bc this only works for WQ data
+    print("Adding markers")
+    leafletProxy(ns("map")) %>%
+      clearMarkers() %>%
+      addMarkers(
+        data = filtered_data,
+        # popup = ~paste("Station: ", site_friendly, "<br>",
+        #                                           "Location: ", wbid, "<br>",
+        #                                           "Latest year of sampling: ", maxYear, "<br",
+        #                                           "Sampling start year: ", minYear, "<br")
+      )
+  })
   # Add buttons to go to other pages
   # observeEvent(input[[ns("go_to_subpage")]], {
   #   print("Go to subpage button clicked")
