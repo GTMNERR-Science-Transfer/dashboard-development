@@ -1,5 +1,5 @@
 # import data for this page
-load("./03_Data_for_app/WIN.RData")
+WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
 
 #### Process data further ####
 # make datframe for map display and hover data

@@ -9,7 +9,7 @@ library(tidyverse)
 GTMNERR <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 # CRS: NAD83 / UTM zone 17N
 # WIN Data
-gps_data <- read.csv("./01_Data_raw/WIN/WIN_data_merged_20240501.csv")
+gps_data <- read.csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv")
 
 #### GTMNERR boundary and aquatic preserves ####
 
@@ -107,5 +107,5 @@ WIN_df <- WIN_df %>%
 # write.csv(WIN_df, 
 #           "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", 
 #           row.names = FALSE)
-# Save the filtered data to a .RData file
-save(WIN_df, file = "03_Data_for_app/WIN.RData")
+# Save the filtered data to a .RDs file
+saveRDS(WIN_df, "03_Data_for_app/WIN.Rds")
