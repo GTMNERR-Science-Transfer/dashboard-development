@@ -40,10 +40,23 @@ try({
   print(paste0("Working dir: ", getwd()))
 }, silent = FALSE) # Setting silent = FALSE will print the error message to the console
 
-#### GTMNERR shapefile ------------------------------------------------
-GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR.shp")
-GTMNERR <- st_transform(GTMNERR, crs = 4326)
+### Load shapefiles ------------------------------------------------
 
-#### county shapefiles ------------------------------------------------
+##### GTMNERR shapefile ------------------------------------------------
+GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp")
+
+##### county shapefiles ------------------------------------------------
 counties_select <- st_read("./03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
-counties_select <- st_transform(counties_select, crs = 4326)
+
+##### HUC shapefiles ------------------------------------------------
+HUC10 <- st_read("./03_Data_for_app/shapefiles_new/nhdwbd_huc10_dec17_GTMNERR.shp")
+HUC12 <- st_read("./03_Data_for_app/shapefiles_new/nhdwbd_huc12_dec17_GTMNERR.shp")
+
+##### Outstanding Florida Waters (OFW) shapefiles ------------------------------
+ofw <- st_read("./03_Data_for_app/shapefiles_new/ofw_GTMNERR.shp")
+
+##### mangrove shapefiles -----------------------------------------------------
+mangroves <- st_read("./03_Data_for_app/shapefiles_new/mangrove_GTMNERR.shp")
+
+##### salt marsh shapefiles -----------------------------------------------------
+saltmarsh <- st_read("./03_Data_for_app/shapefiles_new/salt_marsh_GTMNERR.shp")

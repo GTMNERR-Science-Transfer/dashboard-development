@@ -55,6 +55,26 @@ mainPageServer <- function(input, output, session) {
                   highlightOptions = highlightOptions(color = "white", weight = 2,
                                                       bringToFront = TRUE),
                   group = "Counties", popup = ~NAME) %>% 
+      addPolygons(data = mangroves, 
+                  color = "darkgreen", weight = 2, opacity = 1,
+                  fill = TRUE, fillColor = "darkgreen", fillOpacity = 0.4,
+                  group = "Mangroves") %>% #, popup = ~Area_ha
+      addPolygons(data = ofw, 
+                  color = "darkorange", weight = 2, opacity = 1,
+                  fill = TRUE, fillColor = "darkorange", fillOpacity = 0.4,
+                  group = "Outstanding Florida Waters") %>%
+      addPolygons(data = saltmarsh, 
+                  color = "darkslateblue", weight = 2, opacity = 1,
+                  fill = TRUE, fillColor = "darkslateblue", fillOpacity = 0.4,
+                  group = "Salt marshes") %>%
+      addPolygons(data = HUC10, 
+                  color = "royalblue", weight = 2, opacity = 1,
+                  fill = TRUE, fillColor = "royalblue", fillOpacity = 0.2,
+                  group = "HUC10", popup = ~NAME) %>%
+      addPolygons(data = HUC12, 
+                  color = "darkblue", weight = 2, opacity = 1,
+                  fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
+                  group = "HUC12", popup = ~NAME) %>%
       # addMarkers(data = HAB_data_locations,
       #            popup = ~paste("Site: ", Site, "<br>",
       #                           "County: ", County),
@@ -66,7 +86,10 @@ mainPageServer <- function(input, output, session) {
                                 "Sampling start year: ", minYear, "<br"),
                  group = "WQ") %>% 
       # # Layers control (turning layers on and off)
-      addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
+      addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", 
+                                         "WQ", "Mangroves", "Salt marshes",
+                                         "Outstanding Florida Waters", "HUC10",
+                                         "HUC12"),
                        options = layersControlOptions(collapsed = FALSE)) %>%
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
   })
