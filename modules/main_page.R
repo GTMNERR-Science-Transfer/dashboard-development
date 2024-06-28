@@ -23,6 +23,7 @@ WIN_data_locations = WIN_df %>%
   mutate(
     lat = as.numeric(latitude),
     long = as.numeric(longitude),
+    type = "Water quality",
     dataset = "Watershed Information Network (DEP)"
   ) %>% 
   select(-geometry, - latitude, -longitude)
@@ -33,6 +34,9 @@ WQ_data_locations <- readRDS("./03_Data_for_app/WQ_locations.Rds")
 # For now, for testing, make WQ_locations the dataframe to be used for filtering
 datasets_location <- full_join(WQ_data_locations, WIN_data_locations)
 datasets_location <- st_as_sf(datasets_location, coords = c("long", "lat"), crs = 4326)
+
+color_palette <- colorFactor(palette = c("red"), #, "blue", "green", "purple"
+                             domain = datasets_location$type)
 
 ### Define the UI -------------------------------------------------------------
 mainPageUI <- function(id) {
@@ -61,20 +65,14 @@ mainPageUI <- function(id) {
 mainPageServer <- function(input, output, session) {
   ns <- session$ns
   
-  # Reactive value for the selected dataset
-  # selected_dataset <- reactive({
-  #   print(paste("Selected dataset changed to:", input$dataset_selector))
-  #   input$dataset
-  # })
-  
   # Create the dropdown UI
   output$dropdown_ui <- renderUI({
     print("Rendering dropdown UI")
     selectInput(
-      inputId = ns("dataset_selector"),
-      label = "Select a dataset",
-      choices = unique(datasets_location$dataset),
-      selected = unique(datasets_location$dataset)[1]
+      inputId = ns("datatype_selector"),
+      label = "Select a type of data to see locations with data availability",
+      choices = unique(datasets_location$type),
+      selected = unique(datasets_location$type)[1]
     )
   })
   
@@ -115,25 +113,34 @@ mainPageServer <- function(input, output, session) {
                   fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
                   group = "HUC12", popup = ~NAME) %>%
       # Layers control (turning layers on and off)
-      addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", 
-                                         "WQ", "Mangroves", "Salt marshes",
+      addLayersControl(overlayGroups = c("GTMNERR boundaries", "Counties", 
+                                         "Mangroves", "Salt marshes",
                                          "Outstanding Florida Waters", "HUC10",
                                          "HUC12"),
-                       options = layersControlOptions(collapsed = FALSE)) %>%
+                       options = layersControlOptions(collapsed = TRUE)) %>%
+      hideGroup(c("Counties", "Mangroves", "Salt marshes",
+                  "Outstanding Florida Waters", "HUC10", "HUC12")) %>% 
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
   })
   
   # Select dataset to add markers to the plot
-  observeEvent(input$dataset_selector, {
+  observeEvent(input$datatype_selector, {
     # Filter data based on selected group
-    filtered_data <- datasets_location[datasets_location$dataset == input$dataset_selector,]
+    filtered_data <- datasets_location[datasets_location$type == input$datatype_selector,]
     
     # Add markers to the map - commented out the popup bc this only works for WQ data
     print("Adding markers")
     leafletProxy(ns("map")) %>%
       clearMarkers() %>%
-      addMarkers(
+      addCircleMarkers(
         data = filtered_data,
+        color = ~color_palette(type),
+        opacity = 1,
+        fillOpacity = 0.5,
+        fillColor = ~color_palette(type),
+        fill = TRUE,
+        weight = 3,
+        radius = 8,
         # popup = ~paste("Station: ", site_friendly, "<br>",
         #                                           "Location: ", wbid, "<br>",
         #                                           "Latest year of sampling: ", maxYear, "<br",
