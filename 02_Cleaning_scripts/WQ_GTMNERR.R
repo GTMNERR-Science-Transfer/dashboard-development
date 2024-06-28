@@ -79,7 +79,9 @@ WQ_locations <- WQ %>%
   mutate(Year = year(SampleDate)) %>% 
   select(site_friendly, Year, site_acronym, lat, long, wbid, location) %>% 
   group_by(site_friendly, site_acronym, lat, long, wbid, location) %>% 
-  summarize(maxYear = max(Year), minYear = min(Year)) 
+  summarize(maxYear = max(Year), minYear = min(Year)) %>% 
+  mutate(type = "Water quality",
+         dataset = "Guana Water Quality Monitoring (GTMNERR)")
 
 WQ_data_available <- WQ %>% 
   mutate(Year = year(SampleDate)) %>% 

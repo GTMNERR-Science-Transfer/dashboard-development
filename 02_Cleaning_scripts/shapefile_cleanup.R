@@ -55,7 +55,7 @@ pt4 <- st_point(c(xmax, ymax))
 # Put together as sf object and get bounding box
 bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 
-##### Counties #####
+#### Counties #####
 counties <- st_read("01_Data_raw/shapefiles/countyshore_areas_sep15/countyshore_areas_sep15.shp")
 # CRS: Albers Conical Equal Area
 counties <- st_transform(counties, crs = st_crs(GTMNERR))
@@ -79,7 +79,7 @@ st_write(counties_select, "03_Data_for_app/shapefiles_new/counties_GTMNERR.shp",
          append = FALSE)
 # Ignore warnings when writing data: checked saved shapefile and it is correct
 
-##### Salt marshes #####
+#### Salt marshes #####
 salt_marsh <- st_read("01_Data_raw/shapefiles/salt_marsh_2020/salt_marsh_2020.shp")
 # CRS: NAD83(HARN) / Florida GDL Albers -> for visualization this is not a problem,
 # for consistency I am still changing the CRS
@@ -95,7 +95,7 @@ ggplot()+
 st_write(salt_marsh, "03_Data_for_app/shapefiles_new/salt_marsh_GTMNERR.shp",
          append = FALSE)
 
-##### Hydrology (several shapefiles) #####
+#### Hydrology (several shapefiles) #####
 hydro_6 <- st_read("01_Data_raw/shapefiles/nhdwbd_huc6_dec17/nhdwbd_huc6_dec17.shp")
 # CRS: Albers Conical Equal Area 
 hydro_6 <- st_transform(hydro_6, crs = st_crs(GTMNERR))
@@ -159,8 +159,7 @@ ggplot()+
 # Look up differences between HUCs to add to metadata
 st_write(hydro_10_select, "03_Data_for_app/shapefiles_new/nhdwbd_huc10_dec17_GTMNERR.shp", append = FALSE)
 st_write(hydro_12_select, "03_Data_for_app/shapefiles_new/nhdwbd_huc12_dec17_GTMNERR.shp", append = FALSE)
-#### CHECK WARNINGS of some values not being written (too long) #####
-
+#### Checked warnings of some values not being written (too long): looks fine
 
 #### Water bodies ####
 waterbodies <- st_read("01_Data_raw/shapefiles/nhd24waterbody_dec17/nhd24waterbody_dec17.shp")

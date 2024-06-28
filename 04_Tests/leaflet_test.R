@@ -15,7 +15,18 @@ GTMNERR <- st_read("03_Data_for_app/shapefiles_new/GTMNERR.shp")# CRS: Albers Co
 
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
-m <- leaflet(data = GTMNERR, options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+# Leaflet uses EPSG 3857, change this
+# https://gis.stackexchange.com/questions/48949/epsg-3857-or-4326-for-web-mapping
+epsg4326 <- leafletCRS(crsClass = "L.CRS.EPSG4326")
+# BUT! It actually seems that Leaflet does still want shapefiles in 4326, see
+# https://github.com/Leaflet/Leaflet/issues/4146 I also tried to change GTMNERR 
+# to crs 3857 but that threw errors. See second paragraph here: 
+# https://rstudio.github.io/leaflet/articles/projections.html
+
+m <- leaflet(data = GTMNERR, 
+             options = leafletOptions(#crs = epsg4326,
+                                      minZoom = 9, 
+                                      maxZoom = 18)) %>%
   #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
   clearBounds() %>% 
   addTiles() %>%  # Add default OpenStreetMap map tiles
@@ -32,7 +43,7 @@ HAB_data_locations <- HAB_data %>%
   distinct() %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
 
-leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+leaflet(options = leafletOptions(crs = epsg4326, minZoom = 9, maxZoom = 18)) %>%
   setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
   # Base map
   addTiles() %>%  # Add default OpenStreetMap map tiles
