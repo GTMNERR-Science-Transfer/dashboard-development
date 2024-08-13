@@ -18,8 +18,10 @@ WQ_GTMNERR <- readRDS("03_Data_for_app/WQ.Rds")
 # Having a column for the dates is advisable though, as it is a separate data
 # type. Update that later, not right now.
 
-# First make sure that every row has a UNID
+# First make sure that every row has a UNID and also add a column for the data
+# source / provider
 WQ_GTMNERR <- WQ_GTMNERR %>% 
+  mutate(data_source = "GTMNERR") %>% 
   arrange(UNID, StationCode, SampleDate, ComponentShort)
 
 for (i in 1:nrow(WQ_GTMNERR)){
@@ -53,8 +55,15 @@ WQ_GTMNERR_long <- WQ_GTMNERR_long %>%
 WQ_all <- WIN %>% 
   full_join(WQ_GTMNERR_long)
 
+unique(WQ_all$variable)
+
 ##### NOTE ######
 # We should make the names for lat, long, station name etc the same, so we can use
-# everything together properly in the functions that select and search
+# everything together properly in the functions that select and search. Probably 
+# best to do this in the cleaning files - change the headers, with a lookup
+# table.
+# Other solution: pick the dataset first and then we can keep the column names
+# the same...? But we do have to align lat and long to get the locations.
+# Also before making long, add a column that indicates which dataset it is.
 
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")

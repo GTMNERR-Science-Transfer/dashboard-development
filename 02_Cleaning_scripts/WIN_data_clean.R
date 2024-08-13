@@ -92,6 +92,8 @@ WIN_df <- WIN_df %>%
                    "Org.Detection.Unit",
                    "Org.Result.Unit",
                    "Activity.End.Date.Time"))) %>%
+  # Add a column to record the data source/provider
+  mutate(data_source = "WIN") %>% # or change this to DEP?
   mutate(across(everything(), as.character)) %>%
   mutate_all(~ na_if(., "")) %>%
   pivot_longer(
@@ -108,4 +110,5 @@ WIN_df <- WIN_df %>%
 #           "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", 
 #           row.names = FALSE)
 # Save the filtered data to a .RDs file
+
 saveRDS(WIN_df, "03_Data_for_app/WIN.Rds")
