@@ -1,3 +1,14 @@
+########################################################################
+########## NERRS Science Transfer project - GTMNERR        #############
+########################################################################
+
+# Geraldine Klarenberg, PhD
+# gklarenberg@ufl.edu
+# Created June 2024
+# Last updated: 12 August 2024
+
+# This page shows a map, with a dropdown menu to pick types of 
+# datasets, as well as shapefiles for the area
 
 #### Get WIN data locations
 # I am putting this here right now, but I feel we should move this to a cleaning
@@ -37,6 +48,10 @@ datasets_location <- st_as_sf(datasets_location, coords = c("long", "lat"), crs 
 
 color_palette <- colorFactor(palette = c("red"), #, "blue", "green", "purple"
                              domain = datasets_location$type)
+
+#### HAB locations data ------------------------------------------------
+# Add this at some point so there is another dataset that shows up in the dropdown
+# menu
 
 ### Define the UI -------------------------------------------------------------
 mainPageUI <- function(id) {

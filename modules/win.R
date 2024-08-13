@@ -1,9 +1,19 @@
-# import data for this page
-WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
+########################################################################
+########## NERRS Science Transfer project - GTMNERR        #############
+########################################################################
+
+# Geraldine Klarenberg, PhD
+# Email: gklarenberg@ufl.edu
+# Christopher Marais
+# Email: 
+# Last updated: 12 August 2024
+
+# import all WQ data for this page (WIN and Guana spreadsheet)
+WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 
 #### Process data further ####
 # make datframe for map display and hover data
-WIN_data_locations = WIN_df %>%
+WQ_data_locations = WQ_df %>%
   filter(variable %in% c("geometry", 
                        "HUC12.Name", 
                        "Start.Date",
@@ -23,7 +33,7 @@ WIN_data_locations = WIN_df %>%
     longitude = as.numeric(longitude)
   )
 
-WIN_data_units = WIN_df %>%
+WQ_data_units = WQ_df %>%
   filter(variable %in% c("DEP.Analyte.Name", 
                          "DEP.Result.Unit")
   ) %>%
@@ -156,7 +166,7 @@ WINPageServer <- function(id, parentSession) {
     # Create the dropdown UI
     output$dropdown_ui <- renderUI({
       print("Rendering dropdown UI")
-      df <- filter_dataframe(WIN_df)
+      df <- filter_dataframe(WQ_df)
       create_dropdown(df, ns)
     })
     
@@ -164,15 +174,15 @@ WINPageServer <- function(id, parentSession) {
     observeEvent(selected_column(), {
       print(paste("Updating plot for", selected_column()))
       output$plot <- renderPlotly({
-        df <- filter_dataframe(WIN_df)
-        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+        df <- filter_dataframe(WQ_df)
+        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
       })
     }, ignoreInit = FALSE)
     
     # Default plot
     output$plot <- renderPlotly({
-      df <- filter_dataframe(WIN_df)
-      create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+      df <- filter_dataframe(WQ_df)
+      create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
     })
     
     # Create the map
@@ -195,15 +205,15 @@ WINPageServer <- function(id, parentSession) {
           group = "Counties", popup = ~NAME, layerId = ~NAME
         ) %>%
         addMarkers(
-          data = WIN_data_locations,
+          data = WQ_data_locations,
           popup = ~ paste("Station Name: ", HUC12.Name, "<br>",
                           "Start Date: ", Start.Date, "<br>"
           ),
-          group = "WIN",
+          group = "WQ",
           layerId = ~geometry
         ) %>%
         addLayersControl(
-          overlayGroups = c("Counties", "GTMNERR boundaries", "WIN"),
+          overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
           options = layersControlOptions(collapsed = FALSE)
         ) %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
@@ -214,14 +224,14 @@ WINPageServer <- function(id, parentSession) {
       click <- input$map_marker_click
       if (!is.null(click)) {
         clicked_id <- click$id
-        clicked_data <- WIN_data_locations %>%
+        clicked_data <- WQ_data_locations %>%
           filter(geometry == clicked_id)
         
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WIN_df, filter_value = clicked_data$HUC12.Name)
-          create_plot(df, units_df = WIN_data_units, loc_name = clicked_data$HUC12.Name, selected_column = selected_column())
+          df <- filter_dataframe(WQ_df, filter_value = clicked_data$HUC12.Name)
+          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$HUC12.Name, selected_column = selected_column())
         })
       }
     })
@@ -237,8 +247,8 @@ WINPageServer <- function(id, parentSession) {
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WIN_df, filter_value = clicked_data$NAME)
-          create_plot(df, units_df = WIN_data_units, loc_name = clicked_data$NAME, selected_column = selected_column())
+          df <- filter_dataframe(WQ_df, filter_value = clicked_data$NAME)
+          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$NAME, selected_column = selected_column())
         })
       }
     })
@@ -249,8 +259,8 @@ WINPageServer <- function(id, parentSession) {
       
       # Default plot
       output$plot <- renderPlotly({
-        df <- filter_dataframe(WIN_df)
-        create_plot(df, units_df = WIN_data_units, selected_column = selected_column())
+        df <- filter_dataframe(WQ_df)
+        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
       })
     })
     

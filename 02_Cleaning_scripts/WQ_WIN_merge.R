@@ -53,4 +53,8 @@ WQ_GTMNERR_long <- WQ_GTMNERR_long %>%
 WQ_all <- WIN %>% 
   full_join(WQ_GTMNERR_long)
 
+##### NOTE ######
+# We should make the names for lat, long, station name etc the same, so we can use
+# everything together properly in the functions that select and search
+
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")
