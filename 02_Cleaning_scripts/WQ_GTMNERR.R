@@ -28,6 +28,13 @@ WQ_meta <- read_csv("01_Data_raw/Water_Quality/Guana_WQ/guana_data_dictionary_up
 # Some stations have two codes due to a name change (see Word doc with metadata)
 # Don't remove
 
+lookup_names <- read_csv("03_Data_for_app/WQ_lookup_names.csv")
+
+# Change column names so we can later merge this with other WQ data
+recode_vec <- setNames(lookup_names$original_name, lookup_names$dashboard_name)
+WQ <- WQ %>% 
+  rename(any_of(recode_vec))
+
 ### 2. Check categorical values ------------------------------------------------
 # Check station names, componentLong and componentShort (spelling etc)
 unique(WQ$StationCode)
@@ -61,24 +68,23 @@ unique(WQ$Remark) # inconsistent... But there are some capital letters that
 names(WQ_meta)[names(WQ_meta) == "station_code"] <- "StationCode"
 
 WQ <- WQ %>% 
-  left_join(WQ_meta) %>% 
-  select(-Lat, -Long)
+  left_join(WQ_meta) 
 
 # Stations missing from metadata: GL1.5, GL2.5 and GL3.5 -> added manually and
 # emailed Nikki
 
-which(is.na(WQ$lat))
-which(is.na(WQ$long))
+which(is.na(WQ$Latitude))
+which(is.na(WQ$Longitude))
 
-WQ[which(is.na(WQ$lat)),] # duplicates?? Remove for now; emailed Nikki
-WQ <- WQ[-which(is.na(WQ$lat)),]
+WQ[which(is.na(WQ$Latitude)),] # duplicates?? Remove for now; emailed Nikki
+WQ <- WQ[-which(is.na(WQ$Latitude)),]
 
 # Create a separate dataframe with only station info, not the data (makes map
 # too heavy)
 WQ_locations <- WQ %>% 
   mutate(Year = year(SampleDate)) %>% 
-  select(site_friendly, Year, site_acronym, lat, long, wbid, location) %>% 
-  group_by(site_friendly, site_acronym, lat, long, wbid, location) %>% 
+  select(site_friendly, Year, site_acronym, Latitude, Longitude, wbid, location) %>% 
+  group_by(site_friendly, site_acronym, Latitude, Longitude, wbid, location) %>% 
   summarize(maxYear = max(Year), minYear = min(Year)) %>% 
   mutate(type = "Water quality",
          dataset = "Guana Water Quality Monitoring (GTMNERR)")
@@ -86,7 +92,7 @@ WQ_locations <- WQ %>%
 WQ_data_available <- WQ %>% 
   mutate(Year = year(SampleDate)) %>% 
   select(StationCode, Year, SampleType, ComponentShort, ComponentLong, site_friendly, 
-         site_acronym, lat, long, wbid, location) %>% 
+         site_acronym, Latitude, Longitude, wbid, location) %>% 
   distinct()
 
 ### 4. Save data ---------------------------------------------------------------
