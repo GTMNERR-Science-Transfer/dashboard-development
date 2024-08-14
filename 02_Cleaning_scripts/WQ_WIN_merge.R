@@ -43,7 +43,7 @@ WQ_GTMNERR_long <- WQ_GTMNERR %>%
 # one dataset is?)
 
 min(as.numeric(WQ_GTMNERR_long$UNID)) # 1
-max(as.numeric(WQ_GTMNERR_long$UNID)) # 17098
+max(as.numeric(WQ_GTMNERR_long$UNID)) # 5016 (used to be 17098?)
 
 min(as.numeric(WIN$RowID)) # 55135
 max(as.numeric(WIN$RowID)) # 3677602
@@ -57,13 +57,5 @@ WQ_all <- WIN %>%
 
 unique(WQ_all$variable)
 
-##### NOTE ######
-# We should make the names for lat, long, station name etc the same, so we can use
-# everything together properly in the functions that select and search. Probably 
-# best to do this in the cleaning files - change the headers, with a lookup
-# table.
-# Other solution: pick the dataset first and then we can keep the column names
-# the same...? But we do have to align lat and long to get the locations.
-# Also before making long, add a column that indicates which dataset it is.
-
+# Save data
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")
