@@ -32,6 +32,12 @@ for (i in 1:nrow(WQ_GTMNERR)){
 # Check there are no duplicates
 sum(duplicated(WQ_GTMNERR$UNID))
 
+# Add a geometry column, to later use for clicking markers (we might change this)
+WQ_GTMNERR <- st_as_sf(WQ_GTMNERR, coords = c("Longitude", "Latitude"), 
+                       crs = 4326, remove = FALSE)
+# Turn back into dataframe with geometry as a column
+WQ_GTMNERR <- as.data.frame(WQ_GTMNERR)
+
 WQ_GTMNERR_long <- WQ_GTMNERR %>% 
   mutate(across(everything(), as.character)) %>%
   mutate_all(~ na_if(., "")) %>% 
