@@ -1,3 +1,14 @@
+########################################################################
+########## NERRS Science Transfer project - GTMNERR        #############
+########################################################################
+
+# Geraldine Klarenberg, PhD
+# gklarenberg@ufl.edu
+# Created June 2024
+# Last updated: 12 August 2024
+
+# This page shows a map, with a dropdown menu to pick types of 
+# datasets, as well as shapefiles for the area
 
 #### Get WIN data locations
 # I am putting this here right now, but I feel we should move this to a cleaning
@@ -7,10 +18,10 @@ WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
 
 WIN_data_locations = WIN_df %>%
   filter(variable %in% c("geometry", 
-                         "HUC12.Name", 
-                         "Start.Date",
-                         "latitude",
-                         "longitude")
+                         "HUC12Name", 
+                         "SampleDate",
+                         "Latitude",
+                         "Longitude")
   ) %>%
   select(c(RowID, variable, value)) %>%
   distinct(RowID, variable, value) %>%
@@ -19,24 +30,32 @@ WIN_data_locations = WIN_df %>%
     values_from = value,
     values_fill = list(value = NA)
   ) %>%
-  distinct(geometry, HUC12.Name, Start.Date, latitude, longitude) %>%
+  distinct(geometry, HUC12Name, SampleDate, Latitude, Longitude) %>%
   mutate(
-    lat = as.numeric(latitude),
-    long = as.numeric(longitude),
+    SampleDate = ymd_hms(SampleDate),
+    Latitude = as.numeric(Latitude),
+    Longitude = as.numeric(Longitude),
     type = "Water quality",
-    dataset = "Watershed Information Network (DEP)"
+    dataset = "Watershed Information Network (DEP)", # Update this so we use data_source
+    minYear = min(year(SampleDate)),
+    maxYear = max(year(SampleDate))
   ) %>% 
-  select(-geometry, - latitude, -longitude)
+  select(-geometry, -SampleDate)
 
 #### WQ locations data ------------------------------------------------
 WQ_data_locations <- readRDS("./03_Data_for_app/WQ_locations.Rds")
 
 # For now, for testing, make WQ_locations the dataframe to be used for filtering
 datasets_location <- full_join(WQ_data_locations, WIN_data_locations)
-datasets_location <- st_as_sf(datasets_location, coords = c("long", "lat"), crs = 4326)
+datasets_location <- st_as_sf(datasets_location, coords = c("Longitude", "Latitude"), crs = 4326)
+datasets_location <- datasets_location[!duplicated(datasets_location),]
 
-color_palette <- colorFactor(palette = c("red"), #, "blue", "green", "purple"
-                             domain = datasets_location$type)
+color_palette <- colorFactor(palette = c("red", "goldenrod1"), #, "blue", "green"
+                             domain = datasets_location$dataset)
+
+#### HAB locations data ------------------------------------------------
+# Add this at some point so there is another dataset that shows up in the dropdown
+# menu
 
 ### Define the UI -------------------------------------------------------------
 mainPageUI <- function(id) {
@@ -79,8 +98,8 @@ mainPageServer <- function(input, output, session) {
   # Create the map
   output$map <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
-      #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
-      clearBounds() %>% # centers map on all min/max coords
+      setView(-81.289, lat=29.905, zoom = 10) %>% 
+      #clearBounds() %>% # centers map on all min/max coords
       # Base map
       addTiles() %>%  # Add default OpenStreetMap map tiles
       # Polygons, add groups
@@ -127,25 +146,28 @@ mainPageServer <- function(input, output, session) {
   observeEvent(input$datatype_selector, {
     # Filter data based on selected group
     filtered_data <- datasets_location[datasets_location$type == input$datatype_selector,]
-    
+    print(filtered_data)
     # Add markers to the map - commented out the popup bc this only works for WQ data
     print("Adding markers")
     leafletProxy(ns("map")) %>%
       clearMarkers() %>%
-      addCircleMarkers(
-        data = filtered_data,
-        color = ~color_palette(type),
-        opacity = 1,
-        fillOpacity = 0.5,
-        fillColor = ~color_palette(type),
-        fill = TRUE,
-        weight = 3,
-        radius = 8,
-        # popup = ~paste("Station: ", site_friendly, "<br>",
-        #                                           "Location: ", wbid, "<br>",
-        #                                           "Latest year of sampling: ", maxYear, "<br",
-        #                                           "Sampling start year: ", minYear, "<br")
-      )
+      addAwesomeMarkers(icon = makeAwesomeIcon(icon = "flask", markerColor = "orange", library = "fa",
+                                               iconColor = "black"),
+                        data = filtered_data) #%>%
+      # addCircleMarkers(
+      #   data = filtered_data,
+      #   color = ~color_palette(dataset),
+      #   opacity = 1,
+      #   fillOpacity = 0.5,
+      #   fillColor = ~color_palette(dataset),
+      #   fill = TRUE,
+      #   weight = 3,
+      #   radius = 8,
+      # popup = ~paste("Station: ", site_friendly, "<br>",
+      #                                           "Location: ", wbid, "<br>",
+      #                                           "Latest year of sampling: ", maxYear, "<br",
+      #                                           "Sampling start year: ", minYear, "<br")
+      #)
   })
   # Add buttons to go to other pages
   # observeEvent(input[[ns("go_to_subpage")]], {

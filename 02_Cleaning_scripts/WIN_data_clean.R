@@ -9,7 +9,14 @@ library(tidyverse)
 GTMNERR <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 # CRS: NAD83 / UTM zone 17N
 # WIN Data
-gps_data <- read.csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv")
+gps_data <- read_csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv")
+
+lookup_names <- read_csv("03_Data_for_app/WQ_lookup_names.csv")
+
+# Change column names so we can later merge this with other WQ data
+recode_vec <- setNames(lookup_names$original_name, lookup_names$dashboard_name)
+gps_data <- gps_data %>% 
+  rename(any_of(recode_vec))
 
 #### GTMNERR boundary and aquatic preserves ####
 
@@ -41,7 +48,7 @@ bound_box <- st_bbox(st_sfc(pt1, pt3, pt4, pt2, crs = st_crs(GTMNERR)))
 
 # Filter GPS coordinates
 # Convert to sf object
-gps_sf <- st_as_sf(gps_data, coords = c("Location_2", "Location_1"), crs = 4326)
+gps_sf <- st_as_sf(gps_data, coords = c("Longitude", "Latitude"), crs = 4326)
 
 # Crop GPS points within the bounding box
 gps_cropped <- st_crop(gps_sf, bound_box) 
@@ -65,7 +72,7 @@ coordinates <- st_coordinates(gps_cropped)
 WIN_df <- cbind(WIN_df, coordinates)
 
 # Rename the coordinates columns if necessary
-colnames(WIN_df)[(ncol(WIN_df)-1):ncol(WIN_df)] <- c("longitude", "latitude")
+colnames(WIN_df)[(ncol(WIN_df)-1):ncol(WIN_df)] <- c("Longitude", "Latitude")
 
 #### Keep only columns with varying information ####
 # Function to remove columns with the same value in the whole column
@@ -83,15 +90,17 @@ WIN_df <- remove_constant_columns(WIN_df)
 
 # Convert all columns to character before pivoting and retain the original row identifier
 WIN_df <- WIN_df %>%
-  select(-all_of(c("Station.ID", 
-                   "Station.Name", 
-                   "Org.Analyte.Name", 
-                   "DEP.Result.Value.Number", 
-                   "DEP.MDL",
-                   "DEP.PQL",
-                   "Org.Detection.Unit",
-                   "Org.Result.Unit",
-                   "Activity.End.Date.Time"))) %>%
+  select(-all_of(c("StationID", 
+                   "StationName", 
+                   "OrgAnalyteName", 
+                   "OrgResultValue", #GK: changed this from "DEPResultValueNumber", as I believe it is the DEP value we want to keep?
+                   "DEPMDL",
+                   "DEPPQL",
+                   "OrgDetectionUnit",
+                   "OrgResultUnit",
+                   "ActivityEndDateTime"))) %>%
+  # Add a column to record the data source/provider
+  mutate(data_source = "WIN") %>% # or change this to DEP?
   mutate(across(everything(), as.character)) %>%
   mutate_all(~ na_if(., "")) %>%
   pivot_longer(
@@ -108,4 +117,5 @@ WIN_df <- WIN_df %>%
 #           "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", 
 #           row.names = FALSE)
 # Save the filtered data to a .RDs file
+
 saveRDS(WIN_df, "03_Data_for_app/WIN.Rds")
