@@ -95,7 +95,7 @@ create_dropdown <- function(df, ns) {
   
   selectInput(
     inputId = ns("column_selector"),
-    label = "Select a Column",
+    label = "Select a Variable of Interest",
     choices = column_names,
     selected = column_names[1]
   )
@@ -130,7 +130,7 @@ create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = paste("Mean ", selected_column, " for ", loc_name))
+           title = paste("Mean daily ", selected_column, " for ", loc_name))
   
   return(fig)
 }
@@ -145,11 +145,31 @@ WINPageUI <- function(id) {
   tagList(
     h2("Water Quality Data"),
     fluidRow(
-      column(width = 7, leafletOutput(ns("map"), height="500px")),
-      column(width = 5, plotlyOutput(ns("plot"), height="500px"))
+      column(width = 12,
+             div(style = "margin-bottom: 20px;",
+                 p("This section provides an overview of water quality data. 
+                   You can select a water quality variable of interest by using
+                   the dropdown menu. Click on a marker to see a graph of
+                   all available data for that specific location")
+             )
+      )
     ),
     fluidRow(
       column(width = 12, uiOutput(ns("dropdown_ui")))
+    ),
+    fluidRow(
+      column(width = 12, 
+             div(style = "margin-bottom: 20px;",
+                 leafletOutput(ns("map"), height="500px")
+             )
+      )
+    ),
+    fluidRow(
+      column(width = 12, 
+             div(style = "margin-bottom: 20px;",
+                 plotlyOutput(ns("plot"), height="500px")
+              )
+      )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
