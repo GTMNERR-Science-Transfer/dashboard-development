@@ -121,7 +121,7 @@ create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
   # Loop through each column and add a trace
   for (i in seq_along(column_names)) {
     fig <- fig %>%
-      add_trace(y = df[[column_names[i]]], name = column_names[i], type = 'scatter', mode = 'lines',
+      add_trace(y = df[[column_names[i]]], name = column_names[i], type = 'scatter', mode = 'lines+markers',
                 showlegend = FALSE,
                 visible = if (column_names[i] == selected_column) TRUE else FALSE)
   }
