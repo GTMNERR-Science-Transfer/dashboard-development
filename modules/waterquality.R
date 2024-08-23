@@ -14,9 +14,11 @@ library(tidyverse)
 WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 
 #### Process data further ####
+# MOVE THIS TO THE CLEANING SCRIPT!!
 # make datframe for map display and hover data
 WQ_data_locations = WQ_df %>%
-  filter(variable %in% c("geometry", # we don't need this?
+  filter(variable %in% c("site", "site_friendly", "site_acronym",
+                         "geometry", 
                       #"HUC12Name", # Changed for now (bc GTM WQ data does not have that variable) BUT we should also include a station name of some sort
                        "SampleDate", # changed, from StartDate - but also not necessary for locations
                        "Latitude",
@@ -30,7 +32,7 @@ WQ_data_locations = WQ_df %>%
     values_from = value,
     values_fill = list(value = NA)
   ) %>%
-  distinct(Latitude, Longitude, data_source, geometry) %>%
+  distinct(Latitude, Longitude, data_source, geometry, site, site_friendly, site_acronym) %>%
   mutate(
     Latitude = as.numeric(Latitude),
     Longitude = as.numeric(Longitude)
@@ -51,7 +53,7 @@ WQ_data_units = WQ_df %>%
   distinct(ComponentLong, Unit, data_source)
 
 #### Functions ####
-# make dataframe for click plots
+# make dataframe for click plots - filter for correct stations
 filter_dataframe <- function(df, filter_value = NULL) {
   if (!is.null(filter_value)) {
     # Step 1: Identify the relevant RowIDs
@@ -72,18 +74,21 @@ filter_dataframe <- function(df, filter_value = NULL) {
     pivot_wider(names_from = variable, values_from = value) %>%
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
-           Result) %>%
+           Result,
+           geometry, site, site_friendly, site_acronym) %>%
     pivot_wider(names_from = ComponentLong, 
                 values_from = Result,
                 values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
     mutate(SampleDate = ymd_hms(SampleDate)) %>% # 
     #mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
     #mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd
-    mutate(across(-SampleDate, ~ as.numeric(.))) %>%
+    mutate(across(-c(SampleDate, geometry, site, site_friendly, site_acronym), ~ as.numeric(.))) %>%
     mutate(SampleDate = as.Date(SampleDate)) %>%
-    group_by(SampleDate) %>%
-    summarize(across(everything(), ~mean(.x, na.rm = TRUE))) %>%
-    select(where(~ n_distinct(.) > 2))
+    group_by(SampleDate, geometry, site, site_friendly, site_acronym) %>%
+    summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
+  # strictly speaking, but it's nice to keep for if we ever want to adjust this function
+  # to work for more than 1 variable
+    #select(where(~ n_distinct(.) > 2))
   
   return(wide_df)
 }
@@ -102,7 +107,7 @@ create_dropdown <- function(df, ns) {
 }
 
 # Modified create_plot function
-create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
+create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
   print(paste("Creating plot for", selected_column))
   # Initialize the plot with the x-axis
   fig <- plot_ly(df, x = ~SampleDate)
@@ -130,7 +135,7 @@ create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = list(text = paste0("Mean daily ", selected_column, " for ", loc_name), 
+           title = list(text = paste0("Mean daily ", selected_column, " for station ", loc_name), 
                         y = 0.90), 
            margin = list(t = 60),
            plot_bgcolor = '#e5ecf6',
@@ -245,7 +250,7 @@ WINPageServer <- function(id, parentSession) {
                           #"Start Date: ", SampleDate, "<br>"
           ),
           group = "WQ",
-          layerId = ~geometry
+          layerId = ~geometry 
         ) %>%
         addLayersControl(
           overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
@@ -256,19 +261,17 @@ WINPageServer <- function(id, parentSession) {
     
     # Observe marker clicks
     observeEvent(input$map_marker_click, {
-      click <- input$map_marker_click
+      click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
       if (!is.null(click)) {
-        clicked_id <- click$id
+        clicked_id <- click$id # the id is geometry
         clicked_data <- WQ_data_locations %>%
-          filter(geometry == clicked_id) #GK: I don't think this is a great approach, as
-        # geometry is a specific "thing" for sf objects, so it has specific meaning. And 
-        # that is not how we are using it here
+          filter(geometry == clicked_id) 
         
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WQ_df, filter_value = clicked_data$RowID) # Changed from HUC12.Name
-          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$RowID, selected_column = selected_column())
+          df <- filter_dataframe(WQ_df, filter_value = clicked_data$site_acronym) # Changed from HUC12.Name
+          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$site_friendly, selected_column = selected_column())
         })
       }
     })
