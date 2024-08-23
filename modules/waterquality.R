@@ -130,7 +130,16 @@ create_plot <- function(df, units_df, loc_name = "GTMNERR", selected_column) {
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = paste("Mean daily ", selected_column, " for ", loc_name))
+           title = list(text = paste0("Mean daily ", selected_column, " for ", loc_name), 
+                        y = 0.90), 
+           margin = list(t = 60),
+           plot_bgcolor = '#e5ecf6',
+           xaxis = list(zerolinecolor = 'black',
+                        zerolinewidth = 2,
+                        gridcolor = 'azure1'),
+           yaxis = list(zerolinecolor = 'black',
+                        zerolinewidth = 2,
+                        gridcolor = 'azure1'))
   
   return(fig)
 }
@@ -167,7 +176,7 @@ WINPageUI <- function(id) {
     fluidRow(
       column(width = 12, 
              div(style = "margin-bottom: 20px;",
-                 plotlyOutput(ns("plot"), height="500px")
+                 plotlyOutput(ns("plot"), height="350px")
               )
       )
     ),

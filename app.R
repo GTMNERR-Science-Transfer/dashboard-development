@@ -15,9 +15,8 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(id = "tabs",
       menuItem("Main Page", tabName = "main_page", icon = icon("home")),
-      #menuItem("Water Quality Data", tabName = "waterquality", icon = icon("link")),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("microscope", lib = "font-awesome")),
       menuItem("Water Quality Data", tabName = "waterquality", icon = icon("flask-vial", lib="font-awesome")),
+      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("microscope", lib = "font-awesome")),
       menuItem("Water Level Data", tabName = "waterlevel", icon = icon("water", lib="font-awesome")),
       menuItem("Fish, Shellfish & Other Aquatic Organisms Data", tabName = "shellfish", icon = icon("fish", lib="font-awesome")),
       menuItem("Terrestrial Animal Data", tabName = "animal", icon = icon("paw", lib="font-awesome")),
@@ -27,7 +26,6 @@ ui <- dashboardPage(
   dashboardBody(
     tabItems(
       tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
-      #tabItem(tabName = "waterquality", WQPageUI(id = "waterquality")),
       tabItem(tabName = "algae", HABPageUI(id = "algae")),
       tabItem(tabName = "waterquality", WINPageUI(id = "waterquality"))
     )

@@ -63,7 +63,9 @@ mainPageUI <- function(id) {
   # correct sessions / ID's that connect the ui and server here
   tagList(
     h2("Main Page"),
-    p("This is the main page of the Guana River Data Dashboard."),
+    p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
+      below to see locations with data. To view these data, use the menu on the
+      left of the screen."),
     # Dropdown menu for markers is above the map
     fluidRow(
       column(width = 7, uiOutput(ns("dropdown_ui"))),
