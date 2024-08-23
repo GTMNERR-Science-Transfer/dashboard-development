@@ -1,4 +1,4 @@
-site,alternate_name,site_friendly,station_code,site_acronym,Latitude,Longitude,start_date,end,wbid,location
+site,alternate_name,site_friendly,StationCode,site_acronym,Latitude,Longitude,start_date,end,wbid,location
 MICKLERS,N,Micklers,GTMMKNUT,MK,30.16073611,-81.36027778,,N,Lake,water_control
 DEPGL1,N,Guana Lake 1,GTMGL1NUT,GL1,30.1504,-81.3604,,N,Lake,open_water
 DEPGL2,N,Guana Lake 2,GTMGL2NUT,GL2,30.1161,-81.3511,,N,Lake,open_water

@@ -77,7 +77,7 @@ WIN,Result Updated Date,ResultUpdatedDate
 WIN,RowID,RowID
 WIN,LocationID,LocationID
 WIN,ProgramID,ProgramID
-WIN,Station ID,station_code
+WIN,Station ID,StationCode
 WIN,Station Name,site_friendly
 WIN,Station Type,wbid
 WIN,County,County
