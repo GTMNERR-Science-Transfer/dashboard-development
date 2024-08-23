@@ -16,8 +16,8 @@ WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 #### Process data further ####
 # MOVE THIS TO THE CLEANING SCRIPT!!
 # make datframe for map display and hover data
-WQ_data_locations = WQ_df %>%
-  filter(variable %in% c("site", "site_friendly", "site_acronym",
+WQ_data_locations = WQ_df %>% # site friendlt and station code are the names in common
+  filter(variable %in% c("StationCode", "site_friendly",
                          "geometry", 
                       #"HUC12Name", # Changed for now (bc GTM WQ data does not have that variable) BUT we should also include a station name of some sort
                        "SampleDate", # changed, from StartDate - but also not necessary for locations
@@ -32,7 +32,7 @@ WQ_data_locations = WQ_df %>%
     values_from = value,
     values_fill = list(value = NA)
   ) %>%
-  distinct(Latitude, Longitude, data_source, geometry, site, site_friendly, site_acronym) %>%
+  distinct(Latitude, Longitude, data_source, geometry, StationCode, site_friendly) %>%
   mutate(
     Latitude = as.numeric(Latitude),
     Longitude = as.numeric(Longitude)
@@ -75,16 +75,16 @@ filter_dataframe <- function(df, filter_value = NULL) {
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
            Result,
-           geometry, site, site_friendly, site_acronym) %>%
+           geometry, StationCode, site_friendly) %>%
     pivot_wider(names_from = ComponentLong, 
                 values_from = Result,
                 values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
     mutate(SampleDate = ymd_hms(SampleDate)) %>% # 
     #mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
     #mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd
-    mutate(across(-c(SampleDate, geometry, site, site_friendly, site_acronym), ~ as.numeric(.))) %>%
+    mutate(across(-c(SampleDate, geometry, StationCode, site_friendly), ~ as.numeric(.))) %>%
     mutate(SampleDate = as.Date(SampleDate)) %>%
-    group_by(SampleDate, geometry, site, site_friendly, site_acronym) %>%
+    group_by(SampleDate, geometry, StationCode, site_friendly) %>%
     summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
   # strictly speaking, but it's nice to keep for if we ever want to adjust this function
   # to work for more than 1 variable
@@ -95,7 +95,8 @@ filter_dataframe <- function(df, filter_value = NULL) {
 
 # New function to create the dropdown
 create_dropdown <- function(df, ns) {
-  column_names <- sort(colnames(df)[colnames(df) != "SampleDate"])
+  # Get the column names except the dates and column names and geometry
+  column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
   print(paste("Creating dropdown with choices:", paste(column_names, collapse=", ")))
   
   selectInput(
@@ -112,8 +113,8 @@ create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
   # Initialize the plot with the x-axis
   fig <- plot_ly(df, x = ~SampleDate)
   
-  # Get the column names except the one for the x-axis
-  column_names <- sort(colnames(df)[colnames(df) != "SampleDate"])
+  # Get the column names except the dates and column names and geometry
+  column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
   
   # Create a named vector for Y-axis titles
   y_axis_titles <- setNames(units_df$Unit, units_df$ComponentLong)
@@ -270,7 +271,7 @@ WINPageServer <- function(id, parentSession) {
         popup_visible(TRUE)
         
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WQ_df, filter_value = clicked_data$site_acronym) # Changed from HUC12.Name
+          df <- filter_dataframe(WQ_df, filter_value = clicked_data$StationCode) # Changed from HUC12.Name
           create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$site_friendly, selected_column = selected_column())
         })
       }

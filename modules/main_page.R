@@ -18,7 +18,7 @@ WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
 
 WIN_data_locations = WIN_df %>%
   filter(variable %in% c("geometry", 
-                         "HUC12Name", 
+                         "StationCode", 
                          "SampleDate",
                          "Latitude",
                          "Longitude")
@@ -30,7 +30,7 @@ WIN_data_locations = WIN_df %>%
     values_from = value,
     values_fill = list(value = NA)
   ) %>%
-  distinct(geometry, HUC12Name, SampleDate, Latitude, Longitude) %>%
+  distinct(geometry, StationCode, SampleDate, Latitude, Longitude) %>%
   mutate(
     SampleDate = ymd_hms(SampleDate),
     Latitude = as.numeric(Latitude),
