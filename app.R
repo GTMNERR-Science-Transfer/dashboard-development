@@ -15,12 +15,24 @@ ui <- dashboardPage(
   dashboardSidebar(
     sidebarMenu(id = "tabs",
       menuItem("Main Page", tabName = "main_page", icon = icon("home")),
-      menuItem("Water Quality Data", tabName = "waterquality", icon = icon("flask-vial", lib="font-awesome")),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", icon = icon("microscope", lib = "font-awesome")),
-      menuItem("Water Level Data", tabName = "waterlevel", icon = icon("water", lib="font-awesome")),
-      menuItem("Fish, Shellfish & Other Aquatic Organisms Data", tabName = "shellfish", icon = icon("fish", lib="font-awesome")),
-      menuItem("Terrestrial Animal Data", tabName = "animal", icon = icon("paw", lib="font-awesome")),
-      menuItem("Vegetation Data", tabName = "animal", icon = icon("seedling", lib="font-awesome"))
+      menuItem("Water Quality Data", tabName = "waterquality", 
+               icon = icon("flask-vial", lib="font-awesome"),
+               badgeLabel = "New!", badgeColor = "green"),
+      menuItem("Harmful Algal Bloom Data", tabName = "algae", 
+               icon = icon("microscope", lib = "font-awesome"),
+               badgeLabel = "Coming soon", badgeColor = "yellow"),
+      menuItem("Water Level Data", tabName = "waterlevel", 
+               icon = icon("water", lib="font-awesome"),
+               badgeLabel = "Under construction", badgeColor = "light-blue"),
+      menuItem("Fish, Shellfish & Other Aquatic Organisms Data", tabName = "shellfish", 
+               icon = icon("fish", lib="font-awesome"),
+               badgeLabel = "Under construction", badgeColor = "light-blue"),
+      menuItem("Terrestrial Animal Data", tabName = "animal", 
+               icon = icon("paw", lib="font-awesome"),
+               badgeLabel = "Under construction", badgeColor = "light-blue"),
+      menuItem("Vegetation Data", tabName = "animal", 
+               icon = icon("seedling", lib="font-awesome"),
+               badgeLabel = "Under construction", badgeColor = "light-blue")
     )
   ),
   dashboardBody(
