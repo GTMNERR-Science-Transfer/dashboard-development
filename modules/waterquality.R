@@ -120,9 +120,9 @@ create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
   y_axis_titles <- setNames(units_df$Unit, units_df$ComponentLong)
   
   # Ensure selected_column is not NULL or empty
-  if (is.null(selected_column) || selected_column == "") {
-    selected_column <- column_names[1]
-  }
+  # if (is.null(selected_column) || selected_column == "") {
+  #   selected_column <- column_names[1]
+  # }
   
   # Loop through each column and add a trace
   for (i in seq_along(column_names)) {
@@ -213,25 +213,38 @@ WINPageServer <- function(id, parentSession) {
       create_dropdown(df, ns)
     })
     
-    # Default plot
+    # # Default plot
+    # output$plot <- renderPlotly({
+    #   df <- filter_dataframe(WQ_df)
+    #   create_plot(df, units_df = WQ_data_units, selected_column = NULL) #selected_column()
+    # })
+    
+    # Render an empty plot initially
     output$plot <- renderPlotly({
-      df <- filter_dataframe(WQ_df)
-      create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
+      plot_ly(type = 'scatter', mode = 'markers') %>%
+        layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
     })
     
-    # Update plot when dropdown selection changes
+    #### Update plot when dropdown selection changes ####
     observeEvent(selected_column(), {
       req(clicked_station())  # Ensure station is selected
       
       print(paste("Updating plot for", selected_column(), "at station", clicked_station()))
+      
+      df <- filter_dataframe(WQ_df, filter_value = clicked_station())
+      
       output$plot <- renderPlotly({
-        df <- filter_dataframe(WQ_df, filter_value = clicked_station())
-        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
+        if (nrow(df) > 0) {
+          create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
+        } else {
+          plot_ly(type = 'scatter', mode = 'markers') %>%
+            layout(title = "No data available", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+        }
       })
-    }, ignoreInit = FALSE)
+    }, ignoreInit = FALSE) 
     
     
-    # Create the map
+    #### Create the map ####
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
         clearBounds() %>%
@@ -265,10 +278,10 @@ WINPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
     
+    #### Observe marker clicks ####
     # Reactive value to store the clicked station's ID
     clicked_station <- reactiveVal(NULL)
     
-    # Observe marker clicks
     observeEvent(input$map_marker_click, {
       click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
       if (!is.null(click)) {
@@ -281,9 +294,15 @@ WINPageServer <- function(id, parentSession) {
         # Store the StationCode in a reactive value
         clicked_station(clicked_data$StationCode)
         
+        df <- filter_dataframe(WQ_df, filter_value = clicked_station()) 
+        
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WQ_df, filter_value = clicked_station()) # Changed from HUC12.Name
-          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$site_friendly, selected_column = selected_column())
+          if (nrow(df) > 0) {
+            create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
+          } else {
+            plot_ly(type = 'scatter', mode = 'markers') %>%
+              layout(title = "No data available", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+          }
         })
       }
     })
@@ -316,6 +335,7 @@ WINPageServer <- function(id, parentSession) {
     #   })
     # })
     
+    #### Add 'go back' button ####
     observeEvent(input$go_back, {
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
     })
