@@ -16,7 +16,7 @@ WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 #### Process data further ####
 # MOVE THIS TO THE CLEANING SCRIPT!!
 # make datframe for map display and hover data
-WQ_data_locations = WQ_df %>% # site friendlt and station code are the names in common
+WQ_data_locations = WQ_df %>% # site friendly and station code are the names in common
   filter(variable %in% c("StationCode", "site_friendly",
                          "geometry", 
                       #"HUC12Name", # Changed for now (bc GTM WQ data does not have that variable) BUT we should also include a station name of some sort
@@ -109,7 +109,7 @@ create_dropdown <- function(df, ns) {
 
 # Modified create_plot function
 create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
-  print(paste("Creating plot for", selected_column))
+  print(paste("Creating plot for", selected_column, "at", loc_name))
   # Initialize the plot with the x-axis
   fig <- plot_ly(df, x = ~SampleDate)
   
@@ -132,11 +132,13 @@ create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
                 visible = if (column_names[i] == selected_column) TRUE else FALSE)
   }
   
+  station_name <- unique(df$StationCode)
+  
   # Customize the layout
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = list(text = paste0("Mean daily ", selected_column, " for station ", loc_name), 
+           title = list(text = paste0("Mean daily ", selected_column, " for ", loc_name, " (station code: ", station_name, ")"), 
                         y = 0.90), 
            margin = list(t = 60),
            plot_bgcolor = '#e5ecf6',
@@ -211,20 +213,23 @@ WINPageServer <- function(id, parentSession) {
       create_dropdown(df, ns)
     })
     
-    # Update plot when dropdown selection changes
-    observeEvent(selected_column(), {
-      print(paste("Updating plot for", selected_column()))
-      output$plot <- renderPlotly({
-        df <- filter_dataframe(WQ_df)
-        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
-      })
-    }, ignoreInit = FALSE)
-    
     # Default plot
     output$plot <- renderPlotly({
       df <- filter_dataframe(WQ_df)
       create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
     })
+    
+    # Update plot when dropdown selection changes
+    observeEvent(selected_column(), {
+      req(clicked_station())  # Ensure station is selected
+      
+      print(paste("Updating plot for", selected_column(), "at station", clicked_station()))
+      output$plot <- renderPlotly({
+        df <- filter_dataframe(WQ_df, filter_value = clicked_station())
+        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
+      })
+    }, ignoreInit = FALSE)
+    
     
     # Create the map
     output$map <- renderLeaflet({
@@ -260,6 +265,9 @@ WINPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
     
+    # Reactive value to store the clicked station's ID
+    clicked_station <- reactiveVal(NULL)
+    
     # Observe marker clicks
     observeEvent(input$map_marker_click, {
       click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
@@ -270,40 +278,43 @@ WINPageServer <- function(id, parentSession) {
         
         popup_visible(TRUE)
         
+        # Store the StationCode in a reactive value
+        clicked_station(clicked_data$StationCode)
+        
         output$plot <- renderPlotly({
-          df <- filter_dataframe(WQ_df, filter_value = clicked_data$StationCode) # Changed from HUC12.Name
+          df <- filter_dataframe(WQ_df, filter_value = clicked_station()) # Changed from HUC12.Name
           create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$site_friendly, selected_column = selected_column())
         })
       }
     })
     
     # Add observeEvent function for input$map_shape_click
-    observeEvent(input$map_shape_click, {
-      click <- input$map_shape_click
-      if (!is.null(click)) {
-        clicked_id <- click$id
-        clicked_data <- counties_select %>%
-          filter(NAME == clicked_id)
-        
-        popup_visible(TRUE)
-        
-        output$plot <- renderPlotly({
-          df <- filter_dataframe(WQ_df, filter_value = clicked_data$NAME)
-          create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$NAME, selected_column = selected_column())
-        })
-      }
-    })
+    # observeEvent(input$map_shape_click, {
+    #   click <- input$map_shape_click
+    #   if (!is.null(click)) {
+    #     clicked_id <- click$id
+    #     clicked_data <- counties_select %>%
+    #       filter(NAME == clicked_id)
+    #     
+    #     popup_visible(TRUE)
+    #     
+    #     output$plot <- renderPlotly({
+    #       df <- filter_dataframe(WQ_df, filter_value = clicked_data$NAME)
+    #       create_plot(df, units_df = WQ_data_units, loc_name = clicked_data$NAME, selected_column = selected_column())
+    #     })
+    #   }
+    # })
     
     # Observe map clicks to hide the popup
-    observeEvent(input$map_click, {
-      popup_visible(FALSE)
-      
-      # Default plot
-      output$plot <- renderPlotly({
-        df <- filter_dataframe(WQ_df)
-        create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
-      })
-    })
+    # observeEvent(input$map_click, {
+    #   popup_visible(FALSE)
+    #   
+    #   # Default plot
+    #   output$plot <- renderPlotly({
+    #     df <- filter_dataframe(WQ_df)
+    #     create_plot(df, units_df = WQ_data_units, selected_column = selected_column())
+    #   })
+    # })
     
     observeEvent(input$go_back, {
       updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
