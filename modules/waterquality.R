@@ -231,7 +231,8 @@ WINPageServer <- function(id, parentSession) {
       
       print(paste("Updating plot for", selected_column(), "at station", clicked_station()))
       
-      df <- filter_dataframe(WQ_df, filter_value = clicked_station())
+      df <- filter_dataframe(WQ_df, filter_value = clicked_station()) # also filter for station here?
+      # Because then we can create a "no data" available plot
       
       output$plot <- renderPlotly({
         if (nrow(df) > 0) {
