@@ -1,31 +1,18 @@
-Name: Geraldine Klarenberg
-Date: 26 August 2024
+Guana Dashboard development
+13 August 2024
 
-Created a .csv file as a lookup table to convert names of variables (i.e. analytes) to the same names so we can actually use it in a dropdown. For now I am only changing the ones that we will use in the first prototype of the dashboard.
+For the water quality page, to streamline showing all the WQ data on one page, I manually created
+a lookup table to change the headers of the separate files so they are the same. This way we can use
+merge the datasets and use the existing functions on them.
 
-1. From WIN_data_merged_20240501 I took all the unique names listed in the column "Org Analyte Name".
-2. For the Guana WQ (NUTS?) data I took the unique names in the column ComponentLong in Guana_masterdata.xlsx
-3. These were put in the column "original" in the lookup table: 108 variables. Note that some variable names appear duplicated, but that is because some have trailing blanks/white spaces after the names (which R will pick up as a "different" name).
-4. These were sorted alphabetically.
-5. The following consistent variables names were used and put in the column "new", on the row with the associated original variable name: 
+The headers comfr from the files App_dev/01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv and 
+App_dev/01_Data_raw/Water_Quality/Guana_WQ/Guana_masterdata.xlsx.
 
-Air temperature
-Ammonium (filtered)
-Chlorophyll
-Chlorophyll a (corrected)
-Chlorophyll a (uncorrected)
-Fecal coliform
-Dissolved oxygen
-Organic carbon
-pH
-Salinity
-Specific conductance
-Total nitrogen (TKN + nitrate + nitrite)
-Phosphorus (total)
-Total dissolved solids
-Turbidity
-Water temperature
+1. Copy-pasted the header names to App_dev/03_Data_for_app/WQ_lookup_names.csv and named the column original_name
+2. Added a column data_sources with either WIN or GTMNERR
+3. Created a column dashboard_name and copied all the names from original_name to it
+4. For now (08/13/2024) I am only changing latitude, longitude, dates, sample type, components/analytes measured (DEP, not org) to the names in the GTMNERR data. For visualization purposes. We can rename the rest later (analytes themselves will also need to be renamed, as well as info on station names and types).
+5. For the new names I also removed the spaces (because R inserts points there).
 
-NOTE: The nitrogen variables need to be updated/checked, as right now I do not have the detailed data dictionary for the WIN data.
-
-6. For the remaining variables the original name was copy-pasted in the "new" column.
+23 August 2024
+Updated lookup table so the org result and analyte name are being used instead of DEP (Result and ComponentLong). Also turned "Station ID" into "StationCode", "Station Type" into "bid", and "Station Name" into "site_friendly".
