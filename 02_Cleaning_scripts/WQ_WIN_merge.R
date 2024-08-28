@@ -18,6 +18,8 @@ WQ_GTMNERR <- readRDS("03_Data_for_app/WQ.Rds")
 # Having a column for the dates is advisable though, as it is a separate data
 # type. Update that later, not right now.
 
+#### We need to update the variable list so the names are the same!
+
 # First make sure that every row has a UNID and also add a column for the data
 # source / provider
 WQ_GTMNERR <- WQ_GTMNERR %>% 
@@ -62,6 +64,30 @@ WQ_all <- WIN %>%
   full_join(WQ_GTMNERR_long)
 
 unique(WQ_all$variable)
+unique(WQ_all$value)
+
+# Read in the WQ vars lookup table and replace variables with the names we need
+lookup_WQ_vars <- read_csv("03_Data_for_app/WQ_lookup_variables.csv")
+
+# # I am sure there is a nicer/quicker/tidyverse way of doing this, but whatevs for now
+# for (i in 1:nrow(WQ_all)){
+#   if (is.na(WQ_all$value[i])){
+#     next
+#   }
+#   for (j in 1:nrow(lookup_WQ_vars)){
+#     if (WQ_all$value[i] == lookup_WQ_vars$value[j]){
+#       WQ_all$value[i] <- lookup_WQ_vars$new[j]
+#     }
+#   }
+# }
+
+# Quicker way
+WQ_all <- WQ_all %>%
+  left_join(lookup_WQ_vars, by = "value") %>%
+  mutate(value = coalesce(new, value)) %>%
+  select(-new)
+
+# Filter for only the things that we need? Save for later?
 
 # Save data
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")
