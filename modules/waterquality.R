@@ -266,8 +266,8 @@ WINPageServer <- function(id, parentSession) {
         ) %>%
         addMarkers(
           data = WQ_data_locations,
-          popup = ~ paste("Data Source: ", data_source, "<br>"#, #changed from HUC12Name
-                          #"Start Date: ", SampleDate, "<br>"
+          popup = ~ paste("Station name: ", site_friendly, "<br>", #changed from HUC12Name
+                          "Station code: ", StationCode, "<br>"
           ),
           group = "WQ",
           layerId = ~geometry 
