@@ -51,7 +51,7 @@ WQ_GTMNERR_long <- WQ_GTMNERR %>%
 # one dataset is?)
 
 min(as.numeric(WQ_GTMNERR_long$UNID)) # 1
-max(as.numeric(WQ_GTMNERR_long$UNID)) # 5016 (used to be 17098?)
+max(as.numeric(WQ_GTMNERR_long$UNID)) # 17098 
 
 min(as.numeric(WIN$RowID)) # 55135
 max(as.numeric(WIN$RowID)) # 3677602

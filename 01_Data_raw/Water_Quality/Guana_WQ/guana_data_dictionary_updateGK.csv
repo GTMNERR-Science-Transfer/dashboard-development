@@ -4,6 +4,7 @@ DEPGL1,N,Guana Lake 1,GTMGL1NUT,GL1,30.1504,-81.3604,,N,Lake,open_water
 DEPGL2,N,Guana Lake 2,GTMGL2NUT,GL2,30.1161,-81.3511,,N,Lake,open_water
 LAKE MIDDLE,DEPGL3,Lake Middle,GTMLMNUT,LM,30.08302,-81.34286,,N,Lake,open_water
 LAKE MIDDLE,N,Lake Middle,GTMOLNUT,LM,30.08302,-81.34286,,Y,Lake,open_water
+LAKE MIDDLE,N,Lake Middle,GTMOLNUT_dup,LM,30.08302,-81.34286,,Y,Lake,open_water
 DEPGL4,N,Guana Lake 4,GTMGL4NUT,GL4,30.0451,-81.3351,,N,Lake,open_water
 LAKE SOUTH,N,Lake South,GTMDNNUT,LS,30.023763,-81.327928,,Y,Lake,water_control
 LAKE SOUTH,N,Lake South,GTMLSNUT,LS,30.023763,-81.327928,,N,Lake,water_control
