@@ -87,7 +87,38 @@ WQ_all <- WQ_all %>%
   mutate(value = coalesce(new, value)) %>%
   select(-new)
 
-# Filter for only the things that we need? Save for later?
+# Filter for only the things that we need:
+
+# In ComponentLong:
+
+# Air temperature
+# Ammonium (filtered)
+# Chlorophyll
+# Chlorophyll a (corrected)
+# Chlorophyll a (uncorrected)
+# Fecal coliform
+# Dissolved oxygen
+# Organic carbon
+# pH
+# Salinity
+# Specific conductance
+# Total nitrogen (TKN + nitrate + nitrite)
+# Phosphorus (total)
+# Total dissolved solids
+# Turbidity
+# Water temperature
+
+# I did this as follows now but I am NOT happy about it and we should update it.
+# Because this only removes the variables names but keeps everything else
+# associated with that station (which might make things unnecesarily slow)
+selected_values <- c("Air temperature", "Ammonium (filtered)", "Chlorophyll", "Chlorophyll a (corrected)",
+                     "Chlorophyll a (uncorrected)", "Fecal coliform", "Dissolved oxygen", "Organic carbon",
+                     "pH", "Salinity", "Specific conductance", "Total nitrogen (TKN + nitrate + nitrite)",
+                     "Phosphorus (total)", "Total dissolved solids", "Turbidity", "Water temperature")
+
+WQ_all <- WQ_all %>%
+  filter((variable == "ComponentLong" & value %in% selected_values) | variable != "ComponentLong")
+
 
 # Save data
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")

@@ -89,6 +89,20 @@ which(is.na(WQ$Longitude))
 # WQ[which(is.na(WQ$Latitude)),] # duplicates?? 
 # WQ <- WQ[-which(is.na(WQ$Latitude)),]
 
+# Some station codes appear to have changed over time. Make sure only one code is
+# reflected (otherwise we have issues with the dashboard)
+# GTMDNNUT -> GTMLSNUT (Lake South)
+# GTMDSNUT -> GTMRNNUT (River North)
+# GTMOLNUT and GTMOLNUT_dup -> GTMLMNUT
+
+replacement <- data.frame(StationCode = c("GTMDNNUT", "GTMDSNUT", "GTMOLNUT", "GTMOLNUT_dup"),
+                          StationCode_repl = c("GTMLSNUT", "GTMRNNUT", "GTMLMNUT", "GTMLMNUT"))
+
+WQ <- WQ %>%
+  left_join(replacement, by = "StationCode") %>%
+  mutate(StationCode = coalesce(StationCode_repl, StationCode)) %>%
+  select(-StationCode_repl)
+
 # Create a separate dataframe with only station info, not the data (makes map
 # too heavy)
 WQ_locations <- WQ %>% 
