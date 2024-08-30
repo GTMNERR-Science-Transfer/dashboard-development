@@ -67,17 +67,41 @@ unique(WQ$Remark) # inconsistent... But there are some capital letters that
 # Change station code column name so it is the same as the column in the data
 names(WQ_meta)[names(WQ_meta) == "station_code"] <- "StationCode"
 
+WQ$StationCode <- str_trim(WQ$StationCode)
+
 WQ <- WQ %>% 
-  left_join(WQ_meta) 
+  left_join(WQ_meta, by = c("StationCode")) %>% # not all stations in the original have lat/lon
+  mutate(Latitude = coalesce(Latitude.y, Latitude.x),
+         Longitude = coalesce(Longitude.y, Longitude.x)) %>% 
+  select(-c(Latitude.x, Latitude.y, Longitude.x, Longitude.y))
 
 # Stations missing from metadata: GL1.5, GL2.5 and GL3.5 -> added manually and
 # emailed Nikki
 
+# Check
 which(is.na(WQ$Latitude))
 which(is.na(WQ$Longitude))
 
-WQ[which(is.na(WQ$Latitude)),] # duplicates?? Remove for now; emailed Nikki
-WQ <- WQ[-which(is.na(WQ$Latitude)),]
+# There is GTMMOLNUT and GTMMOLNUT_dup...? I think we can leave it in for now;I give
+# them the same site, site acronym and site friendly name...
+# And GTMLMNUT is the same? But DEP code? Fix this...
+
+# WQ[which(is.na(WQ$Latitude)),] # duplicates?? 
+# WQ <- WQ[-which(is.na(WQ$Latitude)),]
+
+# Some station codes appear to have changed over time. Make sure only one code is
+# reflected (otherwise we have issues with the dashboard)
+# GTMDNNUT -> GTMLSNUT (Lake South)
+# GTMDSNUT -> GTMRNNUT (River North)
+# GTMOLNUT and GTMOLNUT_dup -> GTMLMNUT
+
+replacement <- data.frame(StationCode = c("GTMDNNUT", "GTMDSNUT", "GTMOLNUT", "GTMOLNUT_dup"),
+                          StationCode_repl = c("GTMLSNUT", "GTMRNNUT", "GTMLMNUT", "GTMLMNUT"))
+
+WQ <- WQ %>%
+  left_join(replacement, by = "StationCode") %>%
+  mutate(StationCode = coalesce(StationCode_repl, StationCode)) %>%
+  select(-StationCode_repl)
 
 # Create a separate dataframe with only station info, not the data (makes map
 # too heavy)

@@ -18,6 +18,8 @@ WQ_GTMNERR <- readRDS("03_Data_for_app/WQ.Rds")
 # Having a column for the dates is advisable though, as it is a separate data
 # type. Update that later, not right now.
 
+#### We need to update the variable list so the names are the same!
+
 # First make sure that every row has a UNID and also add a column for the data
 # source / provider
 WQ_GTMNERR <- WQ_GTMNERR %>% 
@@ -49,7 +51,7 @@ WQ_GTMNERR_long <- WQ_GTMNERR %>%
 # one dataset is?)
 
 min(as.numeric(WQ_GTMNERR_long$UNID)) # 1
-max(as.numeric(WQ_GTMNERR_long$UNID)) # 5016 (used to be 17098?)
+max(as.numeric(WQ_GTMNERR_long$UNID)) # 17098 
 
 min(as.numeric(WIN$RowID)) # 55135
 max(as.numeric(WIN$RowID)) # 3677602
@@ -62,6 +64,62 @@ WQ_all <- WIN %>%
   full_join(WQ_GTMNERR_long)
 
 unique(WQ_all$variable)
+unique(WQ_all$value)
+
+# Read in the WQ vars lookup table and replace variables with the names we need
+lookup_WQ_vars <- read_csv("03_Data_for_app/WQ_lookup_variables.csv")
+
+# # I am sure there is a nicer/quicker/tidyverse way of doing this, but whatevs for now
+# for (i in 1:nrow(WQ_all)){
+#   if (is.na(WQ_all$value[i])){
+#     next
+#   }
+#   for (j in 1:nrow(lookup_WQ_vars)){
+#     if (WQ_all$value[i] == lookup_WQ_vars$value[j]){
+#       WQ_all$value[i] <- lookup_WQ_vars$new[j]
+#     }
+#   }
+# }
+
+# Quicker way
+WQ_all <- WQ_all %>%
+  left_join(lookup_WQ_vars, by = "value") %>%
+  mutate(value = coalesce(new, value)) %>%
+  select(-new)
+
+# Filter for only the things that we need:
+
+# In ComponentLong:
+
+# Air temperature
+# Ammonium (filtered)
+# Chlorophyll
+# Chlorophyll a (corrected)
+# Chlorophyll a (uncorrected)
+# Fecal coliform
+# Dissolved oxygen
+# Organic carbon
+# pH
+# Salinity
+# Specific conductance
+# Total nitrogen (TKN + nitrate + nitrite)
+# Phosphorus (total)
+# Total dissolved solids
+# Turbidity
+# Water temperature
+
+# I did this as follows now but I am NOT happy about it and we should update it.
+# Because this only removes the variables names but keeps everything else
+# associated with that station (which might make things unnecesarily slow)
+# Maybe we can do it by rowID?
+selected_values <- c("Air temperature", "Ammonium (filtered)", "Chlorophyll", "Chlorophyll a (corrected)",
+                     "Chlorophyll a (uncorrected)", "Fecal coliform", "Dissolved oxygen", "Organic carbon",
+                     "pH", "Salinity", "Specific conductance", "Total nitrogen (TKN + nitrate + nitrite)",
+                     "Phosphorus (total)", "Total dissolved solids", "Turbidity", "Water temperature")
+
+WQ_all <- WQ_all %>%
+  filter((variable == "ComponentLong" & value %in% selected_values) | variable != "ComponentLong")
+
 
 # Save data
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")

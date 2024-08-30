@@ -18,7 +18,7 @@ WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
 
 WIN_data_locations = WIN_df %>%
   filter(variable %in% c("geometry", 
-                         "HUC12Name", 
+                         "StationCode", 
                          "SampleDate",
                          "Latitude",
                          "Longitude")
@@ -30,7 +30,7 @@ WIN_data_locations = WIN_df %>%
     values_from = value,
     values_fill = list(value = NA)
   ) %>%
-  distinct(geometry, HUC12Name, SampleDate, Latitude, Longitude) %>%
+  distinct(geometry, StationCode, SampleDate, Latitude, Longitude) %>%
   mutate(
     SampleDate = ymd_hms(SampleDate),
     Latitude = as.numeric(Latitude),
@@ -62,11 +62,13 @@ mainPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all subpages so they use the
   # correct sessions / ID's that connect the ui and server here
   tagList(
-    h2("Main Page"),
-    p("This is the main page of the Guana River Data Dashboard."),
+    h2("Welcome!"),
+    p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
+      below to see locations with data. To view these data, use the menu on the
+      left of the screen."),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 7, uiOutput(ns("dropdown_ui"))),
+      column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;"),
     ),
     fluidRow(
       column(width = 10, leafletOutput(ns("map"), height="500px")),
@@ -97,7 +99,7 @@ mainPageServer <- function(input, output, session) {
   
   # Create the map
   output$map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>%
       setView(-81.289, lat=29.905, zoom = 10) %>% 
       #clearBounds() %>% # centers map on all min/max coords
       # Base map
@@ -139,7 +141,7 @@ mainPageServer <- function(input, output, session) {
                        options = layersControlOptions(collapsed = TRUE)) %>%
       hideGroup(c("Counties", "Mangroves", "Salt marshes",
                   "Outstanding Florida Waters", "HUC10", "HUC12")) %>% 
-      addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
+      addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
   })
   
   # Select dataset to add markers to the plot

@@ -9,7 +9,17 @@ library(tidyverse)
 GTMNERR <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
 # CRS: NAD83 / UTM zone 17N
 # WIN Data
-gps_data <- read_csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv")
+
+# Already select which variables we want straightaway. Saves resources. Pick 
+# things that have "Org" in the name because those are the units/names/etc 
+# submitted by the sampling organization - which should be the GTM for this (?)
+gps_data <- read_csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv",
+                     col_select = c(`Monitoring Location ID`, `Activity Type`, 
+                                    `Activity Start Date Time`, `Activity Depth`,
+                                    `DEP Result ID`, `Org Analyte Name`, `Org Result Value`,
+                                    `Org Result Unit`, `Org MDL`, `RowID`, `LocationID`,
+                                    `Station ID`, `Station Name`, `Station Type`, `County`,
+                                    `Location_1`, `Location_2`))
 
 lookup_names <- read_csv("03_Data_for_app/WQ_lookup_names.csv")
 
@@ -76,12 +86,12 @@ colnames(WIN_df)[(ncol(WIN_df)-1):ncol(WIN_df)] <- c("Longitude", "Latitude")
 
 #### Keep only columns with varying information ####
 # Function to remove columns with the same value in the whole column
-remove_constant_columns <- function(df) {
-  df <- df[, sapply(df, function(col) length(unique(col)) > 1)]
-  return(df)
-}
-
-WIN_df <- remove_constant_columns(WIN_df)
+# remove_constant_columns <- function(df) {
+#   df <- df[, sapply(df, function(col) length(unique(col)) > 1)]
+#   return(df)
+# }
+# 
+# WIN_df <- remove_constant_columns(WIN_df)
 
 #### Reformat data to visualize easily ####
 # turn WIN_df into long format with the following columns
@@ -90,15 +100,6 @@ WIN_df <- remove_constant_columns(WIN_df)
 
 # Convert all columns to character before pivoting and retain the original row identifier
 WIN_df <- WIN_df %>%
-  select(-all_of(c("StationID", 
-                   "StationName", 
-                   "OrgAnalyteName", 
-                   "OrgResultValue", #GK: changed this from "DEPResultValueNumber", as I believe it is the DEP value we want to keep?
-                   "DEPMDL",
-                   "DEPPQL",
-                   "OrgDetectionUnit",
-                   "OrgResultUnit",
-                   "ActivityEndDateTime"))) %>%
   # Add a column to record the data source/provider
   mutate(data_source = "WIN") %>% # or change this to DEP?
   mutate(across(everything(), as.character)) %>%
@@ -107,8 +108,7 @@ WIN_df <- WIN_df %>%
     cols =  -c(RowID), # Exclude the Row_ID column from pivoting
     names_to = "variable",
     values_to = "value"
-  ) %>%
-  mutate(value = na_if(value, ""))
+  ) 
   # filter(!is.na(value) & value != "") # use this if space is an issue
 
 #### Save data ####

@@ -1,0 +1,31 @@
+Name: Geraldine Klarenberg
+Date: 26 August 2024
+
+Created a .csv file as a lookup table to convert names of variables (i.e. analytes) to the same names so we can actually use it in a dropdown. For now I am only changing the ones that we will use in the first prototype of the dashboard.
+
+1. From WIN_data_merged_20240501 I took all the unique names listed in the column "Org Analyte Name".
+2. For the Guana WQ (NUTS?) data I took the unique names in the column ComponentLong in Guana_masterdata.xlsx
+3. These were put in the column "original" in the lookup table: 108 variables. Note that some variable names appear duplicated, but that is because some have trailing blanks/white spaces after the names (which R will pick up as a "different" name).
+4. These were sorted alphabetically.
+5. The following consistent variables names were used and put in the column "new", on the row with the associated original variable name: 
+
+Air temperature
+Ammonium (filtered)
+Chlorophyll
+Chlorophyll a (corrected)
+Chlorophyll a (uncorrected)
+Fecal coliform
+Dissolved oxygen
+Organic carbon
+pH
+Salinity
+Specific conductance
+Total nitrogen (TKN + nitrate + nitrite)
+Phosphorus (total)
+Total dissolved solids
+Turbidity
+Water temperature
+
+NOTE: The nitrogen variables need to be updated/checked, as right now I do not have the detailed data dictionary for the WIN data.
+
+6. For the remaining variables the original name was copy-pasted in the "new" column.
