@@ -6,7 +6,9 @@
 
 # inputs: df, units_df, loc_name = "GTMNERR", selected_column()
 
-filter_value = "GTMDNNUT" #"GTMPINUT"
+WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
+
+filter_value = "GTMLSNUT"
 df = WQ_df
 
 if (!is.null(filter_value)) {
@@ -24,7 +26,11 @@ if (!is.null(filter_value)) {
 }
 
 wide_df <- filtered_df %>%
-  pivot_wider(names_from = variable, values_from = value) %>%
+  # 30 August 2024: after updating the station names for some of the Guana station,
+  # it seems like there are duplicates for some variable/value pairs. So that would/
+  # should mean that it's exactly the same, so we can just pick one. If we don't, we 
+  # end up with a vector for the ComponentLong name. Keep the first value.
+  pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
   select(SampleDate, # we could also make these arguments for the function?
          ComponentLong, 
          Result,
@@ -44,6 +50,7 @@ wide_df <- filtered_df %>%
 #select(where(~ n_distinct(.) > 2))
 ##############
 
+# CHECK: there is a column called NA??
 df <- wide_df
 
 selected_column = "Salinity"

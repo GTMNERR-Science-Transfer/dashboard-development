@@ -111,6 +111,7 @@ WQ_all <- WQ_all %>%
 # I did this as follows now but I am NOT happy about it and we should update it.
 # Because this only removes the variables names but keeps everything else
 # associated with that station (which might make things unnecesarily slow)
+# Maybe we can do it by rowID?
 selected_values <- c("Air temperature", "Ammonium (filtered)", "Chlorophyll", "Chlorophyll a (corrected)",
                      "Chlorophyll a (uncorrected)", "Fecal coliform", "Dissolved oxygen", "Organic carbon",
                      "pH", "Salinity", "Specific conductance", "Total nitrogen (TKN + nitrate + nitrite)",

@@ -24,7 +24,7 @@ ui <- dashboardPage(
       menuItem("Water Level Data", tabName = "waterlevel", 
                icon = icon("water", lib="font-awesome"),
                badgeLabel = "Under construction", badgeColor = "light-blue"),
-      menuItem("Fish, Shellfish & Other Aquatic Organisms Data", tabName = "shellfish", 
+      menuItem("Fish and Shellfish", tabName = "shellfish", 
                icon = icon("fish", lib="font-awesome"),
                badgeLabel = "Under construction", badgeColor = "light-blue"),
       menuItem("Terrestrial Animal Data", tabName = "animal", 

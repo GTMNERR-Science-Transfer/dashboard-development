@@ -71,7 +71,7 @@ filter_dataframe <- function(df, filter_value = NULL) {
   
   # Step 3: Create wide dataframe
   wide_df <- filtered_df %>%
-    pivot_wider(names_from = variable, values_from = value) %>%
+    pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
            Result,
