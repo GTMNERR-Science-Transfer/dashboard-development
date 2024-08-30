@@ -14,7 +14,7 @@ ui <- dashboardPage(
   dashboardHeader(title = "Guana River Data Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
-      menuItem("Main Page", tabName = "main_page", icon = icon("home")),
+      menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", 
                icon = icon("flask-vial", lib="font-awesome"),
                badgeLabel = "New!", badgeColor = "green"),
@@ -33,7 +33,18 @@ ui <- dashboardPage(
       menuItem("Vegetation Data", tabName = "animal", 
                icon = icon("seedling", lib="font-awesome"),
                badgeLabel = "Under construction", badgeColor = "light-blue")
-    )
+    ),
+    # Custom CSS to adjust the vertical position of the menu items
+    tags$style(HTML("
+      .main-sidebar {
+        display: flex;
+        flex-direction: column;
+      }
+      .sidebar-menu > li {
+        margin-top: 10px;
+        margin-bottom: 10px;
+      }
+    "))
   ),
   dashboardBody(
     tabItems(
