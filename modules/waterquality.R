@@ -261,7 +261,8 @@ WINPageServer <- function(id, parentSession) {
           create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
         } else {
           plot_ly(type = 'scatter', mode = 'markers') %>%
-            layout(title = "No data available", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+            layout(title = paste0("No data available on ", selected_column(), "<br>at ", clicked_station()), 
+                   xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
         }
       })
     }, ignoreInit = FALSE) 
@@ -332,11 +333,12 @@ WINPageServer <- function(id, parentSession) {
         df <- filter_dataframe(WQ_df, filter_value = clicked_station()) 
         
         output$plot <- renderPlotly({
-          if (nrow(df) > 0) {
+          if (selected_column() %in% names(df)) { # only plot if variable exists for that station
             create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
           } else {
             plot_ly(type = 'scatter', mode = 'markers') %>%
-              layout(title = "No data available", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+              layout(title = paste0("No data available on ", selected_column(), "<br>at ", clicked_station()), 
+                                   xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
           }
         })
       }
