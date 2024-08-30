@@ -140,7 +140,7 @@ create_plot <- function(df, units_df, loc_name = NULL, selected_column) {
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
            yaxis = list(title = y_axis_titles[selected_column]),
-           title = list(text = paste0("Mean daily ", selected_column, " for ", loc_name, " (station code: ", station_name, ")"), 
+           title = list(text = paste0("Mean daily ", selected_column, "<br>for ", loc_name, " (station code: ", station_name, ")"), 
                         y = 0.90), 
            margin = list(t = 60),
            plot_bgcolor = '#e5ecf6',
@@ -179,9 +179,17 @@ WINPageUI <- function(id) {
       # style is to make sure the dropdown menu shows over the map zoom tools
     ),
     fluidRow(
-      column(width = 12, 
+      column(width = 8, 
              div(style = "margin-bottom: 20px;",
                  leafletOutput(ns("map"), height="500px") 
+             )
+      ),
+      column(width = 4, 
+             div(style = "padding: 20px; background-color: #f9f9f9;",
+                 h3("About [variable] and [station]"),
+                 p("Right now this is just some placeholder text. This will be 
+                   updated to dynamically show information about the station and
+                   the variable that the user has selected.")
              )
       )
     ),
@@ -195,6 +203,16 @@ WINPageUI <- function(id) {
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
 }
+
+# Define custom icons -> move this to a separate script
+redIcon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41,
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  shadowWidth = 41, shadowHeight = 41,
+  shadowAnchorX = 12, shadowAnchorY = 41
+)
 
 # Updated Server logic in WINPageServer
 WINPageServer <- function(id, parentSession) {
@@ -239,7 +257,7 @@ WINPageServer <- function(id, parentSession) {
       # Because then we can create a "no data" available plot
       
       output$plot <- renderPlotly({
-        if (nrow(df) > 0) {
+        if (selected_column() %in% names(df)) { # only plot if variable exists for that station
           create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
         } else {
           plot_ly(type = 'scatter', mode = 'markers') %>%
@@ -270,7 +288,7 @@ WINPageServer <- function(id, parentSession) {
         ) %>%
         addMarkers(
           data = WQ_data_locations,
-          popup = ~ paste("Station name: ", site_friendly, "<br>", #changed from HUC12Name
+          popup = ~ paste("Station name: ", site_friendly, "<br>", 
                           "Station code: ", StationCode, "<br>"
           ),
           group = "WQ",
@@ -290,6 +308,18 @@ WINPageServer <- function(id, parentSession) {
     observeEvent(input$map_marker_click, {
       click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
       if (!is.null(click)) {
+        
+        # Update the clicked marker's color using leafletProxy
+        # If there was a previously clicked marker, reset its color
+        leafletProxy("map", session) %>%
+          addMarkers(
+            data = WQ_data_locations,
+            popup = ~ paste("Station name: ", site_friendly, "<br>", 
+                            "Station code: ", StationCode, "<br>"
+            ),
+            group = "WQ",
+            layerId = ~geometry)
+        
         clicked_id <- click$id # the id is geometry
         clicked_data <- WQ_data_locations %>%
           filter(geometry == clicked_id) 
@@ -310,6 +340,12 @@ WINPageServer <- function(id, parentSession) {
           }
         })
       }
+      
+      # Set the new marker color
+      leafletProxy("map") %>%
+        addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat, 
+                   icon = redIcon, layerId = click$id)
+      
     })
     
     # Add observeEvent function for input$map_shape_click

@@ -8,7 +8,7 @@
 
 WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 
-filter_value = "GTMLSNUT"
+filter_value = "GTMSSNUT"
 df = WQ_df
 
 if (!is.null(filter_value)) {
@@ -54,7 +54,7 @@ wide_df <- filtered_df %>%
 # CHECK: there is a column called NA??
 df <- wide_df
 
-selected_column = "Salinity"
+selected_column = "Air temperature" # does not exist for GTMSSNUT
 units_df = WQ_data_units
 
 fig <- plot_ly(df, x = ~SampleDate)
@@ -68,6 +68,13 @@ y_axis_titles <- setNames(units_df$Unit, units_df$ComponentLong)
 # Ensure selected_column is not NULL or empty
 if (is.null(selected_column) || selected_column == "") {
   selected_column <- column_names[1]
+}
+
+if (selected_column %in% names(df)) { # only plot if variable exists for that station
+  #create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
+} else {
+  plot_ly(type = 'scatter', mode = 'markers') %>%
+    layout(title = "No data available", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
 }
 
 # Loop through each column and add a trace
