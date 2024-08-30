@@ -163,6 +163,7 @@ WINPageUI <- function(id) {
   ns <- NS(id)
   tagList(
     h2("Water Quality Data"),
+    
     fluidRow(
       column(width = 12,
              div(style = "margin-bottom: 20px;",
@@ -174,12 +175,13 @@ WINPageUI <- function(id) {
       )
     ),
     fluidRow(
-      column(width = 12, uiOutput(ns("dropdown_ui")))
+      column(width = 12, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;")
+      # style is to make sure the dropdown menu shows over the map zoom tools
     ),
     fluidRow(
       column(width = 12, 
              div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="500px")
+                 leafletOutput(ns("map"), height="500px") 
              )
       )
     ),
@@ -249,7 +251,7 @@ WINPageServer <- function(id, parentSession) {
     
     #### Create the map ####
     output$map <- renderLeaflet({
-      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>% # turn off scroll wheel for now
         clearBounds() %>%
         addTiles() %>%
         addPolygons(
@@ -278,7 +280,7 @@ WINPageServer <- function(id, parentSession) {
           overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
           options = layersControlOptions(collapsed = FALSE)
         ) %>%
-        addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
+        addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
     })
     
     #### Observe marker clicks ####

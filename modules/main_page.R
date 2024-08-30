@@ -68,7 +68,7 @@ mainPageUI <- function(id) {
       left of the screen."),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 7, uiOutput(ns("dropdown_ui"))),
+      column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;"),
     ),
     fluidRow(
       column(width = 10, leafletOutput(ns("map"), height="500px")),
@@ -99,7 +99,7 @@ mainPageServer <- function(input, output, session) {
   
   # Create the map
   output$map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>%
       setView(-81.289, lat=29.905, zoom = 10) %>% 
       #clearBounds() %>% # centers map on all min/max coords
       # Base map
@@ -141,7 +141,7 @@ mainPageServer <- function(input, output, session) {
                        options = layersControlOptions(collapsed = TRUE)) %>%
       hideGroup(c("Counties", "Mangroves", "Salt marshes",
                   "Outstanding Florida Waters", "HUC10", "HUC12")) %>% 
-      addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
+      addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
   })
   
   # Select dataset to add markers to the plot
