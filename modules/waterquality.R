@@ -72,6 +72,8 @@ filter_dataframe <- function(df, filter_value = NULL) {
   # Step 3: Create wide dataframe
   wide_df <- filtered_df %>%
     pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
+    filter(!is.na(ComponentLong)) %>% # stop gap measure because there are NAs from
+    # replacing ComponentLong names in the cleaning script
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
            Result,

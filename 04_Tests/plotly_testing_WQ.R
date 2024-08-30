@@ -31,6 +31,7 @@ wide_df <- filtered_df %>%
   # should mean that it's exactly the same, so we can just pick one. If we don't, we 
   # end up with a vector for the ComponentLong name. Keep the first value.
   pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
+  filter(!is.na(ComponentLong)) %>% 
   select(SampleDate, # we could also make these arguments for the function?
          ComponentLong, 
          Result,
