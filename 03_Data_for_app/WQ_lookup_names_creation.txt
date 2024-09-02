@@ -1,0 +1,18 @@
+Guana Dashboard development
+13 August 2024
+
+For the water quality page, to streamline showing all the WQ data on one page, I manually created
+a lookup table to change the headers of the separate files so they are the same. This way we can use
+merge the datasets and use the existing functions on them.
+
+The headers comfr from the files App_dev/01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.csv and 
+App_dev/01_Data_raw/Water_Quality/Guana_WQ/Guana_masterdata.xlsx.
+
+1. Copy-pasted the header names to App_dev/03_Data_for_app/WQ_lookup_names.csv and named the column original_name
+2. Added a column data_sources with either WIN or GTMNERR
+3. Created a column dashboard_name and copied all the names from original_name to it
+4. For now (08/13/2024) I am only changing latitude, longitude, dates, sample type, components/analytes measured (DEP, not org) to the names in the GTMNERR data. For visualization purposes. We can rename the rest later (analytes themselves will also need to be renamed, as well as info on station names and types).
+5. For the new names I also removed the spaces (because R inserts points there).
+
+23 August 2024
+Updated lookup table so the org result and analyte name are being used instead of DEP (Result and ComponentLong). Also turned "Station ID" into "StationCode", "Station Type" into "bid", and "Station Name" into "site_friendly".

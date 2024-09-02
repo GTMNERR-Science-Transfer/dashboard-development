@@ -15,12 +15,23 @@ GTMNERR <- st_read("03_Data_for_app/shapefiles_new/GTMNERR.shp")# CRS: Albers Co
 
 GTMNERR <- st_transform(GTMNERR, crs = 4326)
 
-m <- leaflet(data = GTMNERR, options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
-  #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
+# Leaflet uses EPSG 3857, change this
+# https://gis.stackexchange.com/questions/48949/epsg-3857-or-4326-for-web-mapping
+#epsg4326 <- leafletCRS(crsClass = "L.CRS.EPSG4326")
+# BUT! It actually seems that Leaflet does still want shapefiles in 4326, see
+# https://github.com/Leaflet/Leaflet/issues/4146 I also tried to change GTMNERR 
+# to crs 3857 but that threw errors. See second paragraph here: 
+# https://rstudio.github.io/leaflet/articles/projections.html
+
+m <- leaflet(data = GTMNERR, 
+             options = leafletOptions(#crs = epsg4326,
+                                      minZoom = 9, 
+                                      maxZoom = 18)) %>%
+  setView(lng=-81.289, lat=29.905, zoom = 11) %>% 
   clearBounds() %>% 
   addTiles() %>%  # Add default OpenStreetMap map tiles
-  addPolygons(color = "purple", fill = NA) #%>% 
-  #addMarkers(lng=-81.347388, lat=30.075, popup="Guana")
+  addPolygons(color = "purple", fill = NA) %>% 
+  addMarkers(lng=-81.347388, lat=30.075, popup="Guana")
 m 
 
 counties_select <- st_read("03_Data_for_app/shapefiles_new/counties_GTMNERR.shp")
@@ -45,10 +56,15 @@ leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
               highlightOptions = highlightOptions(color = "white", weight = 2,
                                                   bringToFront = TRUE),
               group = "Counties", popup = ~NAME) %>% 
-  addMarkers(data = HAB_data_locations,
-              popup = ~paste("Site: ", Site, "<br>",
-                             "County: ", County),
-  group = "HAB") %>% 
+  addAwesomeMarkers(icon = makeAwesomeIcon(icon = "flask", markerColor = "blue", library = "fa",
+                                           iconColor = "black"), #"",
+                    data = HAB_data_locations,
+                    #lng= rep(-81.347388, 34), lat = rep(30.075,34)
+                    ) %>% 
+  # addMarkers(data = HAB_data_locations,
+  #             popup = ~paste("Site: ", Site, "<br>",
+  #                            "County: ", County),
+  # group = "HAB") %>% 
 # # Layers control (turning layers on and off)
   addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries", "HAB"),
                    options = layersControlOptions(collapsed = FALSE)) 
