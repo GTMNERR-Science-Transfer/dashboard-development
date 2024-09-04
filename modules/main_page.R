@@ -128,19 +128,19 @@ mainPageServer <- function(input, output, session) {
       addPolygons(data = HUC10, 
                   color = "royalblue", weight = 2, opacity = 1,
                   fill = TRUE, fillColor = "royalblue", fillOpacity = 0.2,
-                  group = "HUC10", popup = ~NAME) %>%
+                  group = "Watershed Basins", popup = ~NAME) %>%
       addPolygons(data = HUC12, 
                   color = "darkblue", weight = 2, opacity = 1,
                   fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
-                  group = "HUC12", popup = ~NAME) %>%
+                  group = "Watershed Subbasins", popup = ~NAME) %>%
       # Layers control (turning layers on and off)
       addLayersControl(overlayGroups = c("GTMNERR boundaries", "Counties", 
-                                         "Mangroves", "Salt marshes",
-                                         "Outstanding Florida Waters", "HUC10",
-                                         "HUC12"),
+                                         "Mangroves", "Outstanding Florida Waters", 
+                                         "Salt marshes", "Watershed Basins",
+                                         "Watershed Subbasins"),
                        options = layersControlOptions(collapsed = TRUE)) %>%
-      hideGroup(c("Counties", "Mangroves", "Salt marshes",
-                  "Outstanding Florida Waters", "HUC10", "HUC12")) %>% 
+      hideGroup(c("Counties", "Mangroves", "Outstanding Florida Waters", 
+                  "Salt marshes", "Watershed Basins", "Watershed Subbasins")) %>% 
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
   })
   
