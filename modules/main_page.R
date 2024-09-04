@@ -155,7 +155,21 @@ mainPageServer <- function(input, output, session) {
       clearMarkers() %>%
       addAwesomeMarkers(icon = makeAwesomeIcon(icon = "flask", markerColor = "orange", library = "fa",
                                                iconColor = "black"),
-                        data = filtered_data) #%>%
+                        data = filtered_data,
+                        options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                        popup = ~paste("<b>Station:</b> ", site_friendly, "<br>", # popups appear when clicking
+                                       "<b>Sampling start year:</b> ", minYear, "<br>",
+                                       "<b>Latest year of sampling:</b> ", maxYear, "<br"),
+                        label = ~paste("Station: ", site_friendly), # labels appear when hovering
+                        labelOptions = labelOptions(direction = "auto",
+                                                    style = list(
+                                                      "color" = "gray27",
+                                                      "font-style" = "italic",
+                                                      "font-size" = "12px",
+                                                      "border-color" = "rgba(0,0,0,0.5)"
+                                                      )
+                                                    )
+                        )#%>%
       # addCircleMarkers(
       #   data = filtered_data,
       #   color = ~color_palette(dataset),
