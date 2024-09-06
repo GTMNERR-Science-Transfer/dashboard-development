@@ -243,5 +243,5 @@ ggplot()+
   geom_sf(data = GTMNERR, fill = "blue", color = NA, alpha = 0.3)+
   geom_sf(data = ofw_select, fill = "darkred", color = NA)
 
-st_write(mangrove_select, "03_Data_for_app/shapefiles_new/ofw_GTMNERR.shp",
+st_write(ofw_select, "03_Data_for_app/shapefiles_new/ofw_GTMNERR.shp",
          append = FALSE)

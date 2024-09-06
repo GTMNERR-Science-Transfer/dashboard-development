@@ -14,48 +14,46 @@
 # I am putting this here right now, but I feel we should move this to a cleaning
 # script so it doesn't need to be run every time someone uses the app (as with
 # WQ locations)
-WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
+# WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
+# 
+# WIN_data_locations = WIN_df %>%
+#   filter(variable %in% c("geometry", 
+#                          "StationCode", 
+#                          "SampleDate",
+#                          "Latitude",
+#                          "Longitude")
+#   ) %>%
+#   select(c(RowID, variable, value)) %>%
+#   distinct(RowID, variable, value) %>%
+#   pivot_wider(
+#     names_from = variable,
+#     values_from = value,
+#     values_fill = list(value = NA)
+#   ) %>%
+#   distinct(geometry, StationCode, SampleDate, Latitude, Longitude) %>%
+#   mutate(
+#     SampleDate = ymd_hms(SampleDate),
+#     Latitude = as.numeric(Latitude),
+#     Longitude = as.numeric(Longitude),
+#     type = "Water quality",
+#     dataset = "Watershed Information Network (DEP)", # Update this so we use data_source
+#     minYear = min(year(SampleDate)),
+#     maxYear = max(year(SampleDate))
+#   ) %>% 
+#   select(-geometry, -SampleDate)
 
-WIN_data_locations = WIN_df %>%
-  filter(variable %in% c("geometry", 
-                         "StationCode", 
-                         "SampleDate",
-                         "Latitude",
-                         "Longitude")
-  ) %>%
-  select(c(RowID, variable, value)) %>%
-  distinct(RowID, variable, value) %>%
-  pivot_wider(
-    names_from = variable,
-    values_from = value,
-    values_fill = list(value = NA)
-  ) %>%
-  distinct(geometry, StationCode, SampleDate, Latitude, Longitude) %>%
-  mutate(
-    SampleDate = ymd_hms(SampleDate),
-    Latitude = as.numeric(Latitude),
-    Longitude = as.numeric(Longitude),
-    type = "Water quality",
-    dataset = "Watershed Information Network (DEP)", # Update this so we use data_source
-    minYear = min(year(SampleDate)),
-    maxYear = max(year(SampleDate))
-  ) %>% 
-  select(-geometry, -SampleDate)
+#### Location data ------------------------------------------------
+all_data_locations <- readRDS("./03_Data_for_app/all_data_locations.Rds")
 
-#### WQ locations data ------------------------------------------------
-WQ_data_locations <- readRDS("./03_Data_for_app/WQ_locations.Rds")
+# add info for icons and colors
+all_data_locations <- all_data_locations %>%
+  mutate(group_icon = case_when(
+    type == "Water Quality" ~ "flask",
+    type == "Algae" ~ "microscope"),
+    group_color = case_when(
+      type == "Water Quality" ~ "orange",
+      type == "Algae" ~ "purple"))
 
-# For now, for testing, make WQ_locations the dataframe to be used for filtering
-datasets_location <- full_join(WQ_data_locations, WIN_data_locations)
-datasets_location <- st_as_sf(datasets_location, coords = c("Longitude", "Latitude"), crs = 4326)
-datasets_location <- datasets_location[!duplicated(datasets_location),]
-
-color_palette <- colorFactor(palette = c("red", "goldenrod1"), #, "blue", "green"
-                             domain = datasets_location$dataset)
-
-#### HAB locations data ------------------------------------------------
-# Add this at some point so there is another dataset that shows up in the dropdown
-# menu
 
 ### Define the UI -------------------------------------------------------------
 mainPageUI <- function(id) {
@@ -64,8 +62,8 @@ mainPageUI <- function(id) {
   tagList(
     h2("Welcome!"),
     p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
-      below to see locations with data. To view these data, use the menu on the
-      left of the screen."),
+      below to see locations with a certain data type. To view these data, use 
+      the menu on the left of the screen."),
     # Dropdown menu for markers is above the map
     fluidRow(
       column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;"),
@@ -92,8 +90,8 @@ mainPageServer <- function(input, output, session) {
     selectInput(
       inputId = ns("datatype_selector"),
       label = "Select a type of data to see locations with data availability",
-      choices = unique(datasets_location$type),
-      selected = unique(datasets_location$type)[1]
+      choices = unique(all_data_locations$type),
+      selected = unique(all_data_locations$type)[1]
     )
   })
   
@@ -128,34 +126,49 @@ mainPageServer <- function(input, output, session) {
       addPolygons(data = HUC10, 
                   color = "royalblue", weight = 2, opacity = 1,
                   fill = TRUE, fillColor = "royalblue", fillOpacity = 0.2,
-                  group = "HUC10", popup = ~NAME) %>%
+                  group = "Watershed Basins", popup = ~NAME) %>%
       addPolygons(data = HUC12, 
                   color = "darkblue", weight = 2, opacity = 1,
                   fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
-                  group = "HUC12", popup = ~NAME) %>%
+                  group = "Watershed Subbasins", popup = ~NAME) %>%
       # Layers control (turning layers on and off)
       addLayersControl(overlayGroups = c("GTMNERR boundaries", "Counties", 
-                                         "Mangroves", "Salt marshes",
-                                         "Outstanding Florida Waters", "HUC10",
-                                         "HUC12"),
+                                         "Mangroves", "Outstanding Florida Waters", 
+                                         "Salt marshes", "Watershed Basins",
+                                         "Watershed Subbasins"),
                        options = layersControlOptions(collapsed = TRUE)) %>%
-      hideGroup(c("Counties", "Mangroves", "Salt marshes",
-                  "Outstanding Florida Waters", "HUC10", "HUC12")) %>% 
+      hideGroup(c("Counties", "Mangroves", "Outstanding Florida Waters", 
+                  "Salt marshes", "Watershed Basins", "Watershed Subbasins")) %>% 
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
   })
   
   # Select dataset to add markers to the plot
   observeEvent(input$datatype_selector, {
     # Filter data based on selected group
-    filtered_data <- datasets_location[datasets_location$type == input$datatype_selector,]
+    filtered_data <- all_data_locations[all_data_locations$type == input$datatype_selector,]
     print(filtered_data)
     # Add markers to the map - commented out the popup bc this only works for WQ data
     print("Adding markers")
     leafletProxy(ns("map")) %>%
       clearMarkers() %>%
-      addAwesomeMarkers(icon = makeAwesomeIcon(icon = "flask", markerColor = "orange", library = "fa",
+      addAwesomeMarkers(
+                        data = filtered_data,
+                        icon = makeAwesomeIcon(icon = ~group_icon, markerColor = ~group_color, library = "fa",
                                                iconColor = "black"),
-                        data = filtered_data) #%>%
+                        options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                        popup = ~paste("<b>Station:</b> ", site_friendly, "<br>", # popups appear when clicking
+                                       "<b>Sampling start year:</b> ", minYear, "<br>",
+                                       "<b>Latest year of sampling:</b> ", maxYear, "<br"),
+                        label = ~paste("Station: ", site_friendly), # labels appear when hovering
+                        labelOptions = labelOptions(direction = "auto",
+                                                    style = list(
+                                                      "color" = "gray27",
+                                                      "font-style" = "italic",
+                                                      "font-size" = "12px",
+                                                      "border-color" = "rgba(0,0,0,0.5)"
+                                                      )
+                                                    )
+                        )#%>%
       # addCircleMarkers(
       #   data = filtered_data,
       #   color = ~color_palette(dataset),

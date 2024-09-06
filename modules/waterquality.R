@@ -13,31 +13,11 @@ library(tidyverse)
 # import all WQ data for this page (WIN and Guana spreadsheet)
 WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 
-#### Process data further ####
-# MOVE THIS TO THE CLEANING SCRIPT!!
-# make datframe for map display and hover data
-WQ_data_locations = WQ_df %>% # site friendly and station code are the names in common
-  filter(variable %in% c("StationCode", "site_friendly",
-                         "geometry", 
-                      #"HUC12Name", # Changed for now (bc GTM WQ data does not have that variable) BUT we should also include a station name of some sort
-                       "SampleDate", # changed, from StartDate - but also not necessary for locations
-                       "Latitude",
-                       "Longitude",
-                       "data_source")
-         ) %>%
-  #select(c(RowID, variable, value)) %>% # not necessary
-  #distinct(RowID, variable, value) %>% # not necessary
-  pivot_wider(
-    names_from = variable,
-    values_from = value,
-    values_fill = list(value = NA)
-  ) %>%
-  distinct(Latitude, Longitude, data_source, geometry, StationCode, site_friendly) %>%
-  mutate(
-    Latitude = as.numeric(Latitude),
-    Longitude = as.numeric(Longitude)
-  )
+# Location data
+WQ_data_locations <- readRDS("./03_Data_for_app/WQ_data_locations.Rds")
 
+#### Process data further ####
+# Also move this to cleaning script
 WQ_data_units = WQ_df %>%
   filter(variable %in% c("ComponentLong", # some will be duplicated because they differ between the 2 sets
                          "Unit", "data_source")
@@ -219,56 +199,13 @@ WINPageServer <- function(id, parentSession) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     
-    # Reactive value for the selected column
-    selected_column <- reactive({
-      print(paste("Selected column changed to:", input$column_selector))
-      input$column_selector
-    })
-    
-    # Reactive value to track popup bubble state
-    popup_visible <- reactiveVal(FALSE)
-    
-    # Create the dropdown UI
-    output$dropdown_ui <- renderUI({
-      print("Rendering dropdown UI")
-      df <- filter_dataframe(WQ_df)
-      create_dropdown(df, ns)
-    })
-    
-    # # Default plot
-    # output$plot <- renderPlotly({
-    #   df <- filter_dataframe(WQ_df)
-    #   create_plot(df, units_df = WQ_data_units, selected_column = NULL) #selected_column()
-    # })
-    
-    # Render an empty plot initially
-    output$plot <- renderPlotly({
-      plot_ly(type = 'scatter', mode = 'markers') %>%
-        layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-    })
-    
-    #### Update plot when dropdown selection changes ####
-    observeEvent(selected_column(), {
-      req(clicked_station())  # Ensure station is selected
-      
-      print(paste("Updating plot for", selected_column(), "at station", clicked_station()))
-      
-      df <- filter_dataframe(WQ_df, filter_value = clicked_station()) # also filter for station here?
-      # Because then we can create a "no data" available plot
-      
-      output$plot <- renderPlotly({
-        if (selected_column() %in% names(df)) { # only plot if variable exists for that station
-          create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
-        } else {
-          plot_ly(type = 'scatter', mode = 'markers') %>%
-            layout(title = paste0("No data available on ", selected_column(), "<br>at ", clicked_station()), 
-                   xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-        }
-      })
-    }, ignoreInit = FALSE) 
-    
-    
     #### Create the map ####
+    
+    labels <- paste(
+      "<strong>Station name:</strong> " , WQ_data_locations$site_friendly, "<br>",
+      "<strong>Building:</strong> ", WQ_data_locations$StationCode) %>%
+      lapply(htmltools::HTML)
+    
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>% # turn off scroll wheel for now
         clearBounds() %>%
@@ -289,22 +226,42 @@ WINPageServer <- function(id, parentSession) {
         ) %>%
         addMarkers(
           data = WQ_data_locations,
-          popup = ~ paste("Station name: ", site_friendly, "<br>", 
-                          "Station code: ", StationCode, "<br>"
+          options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+          label = labels, # labels appear when hovering
+          labelOptions = labelOptions(direction = "auto",
+                                      style = list(
+                                        "color" = "gray27",
+                                        "font-size" = "12px",
+                                        "border-color" = "rgba(0,0,0,0.5)"
+                                      )
           ),
-          group = "WQ",
+          group = "Water Quality Stations",
           layerId = ~geometry 
         ) %>%
         addLayersControl(
-          overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
+          overlayGroups = c("Counties", "GTMNERR boundaries", "Water Quality Stations"),
           options = layersControlOptions(collapsed = FALSE)
         ) %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
     })
     
-    #### Observe marker clicks ####
+    #### Render an empty plot initially ####
+    output$plot <- renderPlotly({
+      plot_ly(type = 'scatter', mode = 'markers') %>%
+        layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+    })
+    
+    #### Create the dropdown UI #####
+    output$dropdown_ui <- renderUI({
+      print("Rendering dropdown UI")
+      df <- filter_dataframe(WQ_df)
+      create_dropdown(df, ns)
+    })
+    
+    #### Observe marker clicks and update plot when station changes ####
     # Reactive value to store the clicked station's ID
     clicked_station <- reactiveVal(NULL)
+    popup_visible <- reactiveVal(FALSE) # Right now this doesn't do anything in this code
     
     observeEvent(input$map_marker_click, {
       click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
@@ -315,17 +272,32 @@ WINPageServer <- function(id, parentSession) {
         leafletProxy("map", session) %>%
           addMarkers(
             data = WQ_data_locations,
-            popup = ~ paste("Station name: ", site_friendly, "<br>", 
-                            "Station code: ", StationCode, "<br>"
+            # popup = ~ paste("Station name: ", site_friendly, "<br>", 
+            #                 "Station code: ", StationCode, "<br>"
+            #                 ),
+            options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+            label = labels,
+              # ~ paste("Station name: ", site_friendly, "<br>", 
+              #               "Station code: ", StationCode, "<br>"
+            #), # labels appear when hovering
+            labelOptions = labelOptions(direction = "auto",
+                                        style = list(
+                                          "color" = "gray27",
+                                          "font-size" = "12px",
+                                          "border-color" = "rgba(0,0,0,0.5)"
+                                        )
             ),
-            group = "WQ",
+            group = "Water Quality Stations",
             layerId = ~geometry)
         
         clicked_id <- click$id # the id is geometry
+        clicked_lat <- click$lat # save these so the popup can stay visible after clicking
+        clicked_lng <- click$lng
+        
         clicked_data <- WQ_data_locations %>%
           filter(geometry == clicked_id) 
         
-        popup_visible(TRUE)
+        #popup_visible(TRUE)
         
         # Store the StationCode in a reactive value
         clicked_station(clicked_data$StationCode)
@@ -338,17 +310,69 @@ WINPageServer <- function(id, parentSession) {
           } else {
             plot_ly(type = 'scatter', mode = 'markers') %>%
               layout(title = paste0("No data available on ", selected_column(), "<br>at ", clicked_station()), 
-                                   xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+                     xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
           }
         })
+        
+        # Make the popup pop up again
+        # isolate({
+        #   leafletProxy("map") %>%
+        #     addPopups(lng = clicked_lng, lat = clicked_lat,
+        #               popup = paste("Station name: ", clicked_data$site_friendly, "<br>",
+        #                             "Station code: ", clicked_data$StationCode, "<br>"),
+        #               options = popupOptions(offset = c(0, 12)))  # Adjust the offset as needed
+        # })
+        # Set the new marker color
+        leafletProxy("map") %>%
+          #clearPopups() %>%
+          addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
+                     icon = redIcon, layerId = click$id,
+                     options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                     # popup = paste("Station name: ", clicked_data$site_friendly, "<br>",
+                     #                "Station code: ", clicked_data$StationCode, "<br>"),
+                     # options = list(popupOptions(closeButton = TRUE, autoClose = FALSE),
+                     #                markerOptions(riseOnHover = TRUE)), # Brings marker forward when hovering
+                     label = paste(
+                       "<strong>Station name:</strong> " , clicked_data$site_friendly, "<br>",
+                       "<strong>Building:</strong> ", clicked_data$StationCode) %>%
+                       lapply(htmltools::HTML),
+                     labelOptions = labelOptions(direction = "auto",
+                                                 #offset = c(0, -20),
+                                                 style = list(
+                                                   "color" = "gray27",
+                                                   "font-size" = "12px",
+                                                   "border-color" = "rgba(0,0,0,0.5)"
+                                                 )
+                     )
+          )
       }
       
-      # Set the new marker color
-      leafletProxy("map") %>%
-        addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat, 
-                   icon = redIcon, layerId = click$id)
-      
     })
+    
+    #### Update plot when dropdown selection changes ####
+    # Reactive value for the selected column
+    selected_column <- reactive({
+      print(paste("Selected column changed to:", input$column_selector))
+      input$column_selector
+    })
+    
+    observeEvent(selected_column(), {
+      req(clicked_station())  # Ensure station is selected
+      
+      print(paste("Updating plot for", selected_column(), "at station", clicked_station()))
+      
+      df <- filter_dataframe(WQ_df, filter_value = clicked_station())
+      
+      output$plot <- renderPlotly({
+        if (selected_column() %in% names(df)) { # only plot if variable exists for that station
+          create_plot(df, units_df = WQ_data_units, loc_name = unique(df$site_friendly), selected_column = selected_column())
+        } else {
+          plot_ly(type = 'scatter', mode = 'markers') %>%
+            layout(title = paste0("No data available on ", selected_column(), "<br>at ", clicked_station()), 
+                   xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+        }
+      })
+    }, ignoreInit = FALSE) 
     
     # Add observeEvent function for input$map_shape_click
     # observeEvent(input$map_shape_click, {
