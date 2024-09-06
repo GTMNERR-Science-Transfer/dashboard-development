@@ -352,7 +352,10 @@ WINPageServer <- function(id, parentSession) {
                      #                "Station code: ", clicked_data$StationCode, "<br>"),
                      # options = list(popupOptions(closeButton = TRUE, autoClose = FALSE),
                      #                markerOptions(riseOnHover = TRUE)), # Brings marker forward when hovering
-                     label = labels,
+                     label = paste(
+                       "<strong>Station name:</strong> " , clicked_data$site_friendly, "<br>",
+                       "<strong>Building:</strong> ", clicked_data$StationCode) %>%
+                       lapply(htmltools::HTML),
                        # paste("Station name: ", clicked_data$site_friendly, "<br>",
                        #             "Station code: ", clicked_data$StationCode, "<br>"), # labels appear when hovering
                      labelOptions = labelOptions(direction = "auto",
