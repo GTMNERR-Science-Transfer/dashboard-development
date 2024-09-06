@@ -220,6 +220,12 @@ WINPageServer <- function(id, parentSession) {
     ns <- session$ns
     
     #### Create the map ####
+    
+    labels <- paste(
+      "<strong>Station name:</strong> " , WQ_data_locations$site_friendly, "<br>",
+      "<strong>Building:</strong> ", WQ_data_locations$StationCode) %>%
+      lapply(htmltools::HTML)
+    
     output$map <- renderLeaflet({
       leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>% # turn off scroll wheel for now
         clearBounds() %>%
@@ -240,15 +246,11 @@ WINPageServer <- function(id, parentSession) {
         ) %>%
         addMarkers(
           data = WQ_data_locations,
-          popup = ~ paste("Station name: ", site_friendly, "<br>", 
-                          "Station code: ", StationCode, "<br>"
-          ),
           options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
-          label = ~paste("Station: ", site_friendly), # labels appear when hovering
+          label = labels, # labels appear when hovering
           labelOptions = labelOptions(direction = "auto",
                                       style = list(
                                         "color" = "gray27",
-                                        "font-style" = "italic",
                                         "font-size" = "12px",
                                         "border-color" = "rgba(0,0,0,0.5)"
                                       )
@@ -279,7 +281,7 @@ WINPageServer <- function(id, parentSession) {
     #### Observe marker clicks and update plot when station changes ####
     # Reactive value to store the clicked station's ID
     clicked_station <- reactiveVal(NULL)
-    popup_visible <- reactiveVal(FALSE)
+    popup_visible <- reactiveVal(FALSE) # Right now this doesn't do anything in this code
     
     observeEvent(input$map_marker_click, {
       click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID 
@@ -290,8 +292,20 @@ WINPageServer <- function(id, parentSession) {
         leafletProxy("map", session) %>%
           addMarkers(
             data = WQ_data_locations,
-            popup = ~ paste("Station name: ", site_friendly, "<br>", 
-                            "Station code: ", StationCode, "<br>"
+            # popup = ~ paste("Station name: ", site_friendly, "<br>", 
+            #                 "Station code: ", StationCode, "<br>"
+            #                 ),
+            options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+            label = labels,
+              # ~ paste("Station name: ", site_friendly, "<br>", 
+              #               "Station code: ", StationCode, "<br>"
+            #), # labels appear when hovering
+            labelOptions = labelOptions(direction = "auto",
+                                        style = list(
+                                          "color" = "gray27",
+                                          "font-size" = "12px",
+                                          "border-color" = "rgba(0,0,0,0.5)"
+                                        )
             ),
             group = "WQ",
             layerId = ~geometry)
@@ -299,10 +313,11 @@ WINPageServer <- function(id, parentSession) {
         clicked_id <- click$id # the id is geometry
         clicked_lat <- click$lat # save these so the popup can stay visible after clicking
         clicked_lng <- click$lng
+        
         clicked_data <- WQ_data_locations %>%
           filter(geometry == clicked_id) 
         
-        popup_visible(TRUE)
+        #popup_visible(TRUE)
         
         # Store the StationCode in a reactive value
         clicked_station(clicked_data$StationCode)
@@ -319,32 +334,36 @@ WINPageServer <- function(id, parentSession) {
           }
         })
         
-        # Set the new marker color
-        leafletProxy("map") %>%
-          clearPopups() %>% 
-          addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
-                     popup = paste("Station name: ", clicked_data$site_friendly, "<br>", 
-                                   "Station code: ", clicked_data$StationCode, "<br>"),
-                     icon = redIcon, layerId = click$id,
-                     options = popupOptions(closeButton = TRUE, autoClose = FALSE))
-        
-        # # After rendering the plot, reopen the popup
+        # Make the popup pop up again
         # isolate({
         #   leafletProxy("map") %>%
-        #     addPopups(lng = clicked_lng, lat = clicked_lat, popup = paste("Station name: ", clicked_data$site_friendly, "<br>", 
-        #                                                                   "Station code: ", clicked_data$StationCode, "<br>"),
-        #               options = popupOptions(offset = c(0,10)))
+        #     addPopups(lng = clicked_lng, lat = clicked_lat,
+        #               popup = paste("Station name: ", clicked_data$site_friendly, "<br>",
+        #                             "Station code: ", clicked_data$StationCode, "<br>"),
+        #               options = popupOptions(offset = c(0, 12)))  # Adjust the offset as needed
         # })
+        # Set the new marker color
+        leafletProxy("map") %>%
+          clearPopups() %>%
+          addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
+                     icon = redIcon, layerId = click$id,
+                     options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                     # popup = paste("Station name: ", clicked_data$site_friendly, "<br>",
+                     #                "Station code: ", clicked_data$StationCode, "<br>"),
+                     # options = list(popupOptions(closeButton = TRUE, autoClose = FALSE),
+                     #                markerOptions(riseOnHover = TRUE)), # Brings marker forward when hovering
+                     label = labels,
+                       # paste("Station name: ", clicked_data$site_friendly, "<br>",
+                       #             "Station code: ", clicked_data$StationCode, "<br>"), # labels appear when hovering
+                     labelOptions = labelOptions(direction = "auto",
+                                                 style = list(
+                                                   "color" = "gray27",
+                                                   "font-size" = "12px",
+                                                   "border-color" = "rgba(0,0,0,0.5)"
+                                                 )
+                     )
+          )
       }
-      
-      # # Set the new marker color
-      # leafletProxy("map") %>%
-      #   clearPopups() %>% 
-      #   addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
-      #              popup = paste("Station name: ", clicked_data$site_friendly, "<br>", 
-      #                            "Station code: ", clicked_data$StationCode, "<br>"),
-      #              icon = redIcon, layerId = click$id,
-      #              options = popupOptions(closeButton = TRUE, autoClose = FALSE))
       
     })
     
