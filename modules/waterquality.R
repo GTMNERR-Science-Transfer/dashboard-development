@@ -13,31 +13,11 @@ library(tidyverse)
 # import all WQ data for this page (WIN and Guana spreadsheet)
 WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
 
-#### Process data further ####
-# MOVE THIS TO THE CLEANING SCRIPT!!
-# make datframe for map display and hover data
-WQ_data_locations = WQ_df %>% # site friendly and station code are the names in common
-  filter(variable %in% c("StationCode", "site_friendly",
-                         "geometry", 
-                      #"HUC12Name", # Changed for now (bc GTM WQ data does not have that variable) BUT we should also include a station name of some sort
-                       "SampleDate", # changed, from StartDate - but also not necessary for locations
-                       "Latitude",
-                       "Longitude",
-                       "data_source")
-         ) %>%
-  #select(c(RowID, variable, value)) %>% # not necessary
-  #distinct(RowID, variable, value) %>% # not necessary
-  pivot_wider(
-    names_from = variable,
-    values_from = value,
-    values_fill = list(value = NA)
-  ) %>%
-  distinct(Latitude, Longitude, data_source, geometry, StationCode, site_friendly) %>%
-  mutate(
-    Latitude = as.numeric(Latitude),
-    Longitude = as.numeric(Longitude)
-  )
+# Location data
+WQ_data_locations <- readRDS("./03_Data_for_app/WQ_data_locations.Rds")
 
+#### Process data further ####
+# Also move this to cleaning script
 WQ_data_units = WQ_df %>%
   filter(variable %in% c("ComponentLong", # some will be duplicated because they differ between the 2 sets
                          "Unit", "data_source")
