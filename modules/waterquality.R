@@ -255,11 +255,11 @@ WINPageServer <- function(id, parentSession) {
                                         "border-color" = "rgba(0,0,0,0.5)"
                                       )
           ),
-          group = "WQ",
+          group = "Water Quality Stations",
           layerId = ~geometry 
         ) %>%
         addLayersControl(
-          overlayGroups = c("Counties", "GTMNERR boundaries", "WQ"),
+          overlayGroups = c("Counties", "GTMNERR boundaries", "Water Quality Stations"),
           options = layersControlOptions(collapsed = FALSE)
         ) %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
@@ -307,7 +307,7 @@ WINPageServer <- function(id, parentSession) {
                                           "border-color" = "rgba(0,0,0,0.5)"
                                         )
             ),
-            group = "WQ",
+            group = "Water Quality Stations",
             layerId = ~geometry)
         
         clicked_id <- click$id # the id is geometry
@@ -344,7 +344,7 @@ WINPageServer <- function(id, parentSession) {
         # })
         # Set the new marker color
         leafletProxy("map") %>%
-          clearPopups() %>%
+          #clearPopups() %>%
           addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
                      icon = redIcon, layerId = click$id,
                      options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
@@ -356,9 +356,8 @@ WINPageServer <- function(id, parentSession) {
                        "<strong>Station name:</strong> " , clicked_data$site_friendly, "<br>",
                        "<strong>Building:</strong> ", clicked_data$StationCode) %>%
                        lapply(htmltools::HTML),
-                       # paste("Station name: ", clicked_data$site_friendly, "<br>",
-                       #             "Station code: ", clicked_data$StationCode, "<br>"), # labels appear when hovering
                      labelOptions = labelOptions(direction = "auto",
+                                                 #offset = c(0, -20),
                                                  style = list(
                                                    "color" = "gray27",
                                                    "font-size" = "12px",
