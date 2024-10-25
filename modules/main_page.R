@@ -60,7 +60,7 @@ mainPageUI <- function(id) {
   ns <- NS(id) # This is an important part to add to all subpages so they use the
   # correct sessions / ID's that connect the ui and server here
   tagList(
-    h2("Welcome! --  CHANGE EXAMPLE!!!!!!!"),
+    h2("Welcome!"),
     p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
       below to see locations with a certain data type. To view these data, use 
       the menu on the left of the screen."),
