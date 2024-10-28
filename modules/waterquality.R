@@ -9,6 +9,7 @@
 # Last updated: 12 August 2024
 
 library(tidyverse)
+library(shinyWidgets) #not sure if this is necessary? Loaded in global?
 
 # import all WQ data for this page (WIN and Guana spreadsheet)
 WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")

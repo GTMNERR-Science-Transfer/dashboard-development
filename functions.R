@@ -86,16 +86,26 @@ create_date <- function(df, ns) {
     pull(SampleDate)
   print(paste("Creating date range"))
   
-  dateRangeInput( # This creates a date vector of length 2
+  airDatepickerInput(
     inputId = ns("date_range"),
     label = "Select a Date Range",
-    start = NULL, 
-    end = NULL, # will use current date
-    min = min(date_column),
-    max = max(date_column),
-    format = "mm/dd/yyyy",
+    range = TRUE,
+    minDate = min(date_column),
+    maxDate = max(date_column),
+    dateFormat = "MM/dd/yyyy",
     separator = " - "
   )
+  
+  # dateRangeInput( # This creates a date vector of length 2
+  #   inputId = ns("date_range"),
+  #   label = "Select a Date Range",
+  #   start = NULL, 
+  #   end = NULL, # will use current date
+  #   min = min(date_column),
+  #   max = max(date_column),
+  #   format = "mm/dd/yyyy",
+  #   separator = " - "
+  # )
 }
 
 ##### Create plot #####
