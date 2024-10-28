@@ -47,6 +47,8 @@ WQ_GTMNERR_long <- WQ_GTMNERR %>%
                names_to = "variable",
                values_to = "value")
 
+##### Maybe also keep the date as a column?
+
 # How to deal with UNID when merging? Start counting anew (or add however far the
 # one dataset is?)
 
