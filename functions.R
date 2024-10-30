@@ -113,8 +113,10 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
   }
   
   if(!is.null(filter_value)){
-    wide_df <- wide_df %>% 
-      select(SampleDate, geometry, StationCode, site_friendly, filter_value)
+    if(filter_value %in% names(wide_df)){
+      wide_df <- wide_df %>% 
+        select(SampleDate, geometry, StationCode, site_friendly, filter_value)
+    }
   }
   
   return(wide_df)
