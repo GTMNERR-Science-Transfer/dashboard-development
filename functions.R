@@ -65,6 +65,60 @@ filter_dataframe <- function(df, filter_value = NULL, date_range = NULL) {
   return(wide_df)
 }
 
+##### Filter df for station (click on plot) and date range, and variable, and make wide #####
+# make dataframe for click plots - filter for correct stations
+# and the date picker: so this takes 2 reactive values, stationCode and
+# selected_date_range
+filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filter_value = NULL) {
+  if (!is.null(filter_station)) {
+    # Step 1: Identify the relevant RowIDs
+    relevant_row_ids <- df %>%
+      filter(value == filter_station) %>%
+      pull(RowID)
+    
+    # Step 2: Filter the entire dataframe to keep only rows with the relevant RowIDs
+    filtered_df <- df %>%
+      filter(RowID %in% relevant_row_ids)
+  } else {
+    # If no filter_value is provided, skip the filtering step
+    filtered_df <- df
+  }
+  
+  # Step 3: Create wide dataframe
+  wide_df <- filtered_df %>%
+    pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
+    filter(!is.na(ComponentLong)) %>% # stop gap measure because there are NAs from
+    # replacing ComponentLong names in the cleaning script
+    select(SampleDate, # we could also make these arguments for the function?
+           ComponentLong, 
+           Result,
+           geometry, StationCode, site_friendly) %>%
+    pivot_wider(names_from = ComponentLong, 
+                values_from = Result,
+                values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
+    #mutate(SampleDate = ymd_hms(SampleDate)) %>% # 
+    mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
+    mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd,
+    # needed to use this since some datasets only have ymd (no hms) so that makes ymd_hms fail
+    #mutate(across(-c(SampleDate, geometry, StationCode, site_friendly), ~ as.numeric(.))) %>%
+    #mutate(SampleDate = as.Date(SampleDate)) %>%
+    group_by(SampleDate, geometry, StationCode, site_friendly) %>%
+    summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
+  # strictly speaking, but it's nice to keep for if we ever want to adjust this function
+  # to work for more than 1 variable
+  #select(where(~ n_distinct(.) > 2))
+  
+  if(!is.null(date_range)){
+    wide_df <- filter(wide_df, between(SampleDate, ymd(date_range[1]), ymd(date_range[2])))
+  }
+  
+  if(!is.null(filter_value)){
+    wide_df <- wide_df %>% 
+      select(SampleDate, geometry, StationCode, site_friendly, filter_value)
+  }
+  
+  return(wide_df)
+}
 ##### Create dropdown with variables to plot #####
 create_dropdown <- function(df, ns) {
   # Get the column names except the dates and column names and geometry
