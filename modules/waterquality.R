@@ -39,20 +39,31 @@ WINPageUI <- function(id) {
       )
     ),
     fluidRow(
-      column(width = 5, 
-             selectInput(
+      column(width = 4,
+             selectInput(inputId = ns("station_list"), 
+                         label = "Choose a station:", 
+                         choices = all_data_locations$StationCode, 
+                         multiple = TRUE
+      ), style = "position:relative;z-index:10000;"),
+      column(width = 4,
+             prettyRadioButtons(
                inputId = ns("column_selector"),
-               label = "Select a Variable of Interest",
-               choices = c("pH", "Air temperature", "Dissolved oxygen", "Water temperature"),
-               selected = NULL
+               label = "Select a variable of interest",
+               choices = c("pH", "Air temperature", "Dissolved oxygen", "Water temperature")
+             #)
+             # selectInput(
+             #   inputId = ns("column_selector"),
+             #   label = "Select a Variable of Interest",
+             #   choices = c("pH", "Air temperature", "Dissolved oxygen", "Water temperature"),
+             #   selected = NULL
       ), style = "position:relative;z-index:10000;"),
       # style is to make sure the dropdown menu shows over the map zoom tools
-      column(width = 5, 
+      column(width = 4, 
              airDatepickerInput(
                inputId = ns("date_range"),
                label = "Select a Date Range",
                range = TRUE,
-               minDate = "2015-01-01", #NULL
+               minDate = "2018-01-01", #NULL
                maxDate = "2024-12-31", #NULL
                dateFormat = "MM/dd/yyyy",
                separator = " - "
@@ -333,48 +344,100 @@ WINPageServer <- function(id, parentSession) {
     #   })
     # })
     
-    #df_filter <- eventReactive
+    selected_stations <- reactiveVal()
+    
+    # Combine map click and dropdown selection
+    observeEvent({
+      input$map_marker_click
+      input$station_list
+    }, {
+      
+      # Initialize a vector to store currently selected stations
+      current_selected_stations <- selected_stations()
+      
+      # Get the station from map click
+      if (!is.null(input$map_marker_click)) {
+        clicked_station <- WQ_data_locations %>%
+          filter(geometry == req(input$map_marker_click$id)) %>%
+          pull(StationCode)
+        
+        # Only add clicked_station if it's not already in the selected_stations
+        if (!is.null(clicked_station) && !clicked_station %in% current_selected_stations) {
+          current_selected_stations <- unique(c(current_selected_stations, clicked_station))
+        }
+      }
+      
+      # Get selected stations from the dropdown list
+      selected_from_list <- input$station_list
+      
+      # Update selected_stations with list selection (ensure no duplicates)
+      if (!is.null(selected_from_list)) {
+        current_selected_stations <- unique(c(current_selected_stations, selected_from_list))
+      }
+      
+      # Update the reactive value for selected_stations
+      selected_stations(current_selected_stations)
+      
+      # Print current selected stations for debugging
+      print(selected_stations())
+    
+    }, ignoreInit = TRUE)
+
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
     observeEvent(input$make_plot, { # When user clicks action button: update df_filter
-      req(input$map_marker_click, input$column_selector, input$date_range) # make sure all 3 exist
+      req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
       
-      # Store the StationCode in a reactive value (though I don't think that is striclty necessary as it is already reactive)
-      clicked_station <- WQ_data_locations %>%
-        filter(geometry == input$map_marker_click$id) %>%
-        pull(StationCode)
+      # # Store the StationCode in a reactive value (though I don't think that is striclty necessary as it is already reactive)
+      # clicked_station <- WQ_data_locations %>%
+      #   filter(geometry == input$map_marker_click$id) %>%
+      #   pull(StationCode)
       
-      print(paste("Filtering dataframe for", input$column_selector, "at station", clicked_station, "for", input$date_range[1], "to", input$date_range[2], sep = " "))
+      print(paste("Filtering dataframe for", input$column_selector, "at station", selected_stations(), "for", input$date_range[1], "to", input$date_range[2], sep = " "))
       
       # Make the (reactive) filtered dataframe -> also only changes when button is pressed
-      #### HAVE TO ADD A CHECK HERE THAT THE VARIABLE EXISTS FOR A STATION ####
       df_filter(WQ_df %>%
                   filter_dataframe2(filter_value = input$column_selector,
                                     date_range = input$date_range,
-                                    filter_station = clicked_station)
+                                    filter_station = selected_stations())
       )
       
-      # Make reactive input value
+      print("The filtered dataframe contains data for the stations:")
+      print(unique(df_filter()$StationCode))
       
+      # Make reactive input value
       selected_col(input$column_selector)
       
-      })
+      }, ignoreInit = TRUE)
     
     # Create plot -> will also only run when button is pressed because it relies on
     # df_filter()
     output$plot <- renderPlotly({
       
-      req(df_filter(), selected_col())
+      if (is.null(df_filter()) || nrow(df_filter()) == 0) {
+        # Render empty plot
+        return(plot_ly(type = 'scatter', mode = 'markers') %>%
+                 layout(title = "No data selected", 
+                        xaxis = list(visible = FALSE), 
+                        yaxis = list(visible = FALSE)))
+      }
+
+      req(df_filter(), selected_col(), selected_stations())
       
-      print(paste("Updating plot for", selected_col(), "at station", unique(df_filter()$site_friendly), "for", min(df_filter()$SampleDate), "to", max(df_filter()$SampleDate), sep = " "))
+      print(paste("Updating plot for", selected_col(), 
+                  "at stations", paste(unique(df_filter()$StationCode), collapse = ", "), 
+                  "for", min(df_filter()$SampleDate), "to", max(df_filter()$SampleDate), sep = " "))
       
       if (selected_col() %in% names(df_filter())) { # only plot if variable exists for that station ALSO ADD DATE RANGE CHECK
-        create_plot(df = df_filter(), units_df = WQ_data_units, loc_name = unique(df_filter()$site_friendly), selected_column = selected_col())
+        create_plot(df = df_filter(), 
+                    units_df = WQ_data_units, 
+                    selected_column = selected_col())
       } else {
-       plot_ly(type = 'scatter', mode = 'markers') %>%
-         layout(title = paste0("No data available on ", selected_col(), "<br>at ", unique(df_filter()$site_friendly)),
-                xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+        renderText("Error")
+       # plot_ly(type = 'scatter', mode = 'markers') %>%
+       #   layout(title = paste0("No data available on ", selected_col(), "<br>at ", selected_stations()),
+       #          xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
       }
     })
     
