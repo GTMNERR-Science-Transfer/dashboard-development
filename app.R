@@ -17,7 +17,7 @@ ui <- dashboardPage(
       menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", 
                icon = icon("flask-vial", lib="font-awesome"),
-               badgeLabel = "New!", badgeColor = "green"),
+               badgeLabel = "UPDATED!", badgeColor = "fuchsia"),
       menuItem("Harmful Algal Bloom Data", tabName = "algae", 
                icon = icon("microscope", lib = "font-awesome"),
                badgeLabel = "Coming soon", badgeColor = "yellow"),

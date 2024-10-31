@@ -29,6 +29,7 @@ WINPageUI <- function(id) {
     h2("Water Quality Data"),
     
     fluidRow(
+      # First row - explanation
       column(width = 12,
              div(style = "margin-bottom: 20px;",
                  p("This section provides an overview of water quality data. 
@@ -39,66 +40,85 @@ WINPageUI <- function(id) {
       )
     ),
     fluidRow(
-      column(width = 4,
-             selectInput(inputId = ns("station_list"), 
-                         label = "Choose a station:", 
-                         choices = setNames(all_data_locations$StationCode, 
-                                            paste(all_data_locations$site_friendly, " (", all_data_locations$StationCode, ")")), 
-                         multiple = TRUE
-      ), style = "position:relative;z-index:10000;"),
-      column(width = 4,
-             prettyRadioButtons(
-               inputId = ns("column_selector"),
-               label = "Select a variable of interest",
-               choices = c("pH", "Air temperature", "Dissolved oxygen", "Water temperature")
-             #)
-             # selectInput(
-             #   inputId = ns("column_selector"),
-             #   label = "Select a Variable of Interest",
-             #   choices = c("pH", "Air temperature", "Dissolved oxygen", "Water temperature"),
-             #   selected = NULL
-      ), style = "position:relative;z-index:10000;"),
-      # style is to make sure the dropdown menu shows over the map zoom tools
-      column(width = 4, 
-             airDatepickerInput(
-               inputId = ns("date_range"),
-               label = "Select a Date Range",
-               range = TRUE,
-               minDate = "2018-01-01", #NULL
-               maxDate = "2024-12-31", #NULL
-               dateFormat = "MM/dd/yyyy",
-               separator = " - "
-      ), style = "position:relative;z-index:10000;"),
-      # style is to make sure the date selection tool shows over the map zoom tools
-      
-      column(width = 2,
-             actionButton(
-               inputId = ns("make_plot"),
-               label = "Create plot!"#, 
-               #style = "bordered",
-               #color = "success",
-               #icon = icon("chart-simple")
-             ))
-    ),
-    fluidRow(
-      column(width = 8, 
-             div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="500px") 
+      # Second row - inputs and map
+      # Column 1: to define inputs
+      column(width = 7,
+             # 1. Stations
+             fluidRow(
+               column(width = 12,
+                      multiInput(
+                        inputId = ns("station_list"),
+                        label = "Choose station(s) of interest:", 
+                        choices = NULL,
+                        choiceNames = paste0(WQ_data_locations$site_friendly, " (", WQ_data_locations$StationCode, ")"),
+                        width = "100%",
+                        options = list(
+                          non_selected_header = "Choose between:",
+                          selected_header = "You have selected:"
+                        ),
+                        choiceValues = WQ_data_locations$StationCode
+                      )
+               ),
+             ),
+             # 2. Date range
+             fluidRow(
+               column(width = 12, 
+                      sliderInput(
+                        inputId = ns("date_range"),
+                        label = "Select a Date Range",
+                        min = ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), #NULL
+                        max = ymd(paste0(max(WQ_data_locations$maxYear), "-12-31")), #NULL
+                        value = c(ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), 
+                                  ymd(paste0(max(WQ_data_locations$maxYear), "-12-31"))),
+                        timeFormat = "%m/%d/%Y",
+                        width = "100%"
+                      ), style = "position:relative;z-index:10000;" # style is to make sure the dropdown menu shows over the map zoom tools
+               )
+             ),
+             # 3. Variables
+             fluidRow(
+               column(width = 12,
+                      selectInput(
+                        inputId = ns("column_selector"),
+                        label = "Select a variable of interest",
+                        choices = unique(filter(WQ_data_units, !is.na(ComponentLong)) %>% pull (ComponentLong))
+                      ), style = "position:relative;z-index:10000;"
+               )
+             ),
+             fluidRow(
+               column(width = 12,
+                      actionButton(
+                        inputId = ns("make_plot"),
+                        label = "Create plot!"#, 
+                        #style = "bordered",
+                        #color = "success",
+                        #icon = icon("chart-simple")
+                      )
+               )
              )
       ),
-      column(width = 4, 
+      # Column 2: show map
+      column(width = 5, 
+             div(style = "margin-bottom: 20px;",
+                 leafletOutput(ns("map"), height="500px"))
+      )
+    ),
+    # Third row - plot
+    fluidRow(
+      column(width = 12, 
+             div(style = "margin-bottom: 20px;",
+                 plotlyOutput(ns("plot"), height="350px")
+             )
+      )
+    ),
+    # Fourth row - more info
+    fluidRow(
+      column(width = 12, 
              div(style = "padding: 20px; background-color: #f9f9f9;",
                  h3("About [variable] and [station]"),
                  p("Right now this is just some placeholder text. This will be 
                    updated to dynamically show information about the station and
                    the variable that the user has selected.")
-             )
-      )
-    ),
-    fluidRow(
-      column(width = 12, 
-             div(style = "margin-bottom: 20px;",
-                 plotlyOutput(ns("plot"), height="350px")
              )
       )
     ),
