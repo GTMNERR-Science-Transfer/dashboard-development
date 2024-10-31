@@ -42,7 +42,8 @@ WINPageUI <- function(id) {
       column(width = 4,
              selectInput(inputId = ns("station_list"), 
                          label = "Choose a station:", 
-                         choices = all_data_locations$StationCode, 
+                         choices = setNames(all_data_locations$StationCode, 
+                                            paste(all_data_locations$site_friendly, " (", all_data_locations$StationCode, ")")), 
                          multiple = TRUE
       ), style = "position:relative;z-index:10000;"),
       column(width = 4,
