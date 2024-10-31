@@ -64,9 +64,11 @@ mainPageUI <- function(id) {
     p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
       below to see locations with a certain data type. To view these data, use 
       the menu on the left of the screen."),
+    # Create a button that opens a pop up with a message
+    actionButton(ns("help_button"), "Click here for help", icon = icon("info-circle")),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;"),
+      column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:1001;"),
     ),
     fluidRow(
       column(width = 10, leafletOutput(ns("map"), height="500px")),
@@ -189,4 +191,38 @@ mainPageServer <- function(input, output, session) {
   #   print("Go to subpage button clicked")
   #   updateTabItems(session, "tabs", selected = "subpage")
   # })
+  
+  # Show modal for help
+  observeEvent(input$help_button, {
+    showModal(modalDialog(
+      title = "Help",
+      tags$div(
+        tabsetPanel(
+          tabPanel("Overview", 
+                   tagList(
+                     h4("Main Page"),
+                     p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu above to see locations with data availability. To view these data, use the menu on the left of the screen.")
+                   )),
+          tabPanel("Using the Dashboard",
+                   tagList(
+                     h4("Navigation"),
+                     p("Use the left-hand menu to navigate through different sections."),
+                     img(src = "dashboard.gif", height = "300px"),
+                     p("You can view different types of data by selecting the appropriate options."),
+                     p(HTML("On the map, click into the stations represented by the icon <img src='icon.png
+' height=40px /> to display the dashboard for the selected data type.")),
+                     p("The dashboard will be displayed below the map."),
+                     p(HTML("You can also click on the icons <img src='plus.svg' height=20px /> to zoom in and <img src='minus.svg' height=20px /> to zoom out on the map.")),
+                     p(HTML("Click on the icon <img src='http://127.0.0.1:5569/leaflet-1.3.1/images/layers-2x.png' height=20px /> to toggle layers on and off.")),
+                     p(HTML("To measure distances on the map, click on the icon <img src='http://127.0.0.1:5569/leaflet-measure-2.1.7/images/rulers_@2X.png' height=20px />."))
+                   ))
+        )
+      ),
+      size = "l",
+      easyClose = TRUE,
+      footer = modalButton("Close"),
+      style = "position:relative;z-index:1002;"
+    ))
+  })
+  
 }
