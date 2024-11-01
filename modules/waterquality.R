@@ -365,55 +365,73 @@ WINPageServer <- function(id, parentSession) {
     #   })
     # })
     
-    selected_stations <- reactiveVal()
+    # Reactive to keep track of selected stations from both inputs
+    selected_stations <- reactiveVal(character())
     
-    # Combine map click and dropdown selection
+    # Observe map click and update list with selected_stations
     observeEvent({
       input$map_marker_click
-      input$station_list
     }, {
-      
-      # Initialize a vector to store currently selected stations
+      # Initialize a vector to store / or get vector with currently selected stations
       current_selected_stations <- selected_stations()
       
-      # Get the station from map click
-      if (!is.null(input$map_marker_click)) {
+      # Check if there is a map click and get the station code
+      if(!is.null(input$map_marker_click)){
         clicked_station <- WQ_data_locations %>%
           filter(geometry == req(input$map_marker_click$id)) %>%
           pull(StationCode)
+        print(paste("map click detected", clicked_station))
         
-        # Only add clicked_station if it's not already in the selected_stations
-        if (!is.null(clicked_station) && !clicked_station %in% current_selected_stations) {
-          current_selected_stations <- unique(c(current_selected_stations, clicked_station))
+        # Toggle clicked_station: add if not in list, remove if already selected
+        if (!is.null(clicked_station)) {
+          print("Yes you clicked a station!")
+          if (clicked_station %in% current_selected_stations) {
+            # Remove station if it's already selected
+            # setdiff returns elements that are in current_selected_stations that are not in clicked_station
+            # The version used here is dplyr, but it works the same as the base R function
+            current_selected_stations <- setdiff(current_selected_stations, clicked_station)
+            print(paste("Station removed from list with map click, which now contains", paste(unique(current_selected_stations), collapse = ", ")))
+          } else {
+            # Add station if not already selected
+            current_selected_stations <- unique(c(current_selected_stations, clicked_station))
+            print(paste("Station added to list with map click, which now contains", paste(unique(current_selected_stations), collapse = ", ")))
+          }
         }
+        
+        # Update selected_stations reactive value
+        selected_stations(current_selected_stations)
+        
+        # Update the multiInput choices without triggering observeEvent
+        isolate({
+          updateMultiInput(session, "station_list", selected = current_selected_stations)
+        })
       }
-      
-      # Get selected stations from the dropdown list
-      selected_from_list <- input$station_list
-      
-      # Update selected_stations with list selection (ensure no duplicates)
-      if (!is.null(selected_from_list)) {
-        current_selected_stations <- unique(c(current_selected_stations, selected_from_list))
-      }
-      
-      # Update the reactive value for selected_stations
-      selected_stations(current_selected_stations)
-      
-      # Print current selected stations for debugging
-      print(selected_stations())
-    
     }, ignoreInit = TRUE)
-
+    
+    # Observe list selection and update selected_stations
+    observeEvent({
+      input$station_list
+    }, {
+      # Retrieve current selections
+      current_selected_stations <- selected_stations()
+      
+      # Add all selected stations from the dropdown
+      new_selections <- setdiff(input$station_list, current_selected_stations)
+      current_selected_stations <- unique(c(current_selected_stations, new_selections))
+      
+      # Remove stations no longer in dropdown selection
+      stations_to_remove <- setdiff(current_selected_stations, input$station_list)
+      current_selected_stations <- setdiff(current_selected_stations, stations_to_remove)
+      
+      # Update selected_stations reactive value
+      selected_stations(current_selected_stations)
+    }, ignoreInit = TRUE)
+      
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
     observeEvent(input$make_plot, { # When user clicks action button: update df_filter
       req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
-      
-      # # Store the StationCode in a reactive value (though I don't think that is striclty necessary as it is already reactive)
-      # clicked_station <- WQ_data_locations %>%
-      #   filter(geometry == input$map_marker_click$id) %>%
-      #   pull(StationCode)
       
       print(paste("Filtering dataframe for", input$column_selector, "at station", selected_stations(), "for", input$date_range[1], "to", input$date_range[2], sep = " "))
       

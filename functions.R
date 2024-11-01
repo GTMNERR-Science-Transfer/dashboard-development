@@ -167,7 +167,7 @@ create_date <- function(df, ns) {
 # column) 
 create_plot <- function(df, units_df, selected_column) { # The input here 
   # is an already filtered df, so there is a lot we do not have to supply (e.g. date range and stations)
-  print(paste("Creating plot for", selected_column, "for", length(unique(df$StationCode))))
+  print(paste("Creating plot for", selected_column, "for", length(unique(df$StationCode)), "stations"))
   print(paste("Creating plot for", selected_column, "at", paste(unique(df$StationCode), collapse = ", ")))
   # At this point, the dataframe has already been filtered for the correct station
   # Initialize the plot
