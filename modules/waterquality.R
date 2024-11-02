@@ -468,16 +468,10 @@ WINPageServer <- function(id, parentSession) {
                   "at stations", paste(unique(df_filter()$StationCode), collapse = ", "), 
                   "for", min(df_filter()$SampleDate), "to", max(df_filter()$SampleDate), sep = " "))
       
-      if (selected_col() %in% names(df_filter())) { # only plot if variable exists for that station ALSO ADD DATE RANGE CHECK
-        create_plot(df = df_filter(), 
-                    units_df = WQ_data_units, 
-                    selected_column = selected_col())
-      } else {
-        renderText("Error")
-       # plot_ly(type = 'scatter', mode = 'markers') %>%
-       #   layout(title = paste0("No data available on ", selected_col(), "<br>at ", selected_stations()),
-       #          xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-      }
+      # Create the plot (has a built in method to show a message if there is no data available)
+      create_plot(df = df_filter(), 
+                  units_df = WQ_data_units, 
+                  selected_column = selected_col())
     })
     
     #### The 'go back' button ####
