@@ -174,7 +174,6 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   #   need(selected_column %in% names(df), paste("Sorry! Variable", selected_column,
   #                                              "does not exist for the selected station(s) and time frame"))
   # )
-  
   if (!(selected_column %in% names(df))) {
     showNotification(paste("Sorry! Variable", selected_column,
                            "does not exist for the selected station(s) and time frame"), 
@@ -188,37 +187,37 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   # At this point, the dataframe has already been filtered for the correct station
   # Initialize the plot
   
-  # Count unique StationCode values because plot_ly wants at least 3
-  num_stations <- n_distinct(df$StationCode)
-  # Determine colors without named vectors
-  color_mapping <- if (num_stations > 2) {
-    unname(as.character(df$StationCode))  # Ensure it's a regular vector
-  } else if (num_stations == 2) {
-    c("royalblue", "darkorange")
-  } else {
-    "royalblue"
-  }
-  
-  fig <- plot_ly(data = df, 
-                 x = ~ SampleDate,
-                 y = ~ .data[[selected_column]], # changed this because we're only doing one variable at a time
-                 type = 'scatter',
-                 mode = 'lines+markers',
-                # The following code is there because plot_ly does not like colors
-                # for less than 3 categories. When you plot it on its own, you get a 
-                # warning, but in Shiny (for some reason), it's an error. So if there
-                # are less than 3 categories (stations), you should use split. Who knew.
-                 color = if (num_stations > 2){
-                   ~StationCode
-                 } else {
-                   NULL
-                 }, 
-                 split = if (num_stations <= 2) {
-                   ~StationCode
-                 } else {
-                   NULL
-                 }
-                 )
+  # # Count unique StationCode values because plot_ly wants at least 3
+  # num_stations <- n_distinct(df$StationCode)
+  # # Determine colors without named vectors
+  # color_mapping <- if (num_stations > 2) {
+  #   unname(as.character(df$StationCode))  # Ensure it's a regular vector
+  # } else if (num_stations == 2) {
+  #   c("royalblue", "darkorange")
+  # } else {
+  #   "royalblue"
+  # }
+  # 
+  # fig <- plot_ly(data = df, 
+  #                x = ~ SampleDate,
+  #                y = ~ .data[[selected_column]], # changed this because we're only doing one variable at a time
+  #                type = 'scatter',
+  #                mode = 'lines+markers',
+  #               # The following code is there because plot_ly does not like colors
+  #               # for less than 3 categories. When you plot it on its own, you get a 
+  #               # warning, but in Shiny (for some reason), it's an error. So if there
+  #               # are less than 3 categories (stations), you should use split. Who knew.
+  #                color = if (num_stations > 2){
+  #                  ~factor(StationCode, labels = df$site_friendly[unique(df$StationCode)])
+  #                } else {
+  #                  NULL
+  #                }, 
+  #                split = if (num_stations <= 2) {
+  #                  ~factor(StationCode, labels = df$site_friendly[unique(df$StationCode)])
+  #                } else {
+  #                  NULL
+  #                }
+  #                )
   
   # Get the column names except the dates and column names and geometry
   #column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
@@ -231,22 +230,32 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   #   selected_column <- column_names[1]
   # }
   
-  # # Loop through each column and add a trace -> Check if this is the best way (maybe rather filter df?)
-  # for (i in seq_along(column_names)) {
-  #   fig <- fig %>%
-  #     add_trace(y = df[[column_names[i]]], name = column_names[i], type = 'scatter', mode = 'lines+markers',
-  #               showlegend = FALSE,
-  #               visible = if (column_names[i] == selected_column) TRUE else FALSE)
-  # }
+  # Initialize the plot with the x-axis
+  fig <- plot_ly()
+  
+  # Loop through each station name and add a trace
+  unique_stations <- unique(df$StationCode)
+  for (i in seq_along(unique_stations)) {
+    station_data <- df %>% filter(StationCode == unique_stations[i])
+    
+    fig <- fig %>%
+      add_trace(x = station_data$SampleDate,          # Define x explicitly for each trace
+                y = station_data[[selected_column]],  # Define y explicitly for each trace
+                name = unique_stations[i], 
+                type = 'scatter', 
+                mode = 'lines+markers',
+                showlegend = TRUE)#,
+                #visible = if (column_names[i] == selected_column) TRUE else FALSE)
+  }
   
   station_name <- unique(df$StationCode)
   
   # Customize the layout
   fig <- fig %>%
     layout(xaxis = list(title = 'Date'),
-           #yaxis = list(title = y_axis_titles[selected_column]),
-           #title = list(text = paste0("Mean daily ", selected_column, "<br>for (station code: ", station_name, ")"), 
-          #              y = 0.90), 
+           yaxis = list(title = y_axis_titles[selected_column]), #.data[[selected_column]]
+           title = list(text = paste0("Mean daily ", selected_column), #, "<br>for (station code: ", station_name, ")"), 
+                        y = 0.90), 
            margin = list(t = 60),
            plot_bgcolor = '#e5ecf6',
            xaxis = list(zerolinecolor = 'black',
