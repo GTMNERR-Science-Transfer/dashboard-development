@@ -151,7 +151,7 @@ WINPageServer <- function(id, parentSession) {
     
     labels <- paste(
       "<strong>Station name:</strong> " , WQ_data_locations$site_friendly, "<br>",
-      "<strong>Building:</strong> ", WQ_data_locations$StationCode) %>%
+      "<strong>Station:</strong> ", WQ_data_locations$StationCode) %>%
       lapply(htmltools::HTML)
     
     output$map <- renderLeaflet({
@@ -200,90 +200,8 @@ WINPageServer <- function(id, parentSession) {
     })
     
     # Note: all the input$... are already reactive values (i.e. they get updated reactively)
-    
-    # #### Update the dropdown menu and available dates after clicking on a station ####
-    # observeEvent(input$map_marker_click, {
-    #   if(!is.null(input$map_marker_click)){
-    #     # If station changes, update the available variables
-    #     #click <- input$map_marker_click # this is a list with lat, lng, id, group, and layerID
-    #     clicked_id <- input$map_marker_click$id # the id is geometry
-    # 
-    #     # Store the StationCode in a reactive value
-    #     clicked_station <- reactive({
-    #       WQ_data_locations %>%
-    #         filter(geometry == clicked_id) %>%
-    #         pull(StationCode)
-    #     })
-    #     print(paste("You picked station", clicked_station(), sep = " "))
-    # 
-    #     # Make the (reactive) filtered dataframe
-    #     df_filter <- reactive({
-    #       WQ_df %>%
-    #         filter_dataframe2(filter_station = clicked_station())
-    #       # Here, clicked_station and selected_date_range are also reactive values
-    #     })
-    # 
-    #     # Update the available variables based on the station clicked (and date range)
-    #     updateSelectInput(
-    #       session, "column_selector",
-    #       choices = sort(colnames(df_filter())[!colnames(df_filter()) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")]),
-    #       selected = NULL # Has to be specified, otherwise it will use the 1st value and then trigger 
-    #       # the observeEvent for changing input$column_selector
-    #     )
-    #     # Update the date range based on the station clicked (and variable)
-    #     #date_column <- df_filter %>%
-    #     #  pull(SampleDate) # Get the date column from the filtered df
-    #     
-    #     updateAirDateInput(session = session, inputId = "date_range", #range = TRUE,
-    #                        options = list(minDate = min(df_filter()$SampleDate),
-    #                                       maxDate = max(df_filter()$SampleDate))
-    #     )
-    #   }
-    # }, ignoreInit = TRUE)
-    # 
-    # #### Update the dropdown menu [and stations??] after selecting a date range ####
-    # observeEvent(input$date_range, {
-    #   if(!is.null(input$date_range)){
-    #     
-    #     print(paste("You picked date range", input$date_range, sep = " "))
-    # 
-    #     # Make the (reactive) filtered dataframe
-    #     df_filter <- reactive({
-    #       WQ_df %>%
-    #         filter_dataframe2(date_range = input$date_range)
-    #     })
-    # 
-    #     # Update the available variables based on the date range selected (and stations)
-    #     updateSelectInput(
-    #       session, "column_selector",
-    #       choices = sort(colnames(df_filter())[!colnames(df_filter()) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")]),
-    #       selected = NULL # Has to be specified, otherwise it will use the 1st value and then trigger 
-    #       # the observeEvent for changing input$column_selector
-    #     )
-    #   }
-    # }, ignoreInit = TRUE)
-    # 
-    # #### Update the date range menu [and stations??] after selecting a variable ####
-    # observeEvent(input$column_selector, {
-    #   if(!is.null(input$column_selector)){
-    #     
-    #     print(paste("You picked variable", input$column_selector, sep = " "))
-    # 
-    #     # Make the (reactive) filtered dataframe
-    #     df_filter <- reactive({
-    #       WQ_df %>%
-    #         filter_dataframe2(filter_value = input$column_selector)
-    #     })
-    # 
-    #     # Update the date range based on the variable selected (and stations)
-    #     updateAirDateInput(session = session, inputId = "date_range", #range = TRUE,
-    #                        options = list(minDate = min(df_filter()$SampleDate),
-    #                                       maxDate = max(df_filter()$SampleDate))
-    #     )
-    #   }
-    # }, ignoreInit = TRUE)
 
-    #### Observe marker clicks and update map when station changes ####
+    #### Update marker colors when station list changes ####
     # Reactive value to store the clicked station's ID
     # clicked_station <- reactiveVal(NULL)
     # popup_visible <- reactiveVal(FALSE) # Right now this doesn't do anything in this code
@@ -327,7 +245,7 @@ WINPageServer <- function(id, parentSession) {
     #                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
     #                    label = paste(
     #                      "<strong>Station name:</strong> " , clicked_data$site_friendly, "<br>",
-    #                      "<strong>Building:</strong> ", clicked_data$StationCode) %>%
+    #                      "<strong>Station:</strong> ", clicked_data$StationCode) %>%
     #                      lapply(htmltools::HTML),
     #                    # Had to play around with labelOptions to kind of get it in the correct place
     #                    labelOptions = labelOptions(direction = "auto", 
@@ -343,32 +261,10 @@ WINPageServer <- function(id, parentSession) {
     #   }
     # )
     
-    #### Observe action button and save/update reactive values when clicked ####
-    # observeEvent(input$make_plot, { # When user clicks action button: make plot
-    #   req(input$map_marker_click, input$column_selector, input$date_range) # make sure all 3 exist
-    #   
-    #   # Store the StationCode in a reactive value
-    #   clicked_station <- reactive({
-    #     WQ_data_locations %>%
-    #       filter(geometry == input$map_marker_click$id) %>%
-    #       pull(StationCode)
-    #   })
-    #   
-    #   print(paste("Updating plot for", input$column_selector, "at station", clicked_station(), "for", input$date_range[1], "to", input$date_range[2], sep = " "))
-    #   
-    #   # Make the (reactive) filtered dataframe -> also only changes when button is pressed
-    #   df_filter <- reactive({
-    #     WQ_df %>%
-    #       filter_dataframe2(filter_value = input$column_selector,
-    #                         date_range = input$date_range,
-    #                         filter_station = clicked_station())
-    #   })
-    # })
-    
     # Reactive to keep track of selected stations from both inputs
     selected_stations <- reactiveVal(character())
     
-    # Observe map click and update list with selected_stations
+    #### Observe map click and update list with selected_stations ####
     observeEvent({
       input$map_marker_click
     }, {
@@ -390,10 +286,51 @@ WINPageServer <- function(id, parentSession) {
             # setdiff returns elements that are in current_selected_stations that are not in clicked_station
             # The version used here is dplyr, but it works the same as the base R function
             current_selected_stations <- setdiff(current_selected_stations, clicked_station)
+            # Change the color of the clicked station back to blue
+            leafletProxy("map") %>%
+              addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
+                         #icon = redIcon, 
+                         layerId = input$map_marker_click$id,
+                         options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                         label = paste(
+                           "<strong>Station name:</strong> " , 
+                           unique(WQ_data_locations$site_friendly[which(WQ_data_locations$StationCode == clicked_station)]), "<br>",
+                           "<strong>Station:</strong> ", clicked_station) %>%
+                           lapply(htmltools::HTML),
+                         # Had to play around with labelOptions to kind of get it in the correct place
+                         labelOptions = labelOptions(direction = "auto",
+                                                     #offset = c(0, -20),
+                                                     style = list(
+                                                       "color" = "gray27",
+                                                       "font-size" = "12px",
+                                                       "border-color" = "rgba(0,0,0,0.5)"
+                                                     )
+                         )
+              )
             print(paste("Station removed from list with map click, which now contains", paste(unique(current_selected_stations), collapse = ", ")))
           } else {
             # Add station if not already selected
             current_selected_stations <- unique(c(current_selected_stations, clicked_station))
+            # Change the color of the clicked station as well
+            leafletProxy("map") %>%
+                      addMarkers(lng = input$map_marker_click$lng, lat = input$map_marker_click$lat,
+                                 icon = redIcon, layerId = input$map_marker_click$id,
+                                 options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                                 label = paste(
+                                   "<strong>Station name:</strong> " , 
+                                   unique(WQ_data_locations$site_friendly[which(WQ_data_locations$StationCode == clicked_station)]), "<br>",
+                                   "<strong>Station:</strong> ", clicked_station) %>%
+                                   lapply(htmltools::HTML),
+                                 # Had to play around with labelOptions to kind of get it in the correct place
+                                 labelOptions = labelOptions(direction = "auto",
+                                                             #offset = c(0, -20),
+                                                             style = list(
+                                                               "color" = "gray27",
+                                                               "font-size" = "12px",
+                                                               "border-color" = "rgba(0,0,0,0.5)"
+                                                             )
+                                 )
+                      )
             print(paste("Station added to list with map click, which now contains", paste(unique(current_selected_stations), collapse = ", ")))
           }
         }
@@ -408,7 +345,7 @@ WINPageServer <- function(id, parentSession) {
       }
     }, ignoreInit = TRUE)
     
-    # Observe list selection and update selected_stations
+    #### Observe list selection and update selected_stations ####
     observeEvent({
       input$station_list
     }, {

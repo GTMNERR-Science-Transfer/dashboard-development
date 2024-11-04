@@ -223,7 +223,7 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   #column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
   
   # Create a named vector for Y-axis titles
-  y_axis_titles <- setNames(units_df$Unit, units_df$ComponentLong)
+  y_axis_titles <- setNames(paste0(units_df$ComponentLong, " (", units_df$Unit, ")"), units_df$ComponentLong)
   
   # Ensure selected_column is not NULL or empty
   # if (is.null(selected_column) || selected_column == "") {
@@ -235,33 +235,35 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   
   # Loop through each station name and add a trace
   unique_stations <- unique(df$StationCode)
+  unique_friendly <- unique(df$site_friendly)
   for (i in seq_along(unique_stations)) {
     station_data <- df %>% filter(StationCode == unique_stations[i])
     
     fig <- fig %>%
       add_trace(x = station_data$SampleDate,          # Define x explicitly for each trace
                 y = station_data[[selected_column]],  # Define y explicitly for each trace
-                name = unique_stations[i], 
+                name = paste0(unique_friendly[i], " (", unique_stations[i], ")"),
                 type = 'scatter', 
                 mode = 'lines+markers',
-                showlegend = TRUE)#,
-                #visible = if (column_names[i] == selected_column) TRUE else FALSE)
+                showlegend = TRUE)
   }
   
   station_name <- unique(df$StationCode)
   
   # Customize the layout
   fig <- fig %>%
-    layout(xaxis = list(title = 'Date'),
-           yaxis = list(title = y_axis_titles[selected_column]), #.data[[selected_column]]
-           title = list(text = paste0("Mean daily ", selected_column), #, "<br>for (station code: ", station_name, ")"), 
-                        y = 0.90), 
+    layout(showlegend = TRUE, # by also adding this here, you will also get a legend when plotting one variable
+           xaxis = list(title = ""),
+           yaxis = list(title = y_axis_titles[selected_column]), 
+           title = list(text = paste0("Daily ", selected_column), 
+                        y = 0.90),
+           legend = list(orientation = 'h'),
            margin = list(t = 60),
            plot_bgcolor = '#e5ecf6',
-           xaxis = list(zerolinecolor = 'black',
+           xaxis = list(zerolinecolor = 'darkgrey',
                         zerolinewidth = 2,
                         gridcolor = 'azure1'),
-           yaxis = list(zerolinecolor = 'black',
+           yaxis = list(zerolinecolor = 'darkgrey',
                         zerolinewidth = 2,
                         gridcolor = 'azure1'))
   
