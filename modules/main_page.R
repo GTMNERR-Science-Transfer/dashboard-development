@@ -66,16 +66,20 @@ mainPageUI <- function(id) {
       the menu on the left of the screen."),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 7, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;"),
+      column(width = 8, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;")
     ),
     fluidRow(
-      column(width = 10, leafletOutput(ns("map"), height="500px")),
+      column(width = 12, leafletOutput(ns("map"), height="500px")),
     ),
-    # fluidRow(
-    #   column(12, 
-    #          actionButton(ns("go_to_subpage"), "Go to Subpage")
-    #   )
-    #)
+    fluidRow(
+      column(width = 4, actionBttn(inputId = ns("reset_view"),
+                                   label = "Reset map view",
+                                   size = "sm",
+                                   style = "simple",
+                                   color = "danger",
+                                   icon = icon("rotate-right", library = "fa"))
+      )
+    )
   )
 }
 
@@ -83,6 +87,11 @@ mainPageUI <- function(id) {
 
 mainPageServer <- function(input, output, session) {
   ns <- session$ns
+  
+  # Define initial view coordinates and zoom level
+  initial_lat <- 29.905 
+  initial_lng <- -81.289
+  initial_zoom <- 10
   
   # Create the dropdown UI
   output$dropdown_ui <- renderUI({
@@ -97,11 +106,13 @@ mainPageServer <- function(input, output, session) {
   
   # Create the map
   output$map <- renderLeaflet({
-    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>%
-      setView(-81.289, lat=29.905, zoom = 10) %>% 
-      #clearBounds() %>% # centers map on all min/max coords
+    leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = TRUE)) %>%
+      setView(lng = initial_lng, lat = initial_lat, zoom = initial_zoom) %>% 
       # Base map
-      addTiles() %>%  # Add default OpenStreetMap map tiles
+      addTiles(group = "Map") %>%  # Add default OpenStreetMap map tiles
+      addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>% # Add satellite as an option
+      # addWMSTiles() # Putting this here as a reminder that you can also add
+      # custom third party layers, e.g. Nexrad, see https://rstudio.github.io/leaflet/articles/basemaps.html#wms-tiles
       # Polygons, add groups
       addPolygons(data = GTMNERR, color = "purple", fill = NA, 
                   weight = 2, opacity = 1, group = "GTMNERR boundaries") %>% 
@@ -132,21 +143,23 @@ mainPageServer <- function(input, output, session) {
                   fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
                   group = "Watershed Subbasins", popup = ~NAME) %>%
       # Layers control (turning layers on and off)
-      addLayersControl(overlayGroups = c("GTMNERR boundaries", "Counties", 
+      addLayersControl(baseGroups = c("Map", "Satellite"),
+                       overlayGroups = c("GTMNERR boundaries", "Counties", 
                                          "Mangroves", "Outstanding Florida Waters", 
                                          "Salt marshes", "Watershed Basins",
                                          "Watershed Subbasins"),
-                       options = layersControlOptions(collapsed = TRUE)) %>%
-      hideGroup(c("Counties", "Mangroves", "Outstanding Florida Waters", 
-                  "Salt marshes", "Watershed Basins", "Watershed Subbasins")) %>% 
+                       options = layersControlOptions(collapsed = FALSE)) %>%
+      hideGroup(c("Counties", "Mangroves", "Outstanding Florida Waters",
+                  "Salt marshes", "Watershed Basins", "Watershed Subbasins")) %>%
       addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
   })
   
   # Select dataset to add markers to the plot
   observeEvent(input$datatype_selector, {
+    req(input$datatype_selector)
     # Filter data based on selected group
     filtered_data <- all_data_locations[all_data_locations$type == input$datatype_selector,]
-    print(filtered_data)
+    #print(filtered_data)
     # Add markers to the map - commented out the popup bc this only works for WQ data
     print("Adding markers")
     leafletProxy(ns("map")) %>%
@@ -183,10 +196,16 @@ mainPageServer <- function(input, output, session) {
       #                                           "Latest year of sampling: ", maxYear, "<br",
       #                                           "Sampling start year: ", minYear, "<br")
       #)
-  })
+  }, ignoreInit = TRUE)
   # Add buttons to go to other pages
   # observeEvent(input[[ns("go_to_subpage")]], {
   #   print("Go to subpage button clicked")
   #   updateTabItems(session, "tabs", selected = "subpage")
   # })
+  
+  # Observe reset button click to restore initial view
+  observeEvent(input$reset_view, {
+    leafletProxy(ns("map")) %>%
+      setView(lng = initial_lng, lat = initial_lat, zoom = initial_zoom)
+  })
 }

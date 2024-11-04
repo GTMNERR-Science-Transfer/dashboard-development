@@ -87,12 +87,13 @@ WINPageUI <- function(id) {
              ),
              fluidRow(
                column(width = 12,
-                      actionButton(
+                      actionBttn( # function from shinyWidgets
                         inputId = ns("make_plot"),
-                        label = "Create plot!"#, 
-                        #style = "bordered",
-                        #color = "success",
-                        #icon = icon("chart-simple")
+                        label = "Create plot!", 
+                        style = "fill",
+                        color = "warning",
+                        icon = icon("arrow-trend-up", library = "fa"),
+                        block = TRUE # full-width button
                       )
                )
              )
@@ -155,8 +156,9 @@ WINPageServer <- function(id, parentSession) {
       lapply(htmltools::HTML)
     
     output$map <- renderLeaflet({
-      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = FALSE)) %>% # turn off scroll wheel for now
-        clearBounds() %>%
+      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = TRUE)) %>% # turn on scroll wheel for now
+        #clearBounds() %>% # This makes the view default to the largest map object
+        setView(lng=-81.347388, lat=30.075, zoom = 10) %>% # focus on the center of Guana River
         addTiles() %>%
         addPolygons(
           data = GTMNERR, color = "purple", fill = NA,
