@@ -61,9 +61,15 @@ mainPageUI <- function(id) {
   # correct sessions / ID's that connect the ui and server here
   tagList(
     h2("Welcome!"),
-    p("This is the main page of the Guana River Data Dashboard. Use the dropdown menu 
-      below to see locations with a certain data type. To view these data, use 
-      the menu on the left of the screen."),
+    p(htmltools::HTML("This is the main page of the Guana Estuary Data Dashboard. <br>
+    The map below lets you explore characteristics of the area by turning
+    different map layers on and off. <br>
+    <br>
+    There are various data sets available through this dashboard. The dropdown menu 
+    shows you the locations with data availability for different data sets. Clicking
+    on the stations shows you the period of data availability. <br>
+    <br>To explore and view the actual data, pick your data set of interest from
+                      the menu to the left of your screen.")),
     # Dropdown menu for markers is above the map
     fluidRow(
       column(width = 8, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;")

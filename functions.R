@@ -265,7 +265,8 @@ create_plot <- function(df, units_df, selected_column) { # The input here
                         gridcolor = 'azure1'),
            yaxis = list(zerolinecolor = 'darkgrey',
                         zerolinewidth = 2,
-                        gridcolor = 'azure1'))
+                        gridcolor = 'azure1')) %>% 
+    config(displayModeBar = TRUE) # Make sure the top-right tool bar always shows (not just on hover)
   
   return(fig)
 }

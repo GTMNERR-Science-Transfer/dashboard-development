@@ -11,7 +11,7 @@ source("modules/algae.R")
 #source("modules/win.R")
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Guana River Data Dashboard"),
+  dashboardHeader(title = "Guana Estuary Data Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
       menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),

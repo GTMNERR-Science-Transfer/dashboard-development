@@ -32,10 +32,17 @@ WINPageUI <- function(id) {
       # First row - explanation
       column(width = 12,
              div(style = "margin-bottom: 20px;",
-                 p("This section provides an overview of water quality data. 
-                   You can select a water quality variable of interest by using
-                   the dropdown menu. Click on a marker to see a graph of
-                   all available data for that specific location")
+                 p(htmltools::HTML('This section provides an overview of water quality data. 
+                   You can select one or more stations from the list, or by
+                   clicking on stations on the map. <br>
+                   You can specify the time range of interest, and the dropdown 
+                   menu lets you pick a water quality variable. <br>
+                   Clicking "Create plot!" will render a time series plot for 
+                   the available data. <br>
+                   <br> <strong>NOTE:</strong> The plot only shows stations for
+                   which data for the variable are available. Currently you do not
+                   (yet) get a warning if data are unavailable for a station - unless
+                   the data are unavailable for all selected stations.'))
              )
       )
     ),
