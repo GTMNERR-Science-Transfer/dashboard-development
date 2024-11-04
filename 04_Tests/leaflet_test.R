@@ -27,8 +27,8 @@ m <- leaflet(data = GTMNERR,
              options = leafletOptions(#crs = epsg4326,
                                       minZoom = 9, 
                                       maxZoom = 18)) %>%
-  setView(lng=-81.289, lat=29.905, zoom = 11) %>% 
-  clearBounds() %>% 
+  setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
+  #clearBounds() %>% # This makes the view default to the largest map object!!
   addTiles() %>%  # Add default OpenStreetMap map tiles
   addPolygons(color = "purple", fill = NA) %>% 
   addMarkers(lng=-81.347388, lat=30.075, popup="Guana")
