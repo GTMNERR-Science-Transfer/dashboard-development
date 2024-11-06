@@ -354,23 +354,31 @@ WINPageServer <- function(id, parentSession) {
       }
     }, ignoreInit = TRUE)
     
+    observe({
+      if (is.null(input$station_list)) {
+        selected_stations(character())  # Clear the reactive value
+        print("All stations deselected.")
+      }
+    })
+    
     #### Observe list selection and update selected_stations ####
     observeEvent({
       input$station_list
     }, {
-      # Retrieve current selections
-      current_selected_stations <- selected_stations()
       
-      # Add all selected stations from the dropdown
-      new_selections <- setdiff(input$station_list, current_selected_stations)
-      current_selected_stations <- unique(c(current_selected_stations, new_selections))
-      
-      # Remove stations no longer in dropdown selection
-      stations_to_remove <- setdiff(current_selected_stations, input$station_list)
-      current_selected_stations <- setdiff(current_selected_stations, stations_to_remove)
-      
-      # Update selected_stations reactive value
-      selected_stations(current_selected_stations)
+        # Retrieve current selections
+        current_selected_stations <- selected_stations()
+        
+        # Add all selected stations from the dropdown
+        new_selections <- setdiff(input$station_list, current_selected_stations)
+        current_selected_stations <- unique(c(current_selected_stations, new_selections))
+        
+        # Remove stations no longer in dropdown selection
+        stations_to_remove <- setdiff(current_selected_stations, input$station_list)
+        current_selected_stations <- setdiff(current_selected_stations, stations_to_remove)
+        
+        # Update selected_stations reactive value
+        selected_stations(current_selected_stations)
     }, ignoreInit = TRUE)
       
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
