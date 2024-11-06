@@ -72,7 +72,14 @@ mainPageUI <- function(id) {
                       the menu to the left of your screen.")),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 8, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;")
+      column(width = 8, 
+             selectInput(
+               inputId = ns("datatype_selector"),
+               label = "Select a type of data to see locations with data availability",
+               choices = unique(all_data_locations$type),
+               selected = NULL #unique(all_data_locations$type)[1]
+             ), 
+             style = "position:relative;z-index:10000;")
     ),
     fluidRow(
       column(width = 12, leafletOutput(ns("map"), height="500px")),
@@ -98,18 +105,7 @@ mainPageServer <- function(input, output, session) {
   initial_lat <- 29.905 
   initial_lng <- -81.289
   initial_zoom <- 10
-  
-  # Create the dropdown UI
-  output$dropdown_ui <- renderUI({
-    print("Rendering dropdown UI")
-    selectInput(
-      inputId = ns("datatype_selector"),
-      label = "Select a type of data to see locations with data availability",
-      choices = unique(all_data_locations$type),
-      selected = unique(all_data_locations$type)[1]
-    )
-  })
-  
+
   # Create the map
   output$map <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = TRUE)) %>%
