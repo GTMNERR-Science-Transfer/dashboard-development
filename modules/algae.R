@@ -15,10 +15,12 @@ HABPageUI <- function(id) {
       # Map occupies 2nd column
       column(width = 5, leafletOutput(ns("map"), height=750)),
       # plot occupies rows in the 3rd column
-      column(width = 4, plotOutput(ns("timePlot")),
-             sliderInput("bins", "Number of bins:", 
-                         min = 1, max = 50, value = 30))
-      ),
+      column(width = 4, 
+             plotOutput(ns("timePlot")),
+             # sliderInput("bins", "Number of bins:", 
+             #             min = 1, max = 50, value = 30)
+      )
+    ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
   )
 }
@@ -31,19 +33,42 @@ HABPageServer <- function(id, parentSession) {
     output$selectSpecies <- renderUI(selectInput(ns("species"), "Select what species you are interested in (optional)", unique(GeneraData$species[GeneraData$genus == input$genus])))
     output$selectDate <- renderUI(selectInput(ns("date"), "The following dates have data for your selected algal bloom. Select one to view data on map (optional)", unique(GeneraData$`Sample Date`[GeneraData$genus == input$genus & GeneraData$species == input$species])))
     
-    output$timePlot <- renderPlot({
-      # generate bins based on input$bins from ui.R
-      x    <- filter(HAB,  vars == "Temperature (C)") %>% select(vals) %>% pull()
-      bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
-                  length.out = input$bins + 1)
+    ### Selected Data (for map) -----------------------
+    select_HAB_data <- reactive({
+      req(input$genus, input$species, input$date)
       
-      # draw the histogram with the specified number of bins
-      hist(x, breaks = bins, col = 'darkgray', border = 'white',
-           xlab = 'Temperature (degrees Celsius)',
-           main = 'Histogram of water temperatures')
+      GeneraData %>%
+        filter(genus == input$genus,
+               species == input$species,
+               Description == "present") %>% #,
+               #`Sample Date` == input$date) %>%
+        select(Latitude, Longitude, Date, Site, County, vars, vals) %>% 
+        filter(vars == "cells/L*")
     })
     
-    ### Map Marker Data-----------------------
+    output$timePlot <- renderPlot({
+      if(!is.null(select_HAB_data)){
+        ggplot(select_HAB_data(), aes(x = Date, y = vals, color = Site))+
+          geom_point()+
+          labs(x = "", y = "Concentration (cells/L)")+
+          theme_bw()+
+          theme(legend.position = "bottom")
+      }
+      
+      
+      
+      # # generate bins based on input$bins from ui.R
+      # x    <- filter(HAB,  vars == "Temperature (C)") %>% select(vals) %>% pull()
+      # bins <- seq(min(x, na.rm = TRUE), max(x, na.rm = TRUE),
+      #             length.out = input$bins + 1)
+      # 
+      # # draw the histogram with the specified number of bins
+      # hist(x, breaks = bins, col = 'darkgray', border = 'white',
+      #      xlab = 'Temperature (degrees Celsius)',
+      #      main = 'Histogram of water temperatures')
+    })
+    
+    ### Selected Data (for map) -----------------------
     HAB_data_locations <- reactive({
       req(input$genus, input$species, input$date)
       
@@ -51,7 +76,7 @@ HABPageServer <- function(id, parentSession) {
         filter(genus == input$genus,
                species == input$species,
                `Sample Date` == input$date) %>%
-        select(Latitude, Longitude, Site, County, `cells/L*`) %>%
+        select(Latitude, Longitude, Site, County) %>% # , `cells/L*` This is not a column
         distinct() %>% 
         st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
     })
@@ -73,7 +98,7 @@ HABPageServer <- function(id, parentSession) {
                                                         bringToFront = TRUE),
                     group = "Counties", popup = ~NAME) %>% 
         addMarkers(data = HAB_data_locations(),
-                   color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working
+                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working
                    popup = ~paste("Site: ", Site, "<br>",
                                   "County: ", County),
                    group = "HAB") %>% 
