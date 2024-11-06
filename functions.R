@@ -182,8 +182,12 @@ create_plot <- function(df, units_df, selected_column) { # The input here
     return(NULL)  # Prevents further code from running if variable doesn't exist
   }
   
-  print(paste("Creating plot for", selected_column, "for", length(unique(df$StationCode)), "stations"))
-  print(paste("Creating plot for", selected_column, "at", paste(unique(df$StationCode), collapse = ", ")))
+  print(paste("Updating plot for", selected_column,
+              "at stations", paste(unique(df$StationCode), collapse = ", "),
+              "for", min(df$SampleDate), "to", max(df$SampleDate), sep = " "))
+  
+  #print(paste("Creating plot for", selected_column, "for", length(unique(df$StationCode)), "stations"))
+  #print(paste("Creating plot for", selected_column, "at", paste(unique(df$StationCode), collapse = ", ")))
   # At this point, the dataframe has already been filtered for the correct station
   # Initialize the plot
   

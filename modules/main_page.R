@@ -77,7 +77,7 @@ mainPageUI <- function(id) {
                inputId = ns("datatype_selector"),
                label = "Select a type of data to see locations with data availability",
                choices = unique(all_data_locations$type),
-               selected = NULL #unique(all_data_locations$type)[1]
+               selected = unique(all_data_locations$type)[1]
              ), 
              style = "position:relative;z-index:10000;")
     ),
@@ -162,7 +162,7 @@ mainPageServer <- function(input, output, session) {
     # Filter data based on selected group
     filtered_data <- all_data_locations[all_data_locations$type == input$datatype_selector,]
     #print(filtered_data)
-    # Add markers to the map - commented out the popup bc this only works for WQ data
+    # Add markers to the map
     print("Adding markers")
     leafletProxy(ns("map")) %>%
       clearMarkers() %>%
@@ -198,7 +198,7 @@ mainPageServer <- function(input, output, session) {
       #                                           "Latest year of sampling: ", maxYear, "<br",
       #                                           "Sampling start year: ", minYear, "<br")
       #)
-  }, ignoreInit = TRUE)
+  }, ignoreInit = FALSE)
   # Add buttons to go to other pages
   # observeEvent(input[[ns("go_to_subpage")]], {
   #   print("Go to subpage button clicked")
