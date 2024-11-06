@@ -114,8 +114,12 @@ WQ_all <- WQ_all %>%
 # Because this only removes the variables names but keeps everything else
 # associated with that station (which might make things unnecesarily slow)
 # Maybe we can do it by rowID?
-selected_values <- c("Air temperature", "Ammonium (filtered)", "Chlorophyll", "Chlorophyll a (corrected)",
-                     "Chlorophyll a (uncorrected)", "Fecal coliform", "Dissolved oxygen", "Organic carbon",
+selected_values <- c("Air temperature", "Ammonium (filtered)", 
+                     #"Chlorophyll", # Nov 2024, taking this one out for now as well. Checked
+                     # file and this is a "field" measurement, as opposed to "sample"
+                     "Chlorophyll a (corrected)",
+                     #"Chlorophyll a (uncorrected)", 
+                     "Fecal coliform", "Dissolved oxygen", "Organic carbon",
                      "pH", "Salinity", "Specific conductance", "Total nitrogen (TKN + nitrate + nitrite)",
                      "Phosphorus (total)", "Total dissolved solids", "Turbidity", "Water temperature")
 
