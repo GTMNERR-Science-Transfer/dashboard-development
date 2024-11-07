@@ -72,7 +72,14 @@ mainPageUI <- function(id) {
                       the menu to the left of your screen.")),
     # Dropdown menu for markers is above the map
     fluidRow(
-      column(width = 8, uiOutput(ns("dropdown_ui")), style = "position:relative;z-index:10000;")
+      column(width = 8, 
+             selectInput(
+               inputId = ns("datatype_selector"),
+               label = "Select a type of data to see locations with data availability",
+               choices = unique(all_data_locations$type),
+               selected = unique(all_data_locations$type)[1]
+             ), 
+             style = "position:relative;z-index:10000;")
     ),
     fluidRow(
       column(width = 12, leafletOutput(ns("map"), height="500px")),
@@ -98,18 +105,7 @@ mainPageServer <- function(input, output, session) {
   initial_lat <- 29.905 
   initial_lng <- -81.289
   initial_zoom <- 10
-  
-  # Create the dropdown UI
-  output$dropdown_ui <- renderUI({
-    print("Rendering dropdown UI")
-    selectInput(
-      inputId = ns("datatype_selector"),
-      label = "Select a type of data to see locations with data availability",
-      choices = unique(all_data_locations$type),
-      selected = unique(all_data_locations$type)[1]
-    )
-  })
-  
+
   # Create the map
   output$map <- renderLeaflet({
     leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = TRUE)) %>%
@@ -166,7 +162,7 @@ mainPageServer <- function(input, output, session) {
     # Filter data based on selected group
     filtered_data <- all_data_locations[all_data_locations$type == input$datatype_selector,]
     #print(filtered_data)
-    # Add markers to the map - commented out the popup bc this only works for WQ data
+    # Add markers to the map
     print("Adding markers")
     leafletProxy(ns("map")) %>%
       clearMarkers() %>%
@@ -202,7 +198,7 @@ mainPageServer <- function(input, output, session) {
       #                                           "Latest year of sampling: ", maxYear, "<br",
       #                                           "Sampling start year: ", minYear, "<br")
       #)
-  }, ignoreInit = TRUE)
+  }, ignoreInit = FALSE)
   # Add buttons to go to other pages
   # observeEvent(input[[ns("go_to_subpage")]], {
   #   print("Go to subpage button clicked")
