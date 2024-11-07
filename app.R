@@ -11,13 +11,13 @@ source("modules/algae.R")
 #source("modules/win.R")
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Guana River Data Dashboard"),
+  dashboardHeader(title = "Guana Estuary Data Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
       menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
       menuItem("Water Quality Data", tabName = "waterquality", 
                icon = icon("flask-vial", lib="font-awesome"),
-               badgeLabel = "New!", badgeColor = "green"),
+               badgeLabel = "UPDATED!", badgeColor = "fuchsia"),
       menuItem("Harmful Algal Bloom Data", tabName = "algae", 
                icon = icon("microscope", lib = "font-awesome"),
                badgeLabel = "Coming soon", badgeColor = "yellow"),

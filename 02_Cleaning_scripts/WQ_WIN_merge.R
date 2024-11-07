@@ -47,6 +47,8 @@ WQ_GTMNERR_long <- WQ_GTMNERR %>%
                names_to = "variable",
                values_to = "value")
 
+##### Maybe also keep the date as a column?
+
 # How to deal with UNID when merging? Start counting anew (or add however far the
 # one dataset is?)
 
@@ -123,3 +125,22 @@ WQ_all <- WQ_all %>%
 
 # Save data
 saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")
+
+#### Create a df with the units (for plotting) ####
+# Also move this to cleaning script
+WQ_data_units = WQ_all %>%
+  filter(variable %in% c("ComponentLong", # some will be duplicated because they differ between the 2 sets
+                         "Unit", "data_source")
+  ) %>%
+  #select(c(RowID, variable, value)) %>%
+  distinct(RowID, variable, value) %>% # strictly speaking also not necessary
+  pivot_wider(
+    names_from = variable,
+    values_from = value,
+    values_fill = list(value = NA),
+    values_fn = list(value = ~ first(.))
+  ) %>%
+  distinct(ComponentLong, Unit, data_source)
+
+# Save data
+saveRDS(WQ_data_units, "03_Data_for_app/WQ_data_units.Rds")
