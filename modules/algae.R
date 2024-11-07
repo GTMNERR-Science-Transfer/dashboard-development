@@ -45,7 +45,7 @@ HABPageServer <- function(id, parentSession) {
         select(Latitude, Longitude, Date, Site, County, vars, vals) %>% 
         filter(vars == "cells/L*")
     })
-    
+    ##### THIS DOES NOT WORK BECAUSE THERE ARE NO VALS FOR THE 'PRESENT' ALGAE....
     output$timePlot <- renderPlot({
       if(!is.null(select_HAB_data)){
         ggplot(select_HAB_data(), aes(x = Date, y = vals, color = Site))+
