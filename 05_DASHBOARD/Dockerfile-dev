@@ -3,7 +3,7 @@ FROM rocker/shiny:4.3.2
 ARG BRANCH_NAME
 # You can use the ARG value as an environment variable if needed
 ENV BRANCH_NAME=${BRANCH_NAME}
-RUN install2.r rsconnect shiny tidyverse bslib leaflet sf shinydashboard plotly shinyWidgets
+RUN install2.r rsconnect shiny tidyverse bslib leaflet sf shinydashboard plotly shinyWidgets vroom
 WORKDIR /usr/src/dashboard-development
 # Copy the 'app' directory contents into the container
 COPY ./app.R /usr/src/dashboard-development/
