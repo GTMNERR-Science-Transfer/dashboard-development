@@ -6,7 +6,6 @@
 # Email: gklarenberg@ufl.edu
 # Christopher Marais
 # Email: 
-# Last updated: 12 August 2024
 
 library(tidyverse)
 library(shinyWidgets) #not sure if this is necessary? Loaded in global?
@@ -382,7 +381,8 @@ WINPageServer <- function(id, parentSession) {
       
       }, ignoreInit = TRUE)
     
-    # Create plot -> will also only run when button is pressed because it relies on
+    ##### Create plot #### 
+    #-> will also only run when button is pressed because it relies on
     # df_filter()
     output$plot <- renderPlotly({
       
@@ -401,6 +401,24 @@ WINPageServer <- function(id, parentSession) {
                   units_df = WQ_data_units, 
                   selected_column = selected_col())
     })
+    
+    #### Download data ####
+    # from https://github.com/uace-azmet/data-preview-and-download/blob/main/app/app.R
+    output$downloadCSV <- downloadHandler(
+      filename = function() {
+        paste0(
+          "Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
+        )
+      },
+      
+      content = function(file) {
+        vroom::vroom_write(
+          x = dataFormat(), 
+          file = file, 
+          delim = "\t"
+        )
+      }
+    )
     
     #### The 'go back' button ####
     observeEvent(input$go_back, {
