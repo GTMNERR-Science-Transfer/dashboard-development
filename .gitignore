@@ -1,6 +1,8 @@
-# Ignore certain R files - NOT .RData (for now) as I am using it to save data
+# Ignore certain R files 
 .Rhistory
 .Rproj.user/
+# We are using .Rds for saving data so we can safely ignore .RData 
+.RData
 
 # Ignore Mac related files
 .DS_Store
