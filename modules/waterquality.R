@@ -415,7 +415,7 @@ WINPageServer <- function(id, parentSession) {
         vroom::vroom_write(
           x = dataFormat(), 
           file = file, 
-          delim = "\t"
+          delim = ","
         )
       }
     )
