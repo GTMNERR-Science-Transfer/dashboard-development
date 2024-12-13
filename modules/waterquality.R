@@ -364,7 +364,7 @@ WINPageServer <- function(id, parentSession) {
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
-    observeEvent(input$make_plot, { # When user clicks action button: update df_filter
+    observeEvent(c(input$make_plot, input$downloadCSV), { # When user clicks action button: update df_filter
       req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
       
       print(paste("Initiating filter dataframe for", input$column_selector, 
@@ -416,6 +416,7 @@ WINPageServer <- function(id, parentSession) {
       },
       
       content = function(file) {
+        req(df_filter()) # Require this to make sure the data is filtered, also if no plot is made
         vroom::vroom_write(
           x = df_filter(),
           file = file,
