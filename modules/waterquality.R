@@ -379,8 +379,6 @@ WINPageServer <- function(id, parentSession) {
       )
       
       print(paste("CHECK: the filtered dataframe contains data for the stations:", paste(unique(df_filter()$StationCode), collapse = ", ")))
-      print(df_filter())
-      write_csv(df_filter(), "test.csv")
       
       # Make reactive input value
       selected_col(input$column_selector)
@@ -412,19 +410,17 @@ WINPageServer <- function(id, parentSession) {
     # from https://github.com/uace-azmet/data-preview-and-download/blob/main/app/app.R
     output$downloadCSV <- downloadHandler(
       filename = function() {
-        paste0(input$column_selector, ".csv")
-        #paste0(
-        #  "Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
-        #)
+        paste0(
+         "Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
+        )
       },
       
       content = function(file) {
-        write_csv(df_filter(), file)
-        # vroom::vroom_write(
-        #   x = df_filter(), 
-        #   file = file, 
-        #   delim = ","
-        # )
+        vroom::vroom_write(
+          x = df_filter(),
+          file = file,
+          delim = ","
+        )
       }
     )
     
