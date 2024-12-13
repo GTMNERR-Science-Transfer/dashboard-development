@@ -1,12 +1,24 @@
 ### HAB Data------------------------------
-load("./03_Data_for_app/HAB.RData")
+HAB_df <- readRDS("./03_Data_for_app/HAB.Rds")
 GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
                                    names = c("genus", "species"), too_few = "align_start", too_many = "merge")
+
+GeneraData$userMessage <- vector(length = length(GeneraData$genus))
+GeneraData$userMessage[] <- "System Error; please report"
+
+for(i in 1:length(GeneraData$userMessage)){
+  if(!is.na(GeneraData$Description[i])){
+    GeneraData$userMessage[i] = "Algae is Present"  
+  } else{
+    GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$vals[i]), " cells/L")
+  }
+}
 
 HABPageUI <- function(id) {
   ns <- NS(id)
   tagList(
     h2("Harmful Algal Bloom Data"),
+    
     fluidRow(
       #User inputs in 1st column
       column(width = 3, selectInput(ns("genus"), "What genus of Algae do you want data for?", c("All", unique(GeneraData$genus))),
@@ -15,11 +27,9 @@ HABPageUI <- function(id) {
       # Map occupies 2nd column
       column(width = 5, leafletOutput(ns("map"), height=750)),
       # plot occupies rows in the 3rd column
-      column(width = 4, 
-             plotOutput(ns("timePlot")),
-             # sliderInput("bins", "Number of bins:", 
-             #             min = 1, max = 50, value = 30)
-      )
+      ##column(width = 4, ##THIS PLOT IS WHAT I AM CURRENTLY WORKING ON! WILL SHOW A TIME SERIES OF DATA FOR A SPECIFIC STATION ONCE CLICKED, THIS LINE AND THE TWO BELOW IT WILL BE UN-COMMENTED
+             ##plotOutput(ns("timePlot")), 
+      ##)
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
   )
@@ -40,20 +50,19 @@ HABPageServer <- function(id, parentSession) {
       GeneraData %>%
         filter(genus == input$genus,
                species == input$species,
-               Description == "present") %>% #,
+               vars == "Cells/L*") %>% #,
                #`Sample Date` == input$date) %>%
-        select(Latitude, Longitude, Date, Site, County, vars, vals) %>% 
-        filter(vars == "cells/L*")
+        select(Latitude, Longitude, Date, Site, County, userMessage)
     })
     ##### THIS DOES NOT WORK BECAUSE THERE ARE NO VALS FOR THE 'PRESENT' ALGAE....
     output$timePlot <- renderPlot({
-      if(!is.null(select_HAB_data)){
+      #if(!is.null(select_HAB_data)){
         ggplot(select_HAB_data(), aes(x = Date, y = vals, color = Site))+
           geom_point()+
           labs(x = "", y = "Concentration (cells/L)")+
           theme_bw()+
           theme(legend.position = "bottom")
-      }
+      #}
       
       
       
@@ -75,8 +84,9 @@ HABPageServer <- function(id, parentSession) {
       GeneraData %>%
         filter(genus == input$genus,
                species == input$species,
-               `Sample Date` == input$date) %>%
-        select(Latitude, Longitude, Site, County) %>% # , `cells/L*` This is not a column
+               `Sample Date` == input$date,
+               vars == "cells/L*") %>%
+        select(Latitude, Longitude, Site, County, userMessage) %>%
         distinct() %>% 
         st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
     })
@@ -98,9 +108,10 @@ HABPageServer <- function(id, parentSession) {
                                                         bringToFront = TRUE),
                     group = "Counties", popup = ~NAME) %>% 
         addMarkers(data = HAB_data_locations(),
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working
+                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
-                                  "County: ", County),
+                                  "County: ", County, "<br>",
+                                  userMessage),
                    group = "HAB") %>% 
         # # Layers control (turning layers on and off)
         addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries"),
