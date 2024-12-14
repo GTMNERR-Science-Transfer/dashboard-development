@@ -368,7 +368,9 @@ WINPageServer <- function(id, parentSession) {
     selected_col <- reactiveVal() # Same
     
     observeEvent(c(input$make_plot, input$downloadCSV), { # When user clicks action button: update df_filter
-        if (is.null(selected_stations()) || length(selected_stations()) == 0) {
+      #### 12/13/2024 This still does not work in terms of downloading data before
+      # make_plot is clicked. After make_plot is clicked, it works fine.
+      if (is.null(selected_stations()) || length(selected_stations()) == 0) {
         # Render empty df_filter
         df_filter(character())
         print("df_filter is empty")
