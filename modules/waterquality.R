@@ -264,6 +264,7 @@ WINPageServer <- function(id, parentSession) {
       if (is.null(input$station_list)) {
         selected_stations(character())  # Clear the reactive value
         print("All stations deselected.")
+        print(selected_stations())
         
         # Update all map markers to blue again
         leafletProxy("map") %>%
@@ -288,6 +289,7 @@ WINPageServer <- function(id, parentSession) {
       input$station_list
     }, {
       # Retrieve current selections
+      print(paste("Stations selected before selection:", selected_stations()))
       current_selected_stations <- selected_stations()
         
       # Add all selected stations from the dropdown
@@ -300,6 +302,7 @@ WINPageServer <- function(id, parentSession) {
         
       # Update selected_stations reactive value
       selected_stations(current_selected_stations)
+      print(paste("Stations selected after selection:", selected_stations()))
         
     }, ignoreInit = TRUE)
     
@@ -365,6 +368,12 @@ WINPageServer <- function(id, parentSession) {
     selected_col <- reactiveVal() # Same
     
     observeEvent(c(input$make_plot, input$downloadCSV), { # When user clicks action button: update df_filter
+        if (is.null(selected_stations()) || length(selected_stations()) == 0) {
+        # Render empty df_filter
+        df_filter(character())
+        print("df_filter is empty")
+      }
+      
       req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
       
       print(paste("Initiating filter dataframe for", input$column_selector, 
@@ -383,28 +392,25 @@ WINPageServer <- function(id, parentSession) {
       # Make reactive input value
       selected_col(input$column_selector)
       
+      ##### Create plot #### 
+      output$plot <- renderPlotly({
+        print("Running plotting code")
+        req(df_filter(), selected_col(), selected_stations())
+        
+        if (is.null(df_filter()) || nrow(df_filter()) == 0) {
+          # Render empty plot
+          return(plot_ly(type = 'scatter', mode = 'markers') %>%
+                   layout(title = "No data selected", 
+                          xaxis = list(visible = FALSE), 
+                          yaxis = list(visible = FALSE)))
+        }
+        
+        # Create the plot (has a built in method to show a message if there is no data available)
+        create_plot(df = df_filter(), 
+                    units_df = WQ_data_units, 
+                    selected_column = selected_col())
+      })
       }, ignoreInit = TRUE)
-    
-    ##### Create plot #### 
-    #-> will also only run when button is pressed because it relies on
-    # df_filter()
-    output$plot <- renderPlotly({
-      
-      if (is.null(df_filter()) || nrow(df_filter()) == 0) {
-        # Render empty plot
-        return(plot_ly(type = 'scatter', mode = 'markers') %>%
-                 layout(title = "No data selected", 
-                        xaxis = list(visible = FALSE), 
-                        yaxis = list(visible = FALSE)))
-      }
-
-      req(df_filter(), selected_col(), selected_stations())
-      
-      # Create the plot (has a built in method to show a message if there is no data available)
-      create_plot(df = df_filter(), 
-                  units_df = WQ_data_units, 
-                  selected_column = selected_col())
-    })
     
     #### Download data ####
     # from https://github.com/uace-azmet/data-preview-and-download/blob/main/app/app.R
@@ -416,6 +422,7 @@ WINPageServer <- function(id, parentSession) {
       },
       
       content = function(file) {
+        #req(df_filter(), selected_col(), selected_stations())
         req(df_filter()) # Require this to make sure the data is filtered, also if no plot is made
         vroom::vroom_write(
           x = df_filter(),
