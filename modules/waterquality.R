@@ -367,9 +367,7 @@ WINPageServer <- function(id, parentSession) {
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
-    observeEvent(c(input$make_plot, input$downloadCSV), { # When user clicks action button: update df_filter
-      #### 12/13/2024 This still does not work in terms of downloading data before
-      # make_plot is clicked. After make_plot is clicked, it works fine.
+    observeEvent(input$make_plot, { # When user clicks action button: update df_filter
       if (is.null(selected_stations()) || length(selected_stations()) == 0) {
         # Render empty df_filter
         df_filter(character())
@@ -424,8 +422,13 @@ WINPageServer <- function(id, parentSession) {
       },
       
       content = function(file) {
-        #req(df_filter(), selected_col(), selected_stations())
-        req(df_filter()) # Require this to make sure the data is filtered, also if no plot is made
+        req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
+        # Make the (reactive) filtered dataframe -> also only changes when button is pressed
+        df_filter(WQ_df %>% 
+                    filter_dataframe2(filter_value = input$column_selector,
+                                      date_range = input$date_range,
+                                      filter_station = selected_stations()))
+        # make wide
         vroom::vroom_write(
           x = df_filter(),
           file = file,
