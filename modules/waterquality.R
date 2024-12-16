@@ -367,7 +367,8 @@ WINPageServer <- function(id, parentSession) {
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
-    observeEvent(input$make_plot, { # When user clicks action button: update df_filter
+    #observeEvent(input$make_plot, { # When user clicks action button: update df_filter
+    observe({ # 
       if (is.null(selected_stations()) || length(selected_stations()) == 0) {
         # Render empty df_filter
         df_filter(character())
@@ -391,7 +392,9 @@ WINPageServer <- function(id, parentSession) {
       
       # Make reactive input value
       selected_col(input$column_selector)
-      
+    })
+    
+    observeEvent(input$make_plot, { # When user clicks action button  
       ##### Create plot #### 
       output$plot <- renderPlotly({
         print("Running plotting code")
