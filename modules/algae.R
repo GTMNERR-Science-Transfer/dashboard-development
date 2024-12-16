@@ -148,14 +148,14 @@ HABPageServer <- function(id, parentSession) {
     })
 
     ##### THIS DOES NOT WORK BECAUSE THERE ARE NO VALS FOR THE 'PRESENT' ALGAE....
-    output$timePlot <- renderPlot({
-      ggplot(select_HAB_data(), aes(x = Date, y = 'cells/L*', color = Site))+
-        geom_point()+
-        labs(x = "", y = "Concentration (cells/L)")+
-        theme_bw()+
-        theme(legend.position = "bottom")
-      
-    })
+    # output$timePlot <- renderPlot({
+    #   ggplot(select_HAB_data(), aes(x = Date, y = 'cells/L*', color = Site))+
+    #     geom_point()+
+    #     labs(x = "", y = "Concentration (cells/L)")+
+    #     theme_bw()+
+    #     theme(legend.position = "bottom")
+    #   
+    # })
     
     ### Update map based on filtered data --------------------
     # Updates every time HAB_data_locations() is changed
