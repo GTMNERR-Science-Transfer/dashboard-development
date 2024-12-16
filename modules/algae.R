@@ -1,3 +1,13 @@
+########################################################################
+########## NERRS Science Transfer project - GTMNERR        #############
+########################################################################
+
+# Chad Palmer
+# Geraldine Klarenberg, PhD
+# Email: gklarenberg@ufl.edu
+# University of Florida
+# Last updated: see commit history
+
 ### HAB Data------------------------------
 HAB <- readRDS("./03_Data_for_app/HAB.Rds")
 
@@ -7,9 +17,11 @@ HAB <- readRDS("./03_Data_for_app/HAB.Rds")
 GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
                                    names = c("genus", "species"), too_few = "align_start", too_many = "merge")
 
+
 GeneraData$userMessage <- vector(length = length(GeneraData$genus))
 GeneraData$userMessage[] <- "System Error; please report"
 
+# Move this to the cleaning script. Also rewrite as a vectorized operation (is faster)
 for(i in 1:length(GeneraData$userMessage)){
   if(!is.na(GeneraData$Description[i])){
     GeneraData$userMessage[i] = "Algae is Present"  
@@ -17,6 +29,12 @@ for(i in 1:length(GeneraData$userMessage)){
     GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$'cells/L*'[i]), " cells/L")
   }
 }
+
+GeneraData_locs <- GeneraData %>% 
+  select(Latitude, Longitude, Site, County) %>% 
+  distinct() %>% 
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+  
 
 HABPageUI <- function(id) {
   ns <- NS(id)
@@ -77,6 +95,34 @@ HABPageServer <- function(id, parentSession) {
     output$selectSpecies <- renderUI(selectInput(ns("species"), "Select what species you are interested in (optional)", unique(GeneraData$species[GeneraData$genus == input$genus])))
     output$selectDate <- renderUI(sliderInput(ns("date_range"), "The following dates have data for your selected algal genus. Set a range to narrow data on the map", min = ymd(min(GeneraData$`Sample Date`[GeneraData$genus == input$genus & GeneraData$species == input$species])), max = ymd(max(GeneraData$`Sample Date`[GeneraData$genus == input$genus & GeneraData$species == input$species]))))
     
+    ### Create the map upon startup -------------------------------
+    output$map <- renderLeaflet({
+      
+      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
+        #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
+        clearBounds() %>% # centers map on all min/max coords
+        # Base map
+        addTiles() %>%  # Add default OpenStreetMap map tiles
+        # Polygons, add groups
+        addPolygons(data = GTMNERR, color = "purple", fill = NA, 
+                    weight = 2, opacity = 1, group = "GTMNERR boundaries") %>% 
+        addPolygons(data = counties_select, 
+                    color = "black", weight = 2, opacity = 1,
+                    fill = TRUE, fillColor = "white", fillOpacity = 0.01,
+                    highlightOptions = highlightOptions(color = "white", weight = 2,
+                                                        bringToFront = TRUE),
+                    group = "Counties", popup = ~NAME) %>% 
+        addMarkers(data = GeneraData_locs, # Initialize without reactive dataframe
+                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
+                   popup = ~paste("Site: ", Site, "<br>",
+                                  "County: ", County, "<br>"),
+                   group = "HAB") %>% 
+        # Layers control (turning layers on and off)
+        addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries"),
+                         options = layersControlOptions(collapsed = FALSE)) %>%
+        addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
+    })
+    
     ### Selected Data (for map) -----------------------
     select_HAB_data <- reactive({
       req(input$genus, input$species, input$date_range)
@@ -100,36 +146,7 @@ HABPageServer <- function(id, parentSession) {
         distinct() %>% 
         st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
     })
-    
-    output$map <- renderLeaflet({
-      
-      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18)) %>%
-        #setView(lng=-81.347388, lat=30.075, zoom = 11) %>% 
-        clearBounds() %>% # centers map on all min/max coords
-        # Base map
-        addTiles() %>%  # Add default OpenStreetMap map tiles
-        # Polygons, add groups
-        addPolygons(data = GTMNERR, color = "purple", fill = NA, 
-                    weight = 2, opacity = 1, group = "GTMNERR boundaries") %>% 
-        addPolygons(data = counties_select, 
-                    color = "black", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "white", fillOpacity = 0.01,
-                    highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                        bringToFront = TRUE),
-                    group = "Counties", popup = ~NAME) %>% 
-        addMarkers(data = HAB_data_locations(),
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
-                   popup = ~paste("Site: ", Site, "<br>",
-                                  "County: ", County, "<br>",
-                                  "Sample Date: ", `Sample Date`, "<br>",
-                                  userMessage),
-                   group = "HAB") %>% 
-        # # Layers control (turning layers on and off)
-        addLayersControl(overlayGroups = c("Counties", "GTMNERR boundaries"),
-                         options = layersControlOptions(collapsed = FALSE)) %>%
-        addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
-    })
-    
+
     ##### THIS DOES NOT WORK BECAUSE THERE ARE NO VALS FOR THE 'PRESENT' ALGAE....
     output$timePlot <- renderPlot({
       ggplot(select_HAB_data(), aes(x = Date, y = 'cells/L*', color = Site))+
@@ -138,6 +155,22 @@ HABPageServer <- function(id, parentSession) {
         theme_bw()+
         theme(legend.position = "bottom")
       
+    })
+    
+    ### Update map based on filtered data --------------------
+    # Updates every time HAB_data_locations() is changed
+    observe({
+      leafletProxy("map") %>%
+        # First remove original markers (otherwise they just keep plotting over each other)
+        clearMarkers() %>%
+        # Make / keep unselected stations blue
+        addMarkers(data = HAB_data_locations(), # Use reactive (filtered) dataframe
+                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
+                   popup = ~paste("Site: ", Site, "<br>",
+                                  "County: ", County, "<br>",
+                                  "Sample Date: ", `Sample Date`, "<br>",
+                                  userMessage),
+                   group = "HAB")
     })
     
     observeEvent(input$go_back, {
