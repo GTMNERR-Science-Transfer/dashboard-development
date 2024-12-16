@@ -121,7 +121,7 @@ HABPageServer <- function(id, parentSession) {
                    #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
                                   "County: ", County, "<br>",
-                                  "Sample Date: " 'Sample Date', "<br>",
+                                  "Sample Date: ", `Sample Date`, "<br>",
                                   userMessage),
                    group = "HAB") %>% 
         # # Layers control (turning layers on and off)
