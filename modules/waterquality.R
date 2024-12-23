@@ -94,17 +94,7 @@ WINPageUI <- function(id) {
                )
              ),
              fluidRow(
-               column(width = 6,
-                      actionBttn( # function from shinyWidgets
-                        inputId = ns("make_plot"),
-                        label = "Create plot!", 
-                        style = "fill",
-                        color = "warning",
-                        icon = icon("arrow-trend-up", library = "fa"),
-                        block = TRUE # full-width button
-                      )
-               ),
-               column(width = 6,
+               column(width = 12,
                       downloadButton(
                         outputId = ns("downloadCSV"),
                         label = "Download selected data"))
@@ -207,11 +197,11 @@ WINPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
     })
     
-    #### Render an empty plot initially ####
-    output$plot <- renderPlotly({
-      plot_ly(type = 'scatter', mode = 'markers') %>%
-        layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-    })
+    # #### Render an empty plot initially ####
+    # output$plot <- renderPlotly({
+    #   plot_ly(type = 'scatter', mode = 'markers') %>%
+    #     layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
+    # })
     
     # Note: all the input$... are already reactive values (i.e. they get updated reactively)
     
@@ -394,11 +384,12 @@ WINPageServer <- function(id, parentSession) {
       selected_col(input$column_selector)
     })
     
-    observeEvent(input$make_plot, { # When user clicks action button  
+    #observeEvent(input$make_plot, { # When user clicks action button  
+    observe({   
       ##### Create plot #### 
       output$plot <- renderPlotly({
         print("Running plotting code")
-        req(df_filter(), selected_col(), selected_stations())
+        req(df_filter(), selected_col(), selected_stations()) # By having this req in here, plot updates every time df_filter is updated....
         
         if (is.null(df_filter()) || nrow(df_filter()) == 0) {
           # Render empty plot
@@ -413,10 +404,9 @@ WINPageServer <- function(id, parentSession) {
                     units_df = WQ_data_units, 
                     selected_column = selected_col())
       })
-      }, ignoreInit = TRUE)
+    })
     
     #### Download data ####
-    # from https://github.com/uace-azmet/data-preview-and-download/blob/main/app/app.R
     output$downloadCSV <- downloadHandler(
       filename = function() {
         paste0(
