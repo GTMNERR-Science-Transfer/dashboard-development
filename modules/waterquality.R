@@ -357,7 +357,7 @@ WINPageServer <- function(id, parentSession) {
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
-    #observeEvent(input$make_plot, { # When user clicks action button: update df_filter
+    # df_filter updates dynamically
     observe({ # 
       if (is.null(selected_stations()) || length(selected_stations()) == 0) {
         # Render empty df_filter
@@ -384,7 +384,7 @@ WINPageServer <- function(id, parentSession) {
       selected_col(input$column_selector)
     })
     
-    #observeEvent(input$make_plot, { # When user clicks action button  
+    # Plot updates dynamically  
     observe({   
       ##### Create plot #### 
       output$plot <- renderPlotly({
@@ -410,18 +410,21 @@ WINPageServer <- function(id, parentSession) {
     output$downloadCSV <- downloadHandler(
       filename = function() {
         paste0(
-         "Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
+          "Guana-WQ-", input$column_selector, ".csv"
+          # The following option became too long, plus would only add 1 station name
+         #"Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
         )
       },
       
       content = function(file) {
         req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
-        # Make the (reactive) filtered dataframe -> also only changes when button is pressed
-        df_filter(WQ_df %>% 
+        # Make the (reactive) filtered dataframe
+        df_filter(WQ_df %>%
                     filter_dataframe2(filter_value = input$column_selector,
                                       date_range = input$date_range,
-                                      filter_station = selected_stations()))
-        # make wide
+                                      filter_station = selected_stations()) %>% 
+                    select(-geometry))
+        # Write data
         vroom::vroom_write(
           x = df_filter(),
           file = file,
