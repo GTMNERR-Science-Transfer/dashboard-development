@@ -10,6 +10,7 @@ if(!require(sf)){ install.packages("sf") } ;  library(sf)
 if(!require(fs)){ install.packages("fs") } ;  library(fs)
 if(!require(plotly)){ install.packages("plotly") } ;  library(plotly)
 if(!require(shinyWidgets)){ install.packages("shinyWidgets") } ;  library(shinyWidgets)
+if(!require(vroom)){ install.packages("vroom") } ;  library(vroom)
 
 
 #### Get app.R file dir and set work dir ---------------------
