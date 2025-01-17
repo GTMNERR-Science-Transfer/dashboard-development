@@ -417,16 +417,13 @@ WINPageServer <- function(id, parentSession) {
       },
       
       content = function(file) {
-        req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
-        # Make the (reactive) filtered dataframe
-        df_filter(WQ_df %>%
-                    filter_dataframe2(filter_value = input$column_selector,
-                                      date_range = input$date_range,
-                                      filter_station = selected_stations()) %>% 
-                    select(-geometry))
+        req(df_filter())
+
         # Write data
         vroom::vroom_write(
-          x = df_filter(),
+          x = df_filter() %>% 
+            dplyr::ungroup() %>% 
+            dplyr::select(-geometry),
           file = file,
           delim = ","
         )
