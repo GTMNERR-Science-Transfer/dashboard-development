@@ -14,23 +14,23 @@ HAB <- readRDS("./03_Data_for_app/HAB.Rds")
 # Create long format so it can be used in the Shiny app
 # Only doing this with numeric variables for now
 
-GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
-                                   names = c("genus", "species"), too_few = "align_start", too_many = "merge")
+# GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
+#                                    names = c("genus", "species"), too_few = "align_start", too_many = "merge")
+# 
+# 
+# GeneraData$userMessage <- vector(length = length(GeneraData$genus))
+# GeneraData$userMessage[] <- "System Error; please report"
+# 
+# # Move this to the cleaning script. Also rewrite as a vectorized operation (is faster)
+# for(i in 1:length(GeneraData$userMessage)){
+#   if(!is.na(GeneraData$Description[i])){
+#     GeneraData$userMessage[i] = "Algae is Present"  
+#   } else{
+#     GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$'cells/L*'[i]), " cells/L")
+#   }
+# }
 
-
-GeneraData$userMessage <- vector(length = length(GeneraData$genus))
-GeneraData$userMessage[] <- "System Error; please report"
-
-# Move this to the cleaning script. Also rewrite as a vectorized operation (is faster)
-for(i in 1:length(GeneraData$userMessage)){
-  if(!is.na(GeneraData$Description[i])){
-    GeneraData$userMessage[i] = "Algae is Present"  
-  } else{
-    GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$'cells/L*'[i]), " cells/L")
-  }
-}
-
-GeneraData_locs <- GeneraData %>% 
+HAB_locs <- HAB %>% 
   select(Latitude, Longitude, Site, County) %>% 
   distinct() %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
@@ -56,31 +56,29 @@ HABPageUI <- function(id) {
     ),
     fluidRow(
       #User inputs in 1st column
-      column(width = 3, selectInput(ns("genus"), "What genus of Algae do you want data for?", c("All", unique(GeneraData$genus))),
-             uiOutput(ns("selectSpecies")),
+      column(width = 3, 
+             selectInput(ns("algae_type"), "What type of algae do you want data for?", 
+                         c(unique(HAB$type))),
+             uiOutput(ns("selectStation")),
              sliderInput(
                inputId = ns("date_range"),
                label = "Select a Date Range",
-               min = ymd(min(GeneraData$'Sample Date')), #NULL
-               max = ymd(max(GeneraData$'Sample Date')), #NULL
-               value = c(ymd(min(GeneraData$'Sample Date')), 
-                         ymd(max(GeneraData$'Sample Date'))),
+               min = ymd(min(HAB$'Sample Date')), #NULL
+               max = ymd(max(HAB$'Sample Date')), #NULL
+               value = c(ymd(min(HAB$'Sample Date')), 
+                         ymd(max(HAB$'Sample Date'))),
                timeFormat = "%m/%d/%Y",
                width = "100%"
              ),
              #uiOutput(ns("selectDate")) #Keeping as old code in case I need to go back to a single date option
              ),
       # Map occupies 2nd column
-      column(width = 9, leafletOutput(ns("map"), height=750)),
-      # plot occupies rows in the 3rd column
-      ##column(width = 4, ##THIS PLOT IS WHAT I AM CURRENTLY WORKING ON! WILL SHOW A TIME SERIES OF DATA FOR A SPECIFIC STATION ONCE CLICKED, THIS LINE AND THE TWO BELOW IT WILL BE UN-COMMENTED
-             ##plotOutput(ns("timePlot")), 
-      ##)
+      column(width = 9, leafletOutput(ns("map"), height=750))
     ),
     fluidRow(
       #User inputs in 1st column
       column(width = 9, 
-      plotOutput(ns("timePlot")), 
+      plotlyOutput(ns("timePlot")), 
       )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
@@ -92,8 +90,12 @@ HABPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    output$selectSpecies <- renderUI(selectInput(ns("species"), "Select what species you are interested in (optional)", unique(GeneraData$species[GeneraData$genus == input$genus])))
-    output$selectDate <- renderUI(sliderInput(ns("date_range"), "The following dates have data for your selected algal genus. Set a range to narrow data on the map", min = ymd(min(GeneraData$`Sample Date`[GeneraData$genus == input$genus & GeneraData$species == input$species])), max = ymd(max(GeneraData$`Sample Date`[GeneraData$genus == input$genus & GeneraData$species == input$species]))))
+    output$selectStation <- renderUI(selectInput(ns("station"), 
+                                                 "Select what station you are interested in (optional)", 
+                                                 unique(HAB$Site[HAB$type == input$algae_type])))
+    output$selectDate <- renderUI(sliderInput(ns("date_range"), 
+                                              "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
+                                              min = ymd(min(HAB$`Sample Date`[HAB$type == input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type == input$algae_type]))))
     
     ### Create the map upon startup -------------------------------
     output$map <- renderLeaflet({
@@ -112,7 +114,7 @@ HABPageServer <- function(id, parentSession) {
                     highlightOptions = highlightOptions(color = "white", weight = 2,
                                                         bringToFront = TRUE),
                     group = "Counties", popup = ~NAME) %>% 
-        addMarkers(data = GeneraData_locs, # Initialize without reactive dataframe
+        addMarkers(data = HAB_locs, # Initialize without reactive dataframe
                    #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
                                   "County: ", County, "<br>"),
@@ -125,24 +127,22 @@ HABPageServer <- function(id, parentSession) {
     
     ### Selected Data (for map) -----------------------
     select_HAB_data <- reactive({
-      req(input$genus, input$species, input$date_range)
+      req(input$algae_type, input$date_range)
       
-      GeneraData %>%
-        filter(genus == input$genus,
-               species == input$species) %>% #,
+      HAB %>%
+        filter(type == input$algae_type) %>% #,
                #`Sample Date` == input$date) %>%
-        select(Latitude, Longitude, Date, Site, County, userMessage)
+        select(Latitude, Longitude, Date, Site, County)
     })
     
     ### Selected Data (for map) -----------------------
     HAB_data_locations <- reactive({
-      req(input$genus, input$species, input$date_range)
+      req(input$algae_type, input$date_range)
       
-      GeneraData %>%
-        filter(genus == input$genus,
-               species == input$species,
+      HAB %>%
+        filter(type == input$algae_type,
                ymd(`Sample Date`) >= input$date_range[1] & ymd(`Sample Date`) <= input$date_range[2]) %>%
-        select(Latitude, Longitude, Site, County, userMessage, 'Sample Date') %>%
+        select(Latitude, Longitude, Site, County, 'Sample Date') %>%
         distinct() %>% 
         st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
     })
@@ -157,6 +157,42 @@ HABPageServer <- function(id, parentSession) {
     #   
     # })
     
+    output$timePlot <- renderPlotly({
+      p <- HAB %>% 
+        filter(type %in% type_choice,
+               Site %in% site_choice,
+               !is.na(`cells/L*`))  %>% 
+        mutate(date = dmy(`Sample Date`)) %>% 
+        mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+        group_by(Site, date, `Sample Time`, type, Site_type) %>% 
+        summarize(total = sum(`cells/L*`)) %>% 
+        ggplot(aes(x = date, y = total, color = type)) +
+        geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+        geom_point(size = 2, pch = 1) +
+        labs(x = "", y = "Total cells/liter") +
+        theme_bw() +
+        facet_wrap(
+          ~ Site_type, 
+          ncol = 1, 
+          scales = "free_y"
+        ) +
+        theme(
+          strip.text = element_text(size = 12), # Adjust strip text size
+          strip.placement = "outside",         # Place strips outside plot area
+          strip.background = element_rect(fill = NA),
+          legend.position = "none"
+        )
+      
+      gp <- ggplotly(p,
+               dynamicTicks = TRUE) %>% 
+        layout(margin = list(r = 50, l=70)) # Add more margin space to the left and the right
+      # Set the y-axis label position (more to the left)    
+      gp[["x"]][["layout"]][["annotations"]][[1]][["x"]] <- -0.02
+
+      gp
+    })
+    
+    
     ### Update map based on filtered data --------------------
     # Updates every time HAB_data_locations() is changed
     observe({
@@ -167,9 +203,10 @@ HABPageServer <- function(id, parentSession) {
         addMarkers(data = HAB_data_locations(), # Use reactive (filtered) dataframe
                    #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
-                                  "County: ", County, "<br>",
-                                  "Sample Date: ", `Sample Date`, "<br>",
-                                  userMessage),
+                                  "County: ", County, "<br>"#,
+                                  #"Sample Date: ", `Sample Date`, "<br>",
+                                  #userMessage
+                                  ),
                    group = "HAB")
     })
     

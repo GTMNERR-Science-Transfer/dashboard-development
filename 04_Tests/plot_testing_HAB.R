@@ -9,6 +9,7 @@
 # Script for testing/playing with HAB data viz
 
 library(tidyverse)
+library(plotly)
 HAB <- readRDS("./03_Data_for_app/HAB.Rds")
 
 ###############################################
@@ -35,22 +36,48 @@ HAB %>%
   scale_y_log10()
 
 # "Balloon" plots (this way zeros are also shown) - NOT by genus
+# Daily
+type_choice = c("Diatoms", "Cyanobacteria")
+site_choice = c("Guana Lake", "Crescent Beach")
+
 p <- HAB %>% 
-  filter(type == "Diatoms",
-         Site == "Guana Lake",
+  filter(type %in% type_choice,
+         Site %in% site_choice,
          !is.na(`cells/L*`))  %>% 
   mutate(date = dmy(`Sample Date`)) %>% 
-  group_by(date, `Sample Time`) %>% 
+  mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+  group_by(Site, date, `Sample Time`, type, Site_type) %>% 
   summarize(total = sum(`cells/L*`)) %>% 
-  ggplot(aes(x = date, y = total)) +
+  ggplot(aes(x = date, y = total, color = type)) +
   geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
   geom_point(size = 2, pch = 1) +
-  labs(x = "", y = "Total diatoms") +
-  theme_bw() #+
-#scale_y_log10(expand = c(0,0))
-ggplotly(p)
+  labs(x = "", y = "Total cells/liter") +
+  theme_bw() +
+  facet_wrap(
+    ~ Site_type, 
+    ncol = 1, 
+    scales = "free_y"
+  ) +
+  theme(
+    strip.text = element_text(size = 12), # Adjust strip text size
+    strip.placement = "outside",         # Place strips outside plot area
+    strip.background = element_rect(fill = NA),
+    legend.position = "none"
+  )
+
+gp <- ggplotly(p,
+         dynamicTicks = TRUE) %>% 
+  layout(margin = list(r = 50, l=70)) # Add more margin space to the left and the right
+# Set the y-axis label position (more to the left)    
+gp[["x"]][["layout"]][["annotations"]][[1]][["x"]] <- -0.02
+
+gp
+
 # So in app: filter for site and type. Add type to y-axis. If done like WQ, maybe
 # show more sites or variables (types)? Maybe start with doing types?
+# Or do something like Shannon did: facet_wraps, add a facet if there are more than 1
+# station selected/
+
 
 # For numeric data by month, average (add error bars?)
 HAB %>% 
