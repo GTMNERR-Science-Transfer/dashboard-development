@@ -160,18 +160,23 @@ HABPageServer <- function(id, parentSession) {
     
     # Make the HAB dataframe reactive
     HAB_df <- reactiveVal()
+    selected_type <- reactiveVal()
     
     observeEvent({ # If the selected algae type changes
       input$algae_type
     },{ # Filter dataframe
+      selected_type(input$algae_type)
+      
       HAB_df(HAB %>%
-               HAB_filter(type = input$algae_type,
+               HAB_filter(type = selected_type(),
                           site = input$station))
     })
     
     observeEvent({ # If the selected station changes
       input$station
     },{ # Filter dataframe
+      req(selected_type())
+      
       HAB_df(HAB %>%
                HAB_filter(type = input$algae_type,
                           site = input$station))
@@ -179,7 +184,8 @@ HABPageServer <- function(id, parentSession) {
     
     output$timePlot <- renderPlotly({
       req(HAB_df())
-      
+      #### Have to move this to functions and add an if-else set up so it does not
+      # use facet_grid if only one algae type is selected.
       # For numeric data only
       p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
         geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
