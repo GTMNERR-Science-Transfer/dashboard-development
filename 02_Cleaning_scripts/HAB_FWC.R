@@ -46,29 +46,3 @@ HAB <- HAB %>%
 # Save it as an .Rds file so it can be read into the Shiny app
 saveRDS(HAB, "03_Data_for_app/HAB.Rds")
 
-###############################################
-
-# Check all unique categories
-unique(HAB$Description)
-unique(HAB$Site) # Also get coordinates
-unique(HAB$`Collection Agency`)
-unique(HAB$County)
-#unique(HAB$Proofed)
-unique(HAB$Date)
-unique(HAB$vars)
-
-# Histogram
-hist(HAB[which(HAB$vars == "Temperature (C)"),"vals"], breaks = 6, col = 'darkgray', border = 'white',
-     xlab = 'Temperature (degrees Celsius)',
-     main = 'Histogram of water temperatures')
-
-ggplot(HAB %>% filter(vars == "Temperature (C)"), aes(x = vals))+
-  geom_histogram(bins = 10)
-
-# Algae counts over time
-# NOTE: some only have "present" but no count
-# Make a list of algae that have counts, and those that only have "present"
-
-algae_present <- HAB %>% filter(Description == "present")
-algae_count <- HAB %>% filter(Description != "present")
-
