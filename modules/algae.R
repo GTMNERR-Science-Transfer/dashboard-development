@@ -57,8 +57,10 @@ HABPageUI <- function(id) {
     fluidRow(
       #User inputs in 1st column
       column(width = 3, 
-             selectInput(ns("algae_type"), "What type of algae do you want data for?", 
-                         c(unique(HAB$type))),
+             selectInput(ns("algae_type"), 
+                         label = "What type of algae do you want data for?", 
+                         choices = c(unique(HAB$type)), 
+                         multiple = TRUE),
              uiOutput(ns("selectStation")),
              sliderInput(
                inputId = ns("date_range"),
@@ -77,7 +79,7 @@ HABPageUI <- function(id) {
     ),
     fluidRow(
       #User inputs in 1st column
-      column(width = 9, 
+      column(width = 12, 
       plotlyOutput(ns("timePlot")), 
       )
     ),
@@ -92,10 +94,10 @@ HABPageServer <- function(id, parentSession) {
     ns <- session$ns
     output$selectStation <- renderUI(selectInput(ns("station"), 
                                                  "Select what station you are interested in (optional)", 
-                                                 unique(HAB$Site[HAB$type == input$algae_type])))
+                                                 unique(HAB$Site[HAB$type %in% input$algae_type])))
     output$selectDate <- renderUI(sliderInput(ns("date_range"), 
                                               "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
-                                              min = ymd(min(HAB$`Sample Date`[HAB$type == input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type == input$algae_type]))))
+                                              min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
     
     ### Create the map upon startup -------------------------------
     output$map <- renderLeaflet({
@@ -130,8 +132,7 @@ HABPageServer <- function(id, parentSession) {
       req(input$algae_type, input$date_range)
       
       HAB %>%
-        filter(type == input$algae_type) %>% #,
-               #`Sample Date` == input$date) %>%
+        filter(type %in% input$algae_type) %>% 
         select(Latitude, Longitude, Date, Site, County)
     })
     
@@ -140,7 +141,7 @@ HABPageServer <- function(id, parentSession) {
       req(input$algae_type, input$date_range)
       
       HAB %>%
-        filter(type == input$algae_type,
+        filter(type %in% input$algae_type,
                ymd(`Sample Date`) >= input$date_range[1] & ymd(`Sample Date`) <= input$date_range[2]) %>%
         select(Latitude, Longitude, Site, County, 'Sample Date') %>%
         distinct() %>% 
@@ -157,16 +158,30 @@ HABPageServer <- function(id, parentSession) {
     #   
     # })
     
+    # Make the HAB dataframe reactive
+    HAB_df <- reactiveVal()
+    
+    observeEvent({ # If the selected algae type changes
+      input$algae_type
+    },{ # Filter dataframe
+      HAB_df(HAB %>%
+               HAB_filter(type = input$algae_type,
+                          site = input$station))
+    })
+    
+    observeEvent({ # If the selected station changes
+      input$station
+    },{ # Filter dataframe
+      HAB_df(HAB %>%
+               HAB_filter(type = input$algae_type,
+                          site = input$station))
+    })
+    
     output$timePlot <- renderPlotly({
-      p <- HAB %>% 
-        filter(type %in% type_choice,
-               Site %in% site_choice,
-               !is.na(`cells/L*`))  %>% 
-        mutate(date = dmy(`Sample Date`)) %>% 
-        mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
-        group_by(Site, date, `Sample Time`, type, Site_type) %>% 
-        summarize(total = sum(`cells/L*`)) %>% 
-        ggplot(aes(x = date, y = total, color = type)) +
+      req(HAB_df())
+      
+      # For numeric data only
+      p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
         geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
         geom_point(size = 2, pch = 1) +
         labs(x = "", y = "Total cells/liter") +
