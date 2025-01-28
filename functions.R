@@ -275,13 +275,13 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   return(fig)
 }
 
-HAB_filter <- function(HAB_data, type, site){
+HAB_filter <- function(HAB_data, algae_type, site){
   HAB_data <- HAB_data %>% 
-    filter(type %in% type,
+    filter(type %in% algae_type,
            Site %in% site,
            !is.na(`cells/L*`))  %>% 
     mutate(date = dmy(`Sample Date`)) %>% 
-    mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+    mutate(Site_type = paste(Site, algae_type, sep = " - ")) %>% 
     group_by(Site, date, `Sample Time`, type, Site_type) %>% 
     summarize(total = sum(`cells/L*`))
   return(HAB_data)

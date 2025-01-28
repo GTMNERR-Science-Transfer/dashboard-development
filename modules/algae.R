@@ -165,10 +165,13 @@ HABPageServer <- function(id, parentSession) {
     observeEvent({ # If the selected algae type changes
       input$algae_type
     },{ # Filter dataframe
+      req(input$algae_type)
       selected_type(input$algae_type)
       
+      print(paste0("You selected algae type(s) ", selected_type()))
+      
       HAB_df(HAB %>%
-               HAB_filter(type = selected_type(),
+               HAB_filter(algae_type = selected_type(),
                           site = input$station))
     })
     
@@ -177,8 +180,9 @@ HABPageServer <- function(id, parentSession) {
     },{ # Filter dataframe
       req(selected_type())
       
+      
       HAB_df(HAB %>%
-               HAB_filter(type = input$algae_type,
+               HAB_filter(algae_type = selected_type(),
                           site = input$station))
     })
     
@@ -187,22 +191,38 @@ HABPageServer <- function(id, parentSession) {
       #### Have to move this to functions and add an if-else set up so it does not
       # use facet_grid if only one algae type is selected.
       # For numeric data only
-      p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
-        geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
-        geom_point(size = 2, pch = 1) +
-        labs(x = "", y = "Total cells/liter") +
-        theme_bw() +
-        facet_wrap(
-          ~ Site_type, 
-          ncol = 1, 
-          scales = "free_y"
-        ) +
-        theme(
-          strip.text = element_text(size = 12), # Adjust strip text size
-          strip.placement = "outside",         # Place strips outside plot area
-          strip.background = element_rect(fill = NA),
-          legend.position = "none"
-        )
+      
+      print(paste0("You are plotting ", unique(HAB_df()$type)))
+      print(paste0("data length is ", length(unique(HAB_df()$type))))
+      
+      if (length(unique(HAB_df()$type)) > 1){
+        p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
+          geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+          geom_point(size = 2, pch = 1) +
+          labs(x = "", y = "Total cells/liter") +
+          theme_bw() +
+          facet_wrap(
+            ~ Site_type, 
+            ncol = 1, 
+            scales = "free_y"
+          ) +
+          theme(
+            strip.text = element_text(size = 12), # Adjust strip text size
+            strip.placement = "outside",         # Place strips outside plot area
+            strip.background = element_rect(fill = NA),
+            legend.position = "none"
+          )
+      } else { # Assuming the only other option is unique(HAB_df()$type) == 1
+        p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
+          geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+          geom_point(size = 2, pch = 1) +
+          labs(x = "", y = "Total cells/liter") +
+          theme_bw() +
+          theme(
+            legend.position = "none"
+          )
+      }
+      
       
       gp <- ggplotly(p,
                dynamicTicks = TRUE) %>% 

@@ -37,33 +37,53 @@ HAB %>%
 
 # "Balloon" plots (this way zeros are also shown) - NOT by genus
 # Daily
-type_choice = c("Diatoms", "Cyanobacteria")
-site_choice = c("Guana Lake", "Crescent Beach")
+type_choice = c("Diatoms") # , "Cyanobacteria"
+site_choice = c("Guana Lake") # , "Crescent Beach"
 
-p <- HAB %>% 
-  filter(type %in% type_choice,
-         Site %in% site_choice,
-         !is.na(`cells/L*`))  %>% 
-  mutate(date = dmy(`Sample Date`)) %>% 
-  mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
-  group_by(Site, date, `Sample Time`, type, Site_type) %>% 
-  summarize(total = sum(`cells/L*`)) %>% 
-  ggplot(aes(x = date, y = total, color = type)) +
-  geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
-  geom_point(size = 2, pch = 1) +
-  labs(x = "", y = "Total cells/liter") +
-  theme_bw() +
-  facet_wrap(
-    ~ Site_type, 
-    ncol = 1, 
-    scales = "free_y"
-  ) +
-  theme(
-    strip.text = element_text(size = 12), # Adjust strip text size
-    strip.placement = "outside",         # Place strips outside plot area
-    strip.background = element_rect(fill = NA),
-    legend.position = "none"
-  )
+if (length(unique(type_choice)) > 1){
+  p <- HAB %>% 
+    filter(type %in% type_choice,
+           Site %in% site_choice,
+           !is.na(`cells/L*`))  %>% 
+    mutate(date = dmy(`Sample Date`)) %>% 
+    mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+    group_by(Site, date, `Sample Time`, type, Site_type) %>% 
+    summarize(total = sum(`cells/L*`)) %>% 
+    ggplot(aes(x = date, y = total, color = type)) +
+    geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+    geom_point(size = 2, pch = 1) +
+    labs(x = "", y = "Total cells/liter") +
+    theme_bw() +
+    facet_wrap(
+      ~ Site_type, 
+      ncol = 1, 
+      scales = "free_y"
+    ) +
+    theme(
+      strip.text = element_text(size = 12), # Adjust strip text size
+      strip.placement = "outside",         # Place strips outside plot area
+      strip.background = element_rect(fill = NA),
+      legend.position = "none"
+    )
+} else {
+  p <- HAB %>% 
+    filter(type %in% type_choice,
+           Site %in% site_choice,
+           !is.na(`cells/L*`))  %>% 
+    mutate(date = dmy(`Sample Date`)) %>% 
+    mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+    group_by(Site, date, `Sample Time`, type, Site_type) %>% 
+    summarize(total = sum(`cells/L*`)) %>% 
+    ggplot(aes(x = date, y = total, color = type)) +
+    geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+    geom_point(size = 2, pch = 1) +
+    labs(x = "", y = "Total cells/liter") +
+    theme_bw() +
+    theme(
+      legend.position = "none"
+    )
+}
+
 
 gp <- ggplotly(p,
          dynamicTicks = TRUE) %>% 
