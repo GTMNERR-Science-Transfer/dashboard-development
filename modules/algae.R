@@ -60,10 +60,6 @@ HABPageUI <- function(id) {
     fluidRow(
       #User inputs in 1st column
       column(width = 3, 
-             selectInput(ns("algae_type"), 
-                         label = "What type of algae do you want data for?", 
-                         choices = c(unique(HAB$type)), 
-                         multiple = TRUE),
              selectInput(ns("station"), 
                          label = "What station do you want data for?", 
                          choices = c(unique(HAB$Site))),
@@ -77,8 +73,11 @@ HABPageUI <- function(id) {
                          max(dmy(HAB$'Sample Date'))),
                timeFormat = "%m/%d/%Y",
                width = "100%"
-             )
-             #uiOutput(ns("selectDate")) #Keeping as old code in case I need to go back to a single date option
+             ),
+             selectInput(ns("algae_type"), 
+                         label = "What type of algae do you want data for?", 
+                         choices = c(unique(HAB$type)), 
+                         multiple = TRUE)
              ),
       # Map occupies 2nd column
       column(width = 8, 
