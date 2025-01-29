@@ -71,10 +71,10 @@ HABPageUI <- function(id) {
              sliderInput(
                inputId = ns("date_range"),
                label = "Select a Date Range",
-               min = ymd(min(HAB$'Sample Date')), #NULL
-               max = ymd(max(HAB$'Sample Date')), #NULL
-               value = c(ymd(min(HAB$'Sample Date')), 
-                         ymd(max(HAB$'Sample Date'))),
+               min = min(dmy(HAB$'Sample Date')), #NULL
+               max = max(dmy(HAB$'Sample Date')), #NULL
+               value = c(min(dmy(HAB$'Sample Date')), 
+                         max(dmy(HAB$'Sample Date'))),
                timeFormat = "%m/%d/%Y",
                width = "100%"
              )
@@ -104,10 +104,10 @@ HABPageServer <- function(id, parentSession) {
     # output$selectStation <- renderUI(selectInput(ns("station"), 
     #                                              "Select what station you are interested in", 
     #                                              unique(HAB$Site[HAB$type %in% input$algae_type])))
-    output$selectDate <- renderUI(sliderInput(ns("date_range"), 
-                                              "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
-                                              min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
-    
+    # output$selectDate <- renderUI(sliderInput(ns("date_range"), 
+    #                                           "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
+    #                                           min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
+    # 
     ### Create the map upon startup -------------------------------
     output$map <- renderLeaflet({
       
@@ -151,49 +151,56 @@ HABPageServer <- function(id, parentSession) {
       
       HAB %>%
         filter(type %in% input$algae_type,
-               ymd(`Sample Date`) >= input$date_range[1] & ymd(`Sample Date`) <= input$date_range[2]) %>%
+               dmy(`Sample Date`) >= input$date_range[1] & dmy(`Sample Date`) <= input$date_range[2]) %>%
         select(Latitude, Longitude, Site, County, 'Sample Date') %>%
         distinct() %>% 
         st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
     })
-
-    ##### THIS DOES NOT WORK BECAUSE THERE ARE NO VALS FOR THE 'PRESENT' ALGAE....
-    # output$timePlot <- renderPlot({
-    #   ggplot(select_HAB_data(), aes(x = Date, y = 'cells/L*', color = Site))+
-    #     geom_point()+
-    #     labs(x = "", y = "Concentration (cells/L)")+
-    #     theme_bw()+
-    #     theme(legend.position = "bottom")
-    #   
-    # })
     
-    # Make the HAB dataframe reactive
+    # Make the HAB dataframe reactive for plotting
     HAB_df <- reactiveVal()
     selected_type <- reactiveVal()
     
+    #### Filter if algae type changes ####
     observeEvent({ # If the selected algae type changes
       input$algae_type
     },{ # Filter dataframe
-      req(input$algae_type)
+      req(input$algae_type, input$station, input$date_range)
       selected_type(input$algae_type)
       
       print(paste0("You selected algae type(s) ", selected_type()))
       
       HAB_df(HAB %>%
                HAB_filter(algae_type = selected_type(),
-                          site = input$station))
+                          site = input$station,
+                          date_range = input$date_range))
     })
     
+    #### Filter if station changes ####
     observeEvent({ # If the selected station changes
       input$station
     },{ # Filter dataframe
-      req(selected_type())
+      req(selected_type(), input$station, input$date_range)
       
       HAB_df(HAB %>%
                HAB_filter(algae_type = selected_type(),
-                          site = input$station))
+                          site = input$station,
+                          date_range = input$date_range))
     }, ignoreInit = TRUE)
     
+    #### Filter if date range changes ####
+    observeEvent({ # If the selected station changes
+      input$date_range
+    },{ # Filter dataframe
+      req(selected_type(), input$station, input$date_range)
+      
+      HAB_df(HAB %>%
+               HAB_filter(algae_type = selected_type(),
+                          site = input$station,
+                          date_range = input$date_range))
+    }, ignoreInit = TRUE)
+    
+    #### Create plot ####
     output$timePlot <- renderPlotly({
       req(HAB_df())
       #### Have to move this to functions and add an if-else set up so it does not
@@ -212,34 +219,23 @@ HABPageServer <- function(id, parentSession) {
       print(paste0("You are plotting ", unique(HAB_df()$type)))
       print(paste0("data length is ", length(unique(HAB_df()$type))))
       
-      #if (length(unique(HAB_df()$type)) > 1){
-        p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
-          geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
-          geom_point(size = 2, pch = 1) +
-          labs(x = "", y = "Total cells/liter") +
-          theme_bw() +
-          facet_wrap(
-            ~ Site_type, 
-            ncol = 1, 
-            scales = "free_y"
-          ) +
-          theme(
-            strip.text = element_text(size = 12), # Adjust strip text size
-            strip.placement = "outside",         # Place strips outside plot area
-            strip.background = element_rect(fill = NA),
-            legend.position = "none"
-          )
-      # } else { # Assuming the only other option is unique(HAB_df()$type) == 1
-      #   p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
-      #     geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
-      #     geom_point(size = 2, pch = 1) +
-      #     labs(x = "", y = "Total cells/liter") +
-      #     theme_bw() +
-      #     theme(
-      #       legend.position = "none"
-      #     )
-      # }
-      
+      p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
+        geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+        geom_point(size = 2, pch = 1) +
+        labs(x = "", y = "Total cells/liter") +
+        theme_bw() +
+        facet_wrap(
+          ~ Site_type, 
+          ncol = 1, 
+          scales = "free_y"
+        ) +
+        theme(
+          strip.text = element_text(size = 12), # Adjust strip text size
+          #strip.placement = "outside",         # Place strips outside plot area
+          strip.background = element_rect(fill = NA),
+          legend.position = "none"
+        )
+
       gp <- ggplotly(p,
                dynamicTicks = TRUE) %>%
         layout(margin = list(r = 50, l=70)) # Add more margin space to the left and the right
