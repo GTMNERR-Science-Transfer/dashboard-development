@@ -33,7 +33,7 @@ HAB <- readRDS("./03_Data_for_app/HAB.Rds")
 HAB_locs <- HAB %>% 
   select(Latitude, Longitude, Site, County) %>% 
   distinct() %>% 
-  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+  st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
   
 
 HABPageUI <- function(id) {
@@ -135,25 +135,41 @@ HABPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
     
-    ### Selected Data (for map) -----------------------
-    select_HAB_data <- reactive({
-      req(input$algae_type, input$date_range)
-      
-      HAB %>%
-        filter(type %in% input$algae_type) %>% 
-        select(Latitude, Longitude, Date, Site, County)
-    })
+    # ### Selected Data (for map) -----------------------
+    # select_HAB_data <- reactive({
+    #   req(input$algae_type, input$date_range)
+    #   
+    #   HAB %>%
+    #     filter(type %in% input$algae_type) %>% 
+    #     select(Latitude, Longitude, Date, Site, County)
+    # })
     
     ### Selected Data (for map) -----------------------
     HAB_data_locations <- reactive({
-      req(input$algae_type, input$date_range)
+      req(HAB_df())
       
-      HAB %>%
-        filter(type %in% input$algae_type,
-               dmy(`Sample Date`) >= input$date_range[1] & dmy(`Sample Date`) <= input$date_range[2]) %>%
-        select(Latitude, Longitude, Site, County, 'Sample Date') %>%
-        distinct() %>% 
-        st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326)
+      HAB_df() %>% 
+        left_join(HAB_locs) %>% 
+        ungroup() %>% 
+        select(Latitude, Longitude, geometry, Site, County) %>%
+        distinct() # Some sites have 2 coordinate sets?
+    })
+    
+    ### Update map based on filtered data --------------------
+    # Updates every time HAB_data_locations() is changed
+    observe({
+      leafletProxy("map") %>%
+        # First remove original markers (otherwise they just keep plotting over each other)
+        clearMarkers() %>%
+        # Make / keep unselected stations blue
+        addMarkers(data = HAB_data_locations(), # Use reactive (filtered) dataframe
+                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
+                   popup = ~paste("Site: ", Site, "<br>",
+                                  "County: ", County, "<br>"#,
+                                  #"Sample Date: ", `Sample Date`, "<br>",
+                                  #userMessage
+                   ),
+                   group = "HAB")
     })
     
     # Make the HAB dataframe reactive for plotting
@@ -242,24 +258,6 @@ HABPageServer <- function(id, parentSession) {
       gp[["x"]][["layout"]][["annotations"]][[1]][["x"]] <- -0.02
 
       gp
-    })
-    
-    
-    ### Update map based on filtered data --------------------
-    # Updates every time HAB_data_locations() is changed
-    observe({
-      leafletProxy("map") %>%
-        # First remove original markers (otherwise they just keep plotting over each other)
-        clearMarkers() %>%
-        # Make / keep unselected stations blue
-        addMarkers(data = HAB_data_locations(), # Use reactive (filtered) dataframe
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
-                   popup = ~paste("Site: ", Site, "<br>",
-                                  "County: ", County, "<br>"#,
-                                  #"Sample Date: ", `Sample Date`, "<br>",
-                                  #userMessage
-                                  ),
-                   group = "HAB")
     })
     
     observeEvent(input$go_back, {
