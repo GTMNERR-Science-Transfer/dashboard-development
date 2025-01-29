@@ -37,7 +37,7 @@ HAB %>%
 
 # "Balloon" plots (this way zeros are also shown) - NOT by genus
 # Daily
-type_choice = c("Diatoms") # , "Cyanobacteria"
+type_choice = c("Diatoms", "Cyanobacteria") # , 
 site_choice = c("Guana Lake") # , "Crescent Beach"
 
 if (length(unique(type_choice)) > 1){

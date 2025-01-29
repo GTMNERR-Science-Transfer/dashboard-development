@@ -61,7 +61,10 @@ HABPageUI <- function(id) {
                          label = "What type of algae do you want data for?", 
                          choices = c(unique(HAB$type)), 
                          multiple = TRUE),
-             uiOutput(ns("selectStation")),
+             selectInput(ns("station"), 
+                         label = "What station do you want data for?", 
+                         choices = c(unique(HAB$Site))),
+             #uiOutput(ns("selectStation")),
              sliderInput(
                inputId = ns("date_range"),
                label = "Select a Date Range",
@@ -92,9 +95,9 @@ HABPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    output$selectStation <- renderUI(selectInput(ns("station"), 
-                                                 "Select what station you are interested in (optional)", 
-                                                 unique(HAB$Site[HAB$type %in% input$algae_type])))
+    # output$selectStation <- renderUI(selectInput(ns("station"), 
+    #                                              "Select what station you are interested in", 
+    #                                              unique(HAB$Site[HAB$type %in% input$algae_type])))
     output$selectDate <- renderUI(sliderInput(ns("date_range"), 
                                               "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
                                               min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
@@ -180,11 +183,10 @@ HABPageServer <- function(id, parentSession) {
     },{ # Filter dataframe
       req(selected_type())
       
-      
       HAB_df(HAB %>%
                HAB_filter(algae_type = selected_type(),
                           site = input$station))
-    })
+    }, ignoreInit = TRUE)
     
     output$timePlot <- renderPlotly({
       req(HAB_df())
@@ -192,10 +194,19 @@ HABPageServer <- function(id, parentSession) {
       # use facet_grid if only one algae type is selected.
       # For numeric data only
       
+      # Render an empty plot if no data is selected or no data available
+      if (is.null(HAB_df()) || nrow(HAB_df()) == 0) {
+        # Render empty plot
+        return(plot_ly(type = 'scatter', mode = 'markers') %>%
+                 layout(title = "No data selected", 
+                        xaxis = list(visible = FALSE), 
+                        yaxis = list(visible = FALSE)))
+      }
+      
       print(paste0("You are plotting ", unique(HAB_df()$type)))
       print(paste0("data length is ", length(unique(HAB_df()$type))))
       
-      if (length(unique(HAB_df()$type)) > 1){
+      #if (length(unique(HAB_df()$type)) > 1){
         p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
           geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
           geom_point(size = 2, pch = 1) +
@@ -212,22 +223,21 @@ HABPageServer <- function(id, parentSession) {
             strip.background = element_rect(fill = NA),
             legend.position = "none"
           )
-      } else { # Assuming the only other option is unique(HAB_df()$type) == 1
-        p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
-          geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
-          geom_point(size = 2, pch = 1) +
-          labs(x = "", y = "Total cells/liter") +
-          theme_bw() +
-          theme(
-            legend.position = "none"
-          )
-      }
-      
+      # } else { # Assuming the only other option is unique(HAB_df()$type) == 1
+      #   p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
+      #     geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
+      #     geom_point(size = 2, pch = 1) +
+      #     labs(x = "", y = "Total cells/liter") +
+      #     theme_bw() +
+      #     theme(
+      #       legend.position = "none"
+      #     )
+      # }
       
       gp <- ggplotly(p,
-               dynamicTicks = TRUE) %>% 
+               dynamicTicks = TRUE) %>%
         layout(margin = list(r = 50, l=70)) # Add more margin space to the left and the right
-      # Set the y-axis label position (more to the left)    
+      # Set the y-axis label position (more to the left)
       gp[["x"]][["layout"]][["annotations"]][[1]][["x"]] <- -0.02
 
       gp

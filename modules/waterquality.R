@@ -357,7 +357,8 @@ WINPageServer <- function(id, parentSession) {
                    )
         )
     })
-      
+    
+    #### Filter and update / create plot #####  
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     

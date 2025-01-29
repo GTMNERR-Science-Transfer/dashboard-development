@@ -281,7 +281,7 @@ HAB_filter <- function(HAB_data, algae_type, site){
            Site %in% site,
            !is.na(`cells/L*`))  %>% 
     mutate(date = dmy(`Sample Date`)) %>% 
-    mutate(Site_type = paste(Site, algae_type, sep = " - ")) %>% 
+    mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
     group_by(Site, date, `Sample Time`, type, Site_type) %>% 
     summarize(total = sum(`cells/L*`))
   return(HAB_data)
