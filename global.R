@@ -12,7 +12,6 @@ if(!require(plotly)){ install.packages("plotly") } ;  library(plotly)
 if(!require(shinyWidgets)){ install.packages("shinyWidgets") } ;  library(shinyWidgets)
 if(!require(vroom)){ install.packages("vroom") } ;  library(vroom)
 
-
 #### Get app.R file dir and set work dir ---------------------
 # find file_name from current working directory
 # before trying from a shallower directory
