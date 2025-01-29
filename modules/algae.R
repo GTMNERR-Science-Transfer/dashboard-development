@@ -44,13 +44,16 @@ HABPageUI <- function(id) {
       # First row - explanation
       column(width = 12,
              div(style = "margin-bottom: 20px;",
-                 p(htmltools::HTML('This section provides an overview of harmful algal bloom data. 
-                   Start by selecting a genus and species of algae you are interested in. <br>
-                   Next, select the date that you are interested in. The map will automatically show
-                   stations for which there is data for your selected parameters.<br>
-                   Hovering over one of the station markers will provide the station name.
-                   Algae quantity will be shown if available. 
-                   Where quantity is not available, presence or absence will be indicated.'))
+                 p(htmltools::HTML('This section provides an overview of harmful algal bloom data.
+                 Currently the dashboard is only showing numerical data (not presence / absence). A
+                 value of 0 means that the water sample was tested for this algal type, but it was not
+                 detected. <br>
+                 Start by selecting a type of algae you are interested in. <br>
+                 Next, select the stations and date range that you are interested in. <br>
+                 The plot below the map will show total daily values in total cells/liter for each type of algae. <br>
+                 <br>
+                 Note the different y-axis scales, and also note that high numbers do not necessarily indicate
+                 blooms or toxic conditions [add a link to info here].'))
              )
       )
     ),
@@ -74,12 +77,15 @@ HABPageUI <- function(id) {
                          ymd(max(HAB$'Sample Date'))),
                timeFormat = "%m/%d/%Y",
                width = "100%"
-             ),
+             )
              #uiOutput(ns("selectDate")) #Keeping as old code in case I need to go back to a single date option
              ),
       # Map occupies 2nd column
-      column(width = 9, leafletOutput(ns("map"), height=750))
-    ),
+      column(width = 8, 
+             div(style = "margin-bottom: 20px;",
+                 leafletOutput(ns("map"), height="500px"))
+            )
+      ),
     fluidRow(
       #User inputs in 1st column
       column(width = 12, 
