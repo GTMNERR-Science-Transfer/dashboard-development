@@ -59,7 +59,7 @@ HABPageUI <- function(id) {
     ),
     fluidRow(
       #User inputs in 1st column
-      column(width = 3, 
+      column(width = 6, 
              selectInput(ns("station"), 
                          label = "What station do you want data for?", 
                          choices = c(unique(HAB$Site))),
@@ -80,13 +80,13 @@ HABPageUI <- function(id) {
                          multiple = TRUE)
              ),
       # Map occupies 2nd column
-      column(width = 8, 
+      column(width = 6, 
              div(style = "margin-bottom: 20px;",
                  leafletOutput(ns("map"), height="500px"))
             )
       ),
     fluidRow(
-      #User inputs in 1st column
+      # Plot in the next row, below inputs and map
       column(width = 12, 
       plotlyOutput(ns("timePlot")), 
       )
@@ -135,17 +135,8 @@ HABPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles")
     })
     
-    # ### Selected Data (for map) -----------------------
-    # select_HAB_data <- reactive({
-    #   req(input$algae_type, input$date_range)
-    #   
-    #   HAB %>%
-    #     filter(type %in% input$algae_type) %>% 
-    #     select(Latitude, Longitude, Date, Site, County)
-    # })
-    
     ### Selected Data (for map) -----------------------
-    HAB_data_locations <- reactive({
+    HAB_data_loc_selected <- reactive({
       req(HAB_df())
       
       HAB_df() %>% 
@@ -155,6 +146,15 @@ HABPageServer <- function(id, parentSession) {
         distinct() # Some sites have 2 coordinate sets?
     })
     
+    ### Not -selected data (for map) --------------------------
+    HAB_data_loc_unselected <- reactive({
+      req(input$station)
+      
+      HAB_locs %>% 
+        filter(Site != input$station) %>% 
+        distinct()
+    })
+    
     ### Update map based on filtered data --------------------
     # Updates every time HAB_data_locations() is changed
     observe({
@@ -162,14 +162,32 @@ HABPageServer <- function(id, parentSession) {
         # First remove original markers (otherwise they just keep plotting over each other)
         clearMarkers() %>%
         # Make / keep unselected stations blue
-        addMarkers(data = HAB_data_locations(), # Use reactive (filtered) dataframe
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
-                   popup = ~paste("Site: ", Site, "<br>",
-                                  "County: ", County, "<br>"#,
-                                  #"Sample Date: ", `Sample Date`, "<br>",
-                                  #userMessage
-                   ),
-                   group = "HAB")
+        addMarkers(data = HAB_data_loc_unselected(),
+                   #layerId = unselected_coords()$geometry,
+                   options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                   popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
+                                  "<strong>County:</strong> ", County, "<br>")%>%
+                     lapply(htmltools::HTML)
+        ) %>% 
+        # Make selected stations red
+        addMarkers(data = HAB_data_loc_selected(),
+                   icon = redIcon, 
+                   #layerId = selected_coords()$geometry,
+                   options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
+                   popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
+                                  "<strong>County:</strong> ", County, "<br>"
+                                  )%>%
+                     lapply(htmltools::HTML),
+                   # Had to play around with labelOptions to kind of get it in the correct place
+                   popupOptions = popupOptions(direction = "auto",
+                                               offset = c(0, -20),
+                                               style = list(
+                                                 "color" = "gray27",
+                                                 "font-size" = "12px",
+                                                 "border-color" = "rgba(0,0,0,0.5)"
+                                               )
+                   )
+        )
     })
     
     # Make the HAB dataframe reactive for plotting

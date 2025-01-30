@@ -129,16 +129,6 @@ WINPageUI <- function(id) {
   )
 }
 
-# Define custom icons -> move this to a separate script
-redIcon <- makeIcon(
-  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  iconWidth = 25, iconHeight = 41,
-  iconAnchorX = 12, iconAnchorY = 41,
-  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  shadowWidth = 41, shadowHeight = 41,
-  shadowAnchorX = 12, shadowAnchorY = 41
-)
-
 #### LIST OF INPUTS ####
 # input$dropdown_ui -> to get variable
 # input$date_range -> to get date range
@@ -196,14 +186,6 @@ WINPageServer <- function(id, parentSession) {
         ) %>%
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
     })
-    
-    # #### Render an empty plot initially ####
-    # output$plot <- renderPlotly({
-    #   plot_ly(type = 'scatter', mode = 'markers') %>%
-    #     layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-    # })
-    
-    # Note: all the input$... are already reactive values (i.e. they get updated reactively)
     
     # Reactive to keep track of selected stations from both inputs
     selected_stations <- reactiveVal(character())

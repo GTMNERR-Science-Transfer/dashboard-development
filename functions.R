@@ -291,3 +291,15 @@ HAB_filter <- function(HAB_data, algae_type, site, date_range = NULL){
   
   return(HAB_data)
 }
+
+#### Create custom icons etc ####
+# Define custom icons -> move this to a separate script
+# Red map marker icon
+redIcon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41,
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  shadowWidth = 41, shadowHeight = 41,
+  shadowAnchorX = 12, shadowAnchorY = 41
+)
