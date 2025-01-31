@@ -292,6 +292,14 @@ HAB_filter <- function(HAB_data, algae_type, site, date_range = NULL){
   return(HAB_data)
 }
 
+#### Create HEX colors to use in html code ####
+# Some R color names do not work inside with CSS/html. This function changes the
+# name to the HEX code, which does work
+get_hex_color <- function(color_name) {
+  rgb_vals <- grDevices::col2rgb(color_name) / 255
+  sprintf("#%02X%02X%02X", round(rgb_vals[1] * 255), round(rgb_vals[2] * 255), round(rgb_vals[3] * 255))
+}
+
 #### Create custom icons etc ####
 # Define custom icons -> move this to a separate script
 # Red map marker icon

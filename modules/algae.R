@@ -93,31 +93,37 @@ HABPageUI <- function(id) {
     fluidRow(
       # Plot in the next row, below inputs and map
       column(width = 12, 
-      plotlyOutput(ns("timePlot")), 
+             div(style = "margin-bottom: 20px;",
+                 plotlyOutput(ns("timePlot"))
+                 )
       )
     ),
     fluidRow(
       # Plot in the next row, below the plot
       column(width = 12,
-             conditionalPanel(
-               condition = "input.algae_type.length >= 1",
-               DTOutput(ns("HAB_table"))
-              ),
+             div(style = "margin-bottom: 20px;",
+                 conditionalPanel(
+                   condition = "input.algae_type.length >= 1",
+                   DTOutput(ns("HAB_table"))
+                 )),
               # Only show this panel if there are 2 algae types selected
-              conditionalPanel(
-                condition = "input.algae_type.length >= 2",
-                DTOutput(ns("HAB_table2"))
-              ),
+             div(style = "margin-bottom: 20px;",
+                 conditionalPanel(
+                   condition = "input.algae_type.length >= 2",
+                   DTOutput(ns("HAB_table2"))
+                 )),
              # Only show this panel if there are 3 algae types selected
-             conditionalPanel(
-               condition = "input.algae_type.length >= 3",
-               DTOutput(ns("HAB_table3"))
-             ),
+             div(style = "margin-bottom: 20px;",
+                 conditionalPanel(
+                   condition = "input.algae_type.length >= 3",
+                   DTOutput(ns("HAB_table3"))
+                 )),
              # Only show this panel if there are 4 algae types selected
-             conditionalPanel(
-               condition = "input.algae_type.length >= 4",
-               DTOutput(ns("HAB_table4"))
-             )
+             div(style = "margin-bottom: 20px;",
+                 conditionalPanel(
+                   condition = "input.algae_type.length >= 4",
+                   DTOutput(ns("HAB_table4"))
+                 ))
             )
     # ),
     # fluidRow(
@@ -298,9 +304,6 @@ HABPageServer <- function(id, parentSession) {
                         yaxis = list(visible = FALSE)))
       }
       
-      print(paste0("You are plotting ", unique(HAB_df()$type)))
-      print(paste0("data length is ", length(unique(HAB_df()$type))))
-      
       p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
         geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
         geom_point(size = 2, pch = 1) +
@@ -314,7 +317,6 @@ HABPageServer <- function(id, parentSession) {
         ) +
         theme(
           strip.text = element_text(size = 12), # Adjust strip text size
-          #strip.placement = "outside",         # Place strips outside plot area
           strip.background = element_rect(fill = NA),
           legend.position = "none"
         )
@@ -331,91 +333,188 @@ HABPageServer <- function(id, parentSession) {
     ### Create tables ####
     # Render table with values
     # Create year and month and show monthly average. Color the value
-    output$HAB_table <- DT::renderDT({
+    output$HAB_table <- DT::renderDT(server = FALSE, {
       req(HAB_df(), input$algae_type, length(input$algae_type) >= 1)
       
+      caption_color <- get_hex_color(algae_colors[input$algae_type[1]])
+      
       formattable(
-        HAB_df() %>% 
-          ungroup() %>% 
-          mutate(year = year(date), month = month(date)) %>% 
-          group_by(year, month, Site, type) %>% 
-          summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
-          ungroup() %>% 
-          filter(type == input$algae_type[1]) %>% 
+        HAB_df() %>%
+          ungroup() %>%
+          mutate(year = year(date), month = month(date)) %>%
+          group_by(year, month, Site, type) %>%
+          summarize(month_ave = mean(total, na.rm = TRUE)) %>%
+          ungroup() %>%
+          filter(type == input$algae_type[1]) %>%
           select(Site, type, year, month, month_ave),
         list(
-          `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[1]]))
+          `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
         as.datatable(escape = FALSE,
-                      options = list(scrollX = TRUE),
-                      rownames = FALSE)
+                     extensions = 'Buttons',
+                     options = list(scrollX = TRUE,
+                                    dom = 'Blfrtip',
+                                    paging = TRUE,
+                                    server = FALSE,
+                                    buttons = list(
+                                      list(extend = "copy", text = "Copy", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = "print", text = "Print", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = 'collection',
+                                           text = 'Download',
+                                           buttons = list(
+                                             list(extend = "csv", text = "CSV", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "excel", text = "Excel", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "pdf", text = "PDF", exportOptions = list(modifier = list(page = "all")))
+                                           )
+                                      )
+                                    )
+                     ),
+                     rownames = FALSE,
+                     caption = htmltools::tags$caption(
+                       style = paste0('caption-side: top; text-align: center; font-size: 16px; font-weight: bold; color: ',
+                                     caption_color, ";"),
+                       paste("Station:", input$station, " | Algae Type:", input$algae_type[1])
+                     )
+        )
     })
     
-    output$HAB_table2 <- DT::renderDT({
+    output$HAB_table2 <- DT::renderDT(server = FALSE, {
       req(HAB_df(), input$algae_type, length(input$algae_type) >= 2)
       
-      # create second table
+      caption_color <- get_hex_color(algae_colors[input$algae_type[2]])
+      
       formattable(
-        HAB_df() %>% 
-          ungroup() %>% 
-          mutate(year = year(date), month = month(date)) %>% 
-          group_by(year, month, Site, type) %>% 
-          summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
-          ungroup() %>% 
-          filter(type == input$algae_type[2]) %>% 
+        HAB_df() %>%
+          ungroup() %>%
+          mutate(year = year(date), month = month(date)) %>%
+          group_by(year, month, Site, type) %>%
+          summarize(month_ave = mean(total, na.rm = TRUE)) %>%
+          ungroup() %>%
+          filter(type == input$algae_type[2]) %>%
           select(Site, type, year, month, month_ave),
         list(
-          `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[2]]))
+          `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
-      as.datatable(escape = FALSE,
-                    options = list(scrollX = TRUE),
-                    rownames = FALSE)
+        as.datatable(escape = FALSE,
+                     extensions = 'Buttons',
+                     options = list(scrollX = TRUE,
+                                    dom = 'Blfrtip',
+                                    paging = TRUE,
+                                    server = FALSE,
+                                    buttons = list(
+                                      list(extend = "copy", text = "Copy", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = "print", text = "Print", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = 'collection',
+                                           text = 'Download',
+                                           buttons = list(
+                                             list(extend = "csv", text = "CSV", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "excel", text = "Excel", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "pdf", text = "PDF", exportOptions = list(modifier = list(page = "all")))
+                                           )
+                                      )
+                                    )
+                     ),
+                     rownames = FALSE,
+                     caption = htmltools::tags$caption(
+                       style = paste0('caption-side: top; text-align: center; font-size: 16px; font-weight: bold; color: ',
+                                      caption_color, ";"),
+                       paste("Station:", input$station, " | Algae Type:", input$algae_type[2])
+                     )
+        )
     })
     
-    output$HAB_table3 <- DT::renderDT({
+    output$HAB_table3 <- DT::renderDT(server = FALSE, {
       req(HAB_df(), input$algae_type, length(input$algae_type) >= 3)
       
-      # create third table
+      caption_color <- get_hex_color(algae_colors[input$algae_type[3]])
+      
       formattable(
-        HAB_df() %>% 
-          ungroup() %>% 
-          mutate(year = year(date), month = month(date)) %>% 
-          group_by(year, month, Site, type) %>% 
-          summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
-          ungroup() %>% 
-          filter(type == input$algae_type[3]) %>% 
+        HAB_df() %>%
+          ungroup() %>%
+          mutate(year = year(date), month = month(date)) %>%
+          group_by(year, month, Site, type) %>%
+          summarize(month_ave = mean(total, na.rm = TRUE)) %>%
+          ungroup() %>%
+          filter(type == input$algae_type[3]) %>%
           select(Site, type, year, month, month_ave),
         list(
-          `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[3]]))
+          `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
         as.datatable(escape = FALSE,
-                      options = list(scrollX = TRUE),
-                      rownames = FALSE)
+                     extensions = 'Buttons',
+                     options = list(scrollX = TRUE,
+                                    dom = 'Blfrtip',
+                                    paging = TRUE,
+                                    server = FALSE,
+                                    buttons = list(
+                                      list(extend = "copy", text = "Copy", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = "print", text = "Print", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = 'collection',
+                                           text = 'Download',
+                                           buttons = list(
+                                             list(extend = "csv", text = "CSV", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "excel", text = "Excel", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "pdf", text = "PDF", exportOptions = list(modifier = list(page = "all")))
+                                           )
+                                      )
+                                    )
+                     ),
+                     rownames = FALSE,
+                     caption = htmltools::tags$caption(
+                       style = paste0('caption-side: top; text-align: center; font-size: 16px; font-weight: bold; color: ',
+                                      caption_color, ";"),
+                       paste("Station:", input$station, " | Algae Type:", input$algae_type[3])
+                     )
+        )
     })
     
-    output$HAB_table4 <- DT::renderDT({
+    output$HAB_table4 <- DT::renderDT(server = FALSE, {
       req(HAB_df(), input$algae_type, length(input$algae_type) >= 4)
       
-      # create fourth table
+      caption_color <- get_hex_color(algae_colors[input$algae_type[4]])
+      
       formattable(
-        HAB_df() %>% 
-          ungroup() %>% 
-          mutate(year = year(date), month = month(date)) %>% 
-          group_by(year, month, Site, type) %>% 
-          summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
-          ungroup() %>% 
-          filter(type == input$algae_type[4]) %>% 
+        HAB_df() %>%
+          ungroup() %>%
+          mutate(year = year(date), month = month(date)) %>%
+          group_by(year, month, Site, type) %>%
+          summarize(month_ave = mean(total, na.rm = TRUE)) %>%
+          ungroup() %>%
+          filter(type == input$algae_type[4]) %>%
           select(Site, type, year, month, month_ave),
         list(
-          `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[4]]))
+          `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
         as.datatable(escape = FALSE,
-                      options = list(scrollX = TRUE),
-                      rownames = FALSE)
+                     extensions = 'Buttons',
+                     options = list(scrollX = TRUE,
+                                    dom = 'Blfrtip',
+                                    paging = TRUE,
+                                    server = FALSE,
+                                    buttons = list(
+                                      list(extend = "copy", text = "Copy", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = "print", text = "Print", exportOptions = list(modifier = list(page = "all"))),
+                                      list(extend = 'collection',
+                                           text = 'Download',
+                                           buttons = list(
+                                             list(extend = "csv", text = "CSV", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "excel", text = "Excel", exportOptions = list(modifier = list(page = "all"))),
+                                             list(extend = "pdf", text = "PDF", exportOptions = list(modifier = list(page = "all")))
+                                           )
+                                      )
+                                    )
+                     ),
+                     rownames = FALSE,
+                     caption = htmltools::tags$caption(
+                       style = paste0('caption-side: top; text-align: center; font-size: 16px; font-weight: bold; color: ',
+                                      caption_color, ";"),
+                       paste("Station:", input$station, " | Algae Type:", input$algae_type[4])
+                     )
+        )
     })
     
     observeEvent(input$go_back, {
