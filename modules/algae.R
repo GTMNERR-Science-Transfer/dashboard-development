@@ -99,7 +99,29 @@ HABPageUI <- function(id) {
     fluidRow(
       # Plot in the next row, below the plot
       column(width = 12, 
-             plotlyOutput(ns("HAB_table")), 
+             DTOutput(ns("HAB_table"))
+             #gt::gt_output(ns("HAB_table")), 
+      )
+    ),
+    fluidRow(
+      # Plot in the next row, below the plot
+      column(width = 12, 
+             DTOutput(ns("HAB_table2"))
+             #gt::gt_output(ns("HAB_table")), 
+      )
+    ),
+    fluidRow(
+      # Plot in the next row, below the plot
+      column(width = 12, 
+             DTOutput(ns("HAB_table3"))
+             #gt::gt_output(ns("HAB_table")), 
+      )
+    ),
+    fluidRow(
+      # Plot in the next row, below the plot
+      column(width = 12, 
+             DTOutput(ns("HAB_table4"))
+             #gt::gt_output(ns("HAB_table")), 
       )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
@@ -291,23 +313,100 @@ HABPageServer <- function(id, parentSession) {
     })
     
     ### Create table ####
-    # Render the table of most recurring species in the area
-    output$HAB_table <- gt::render_gt({
-      req(HAB_df())
+    # Render table with values
+    # Create year and month and show monthly average. Color the value
+    output$HAB_table <- DT::renderDT({
+      req(HAB_df(), input$algae_type)
       
-      HAB_df() %>% 
-        ungroup() %>% 
-        filter(type == input$algae_type[1]) %>% 
-        select(date, total) %>% 
-        gt::gt() %>%
-        gt::tab_options(table.font.size = "12pt", heading.title.font.size = "14pt") %>%
-        gt::tab_header(title = paste0(input$station, ": Algae in cells/liter (", input$algae_type[1], ")")) %>%
-        gtExtras::gt_plt_bar(column = total, keep_column = TRUE, color = algae_colors[input$algae_type[1]]) %>% 
-        gt::cols_label(
-          date = "Date",
-          total = "Total",
-          total = "Total"
-        )
+      print(paste0("Create table for ", input$algae_type[1]))
+      
+      if (length(input$algae_type == 1)){
+        formattable(
+          HAB_df() %>% 
+            ungroup() %>% 
+            mutate(year = year(date), month = month(date)) %>% 
+            group_by(year, month, Site, type) %>% 
+            summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+            ungroup() %>% 
+            filter(type == input$algae_type[1]) %>% 
+            select(Site, type, year, month, month_ave),
+          list(
+            `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[1]]))
+          )
+        ) %>%
+          as.datatable(escape = FALSE,
+                       options = list(scrollX = TRUE),
+                       rownames = FALSE)
+      } 
+    })
+    
+    output$HAB_table2 <- DT::renderDT({
+      req(HAB_df(), input$algae_type)
+      if (length(input$algae_type == 2)){
+        # create second table
+        formattable(
+          HAB_df() %>% 
+            ungroup() %>% 
+            mutate(year = year(date), month = month(date)) %>% 
+            group_by(year, month, Site, type) %>% 
+            summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+            ungroup() %>% 
+            filter(type == input$algae_type[2]) %>% 
+            select(Site, type, year, month, month_ave),
+          list(
+            `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[2]]))
+          )
+        ) %>%
+        as.datatable(escape = FALSE,
+                     options = list(scrollX = TRUE),
+                     rownames = FALSE)
+      }
+    })
+    
+    output$HAB_table3 <- DT::renderDT({
+      req(HAB_df(), input$algae_type)
+      if (length(input$algae_type == 3)){
+        # create second table
+        formattable(
+          HAB_df() %>% 
+            ungroup() %>% 
+            mutate(year = year(date), month = month(date)) %>% 
+            group_by(year, month, Site, type) %>% 
+            summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+            ungroup() %>% 
+            filter(type == input$algae_type[3]) %>% 
+            select(Site, type, year, month, month_ave),
+          list(
+            `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[3]]))
+          )
+        ) %>%
+          as.datatable(escape = FALSE,
+                       options = list(scrollX = TRUE),
+                       rownames = FALSE)
+      }
+    })
+    
+    output$HAB_table4 <- DT::renderDT({
+      req(HAB_df(), input$algae_type)
+      if (length(input$algae_type == 4)){
+        # create second table
+        formattable(
+          HAB_df() %>% 
+            ungroup() %>% 
+            mutate(year = year(date), month = month(date)) %>% 
+            group_by(year, month, Site, type) %>% 
+            summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+            ungroup() %>% 
+            filter(type == input$algae_type[4]) %>% 
+            select(Site, type, year, month, month_ave),
+          list(
+            `month_ave` = color_tile("white", as.vector(algae_colors[input$algae_type[4]]))
+          )
+        ) %>%
+          as.datatable(escape = FALSE,
+                       options = list(scrollX = TRUE),
+                       rownames = FALSE)
+      }
     })
     
     observeEvent(input$go_back, {

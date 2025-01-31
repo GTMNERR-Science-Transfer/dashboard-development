@@ -36,6 +36,12 @@ HAB %>%
   geom_col(position = "stack") +
   scale_y_log10()
 
+# Create colors for the algae
+algae_colors <- c("Diatoms" = "goldenrod2", 
+                  "Cyanobacteria" = "cadetblue3", 
+                  "Dinoflagellates" = "indianred1", 
+                  "Other" = "darkolivegreen4")
+
 # "Balloon" plots (this way zeros are also shown) - NOT by genus
 # Daily
 type_choice = c("Diatoms", "Cyanobacteria") # , 
@@ -107,7 +113,49 @@ gp
 
 HAB_df %>% 
   ungroup() %>% 
+  mutate(year = year(date), month = month(date)) %>% 
+  group_by(year, month, Site, type) %>% 
+  summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+  ungroup() %>% 
   filter(type == type_choice[1]) %>% 
+  select(year, month, month_ave) %>% 
+  gt::gt() %>%
+  gt::tab_options(table.font.size = "12pt", heading.title.font.size = "14pt") %>%
+  gt::tab_header(title = paste0(site_choice, ": Algae in cells/liter (", type_choice[1], ")")) %>%
+  gtExtras::gt_plt_bar(column = month_ave, keep_column = TRUE, color = algae_colors[type_choice[1]]) %>% 
+  gt::cols_label(
+    date = "Date",
+    total = "Total",
+    total = "Total"
+  )
+
+library(DT)
+library(formattable)
+
+HAB_df2 <- HAB_df %>% 
+  ungroup() %>% 
+  mutate(year = year(date), month = month(date)) %>% 
+  group_by(year, month, Site, type) %>% 
+  summarize(month_ave = mean(total, na.rm = TRUE)) %>% 
+  ungroup() %>% 
+  #filter(type == type_choice[1]) %>% 
+  select(Site, type, year, month, month_ave)
+
+formattable(
+  HAB_df2,
+  list(
+    `month_ave` = color_tile("white", as.vector(algae_colors[type_choice[1]]))
+  )
+) %>%
+  as.datatable(escape = FALSE,
+               options = list(scrollX = TRUE),
+               rownames = FALSE)
+
+###################
+HAB_df %>% 
+  ungroup() %>% 
+  filter(type == type_choice[1]) %>% 
+  mutate()
   select(date, total) %>% 
   gt::gt() %>%
   gt::tab_options(table.font.size = "12pt", heading.title.font.size = "14pt") %>%
@@ -118,7 +166,8 @@ HAB_df %>%
     total = "Total",
     total = "Total"
   )
-  
+
+
 
 HAB_df %>% 
   ungroup() %>% 
