@@ -34,7 +34,12 @@ HAB_locs <- HAB %>%
   select(Latitude, Longitude, Site, County) %>% 
   distinct() %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
-  
+
+# Create colors for the algae
+algae_colors <- c("Diatoms" = "goldenrod2", 
+                  "Cyanobacteria" = "cadetblue3", 
+                  "Dinoflagellates" = "indianred1", 
+                  "Other" = "darkolivegreen4")
 
 HABPageUI <- function(id) {
   ns <- NS(id)
@@ -89,6 +94,12 @@ HABPageUI <- function(id) {
       # Plot in the next row, below inputs and map
       column(width = 12, 
       plotlyOutput(ns("timePlot")), 
+      )
+    ),
+    fluidRow(
+      # Plot in the next row, below the plot
+      column(width = 12, 
+             plotlyOutput(ns("HAB_table")), 
       )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
@@ -194,7 +205,7 @@ HABPageServer <- function(id, parentSession) {
     HAB_df <- reactiveVal()
     selected_type <- reactiveVal()
     
-    #### Filter if algae type changes ####
+    ### Filter if algae type changes ####
     observeEvent({ # If the selected algae type changes
       input$algae_type
     },{ # Filter dataframe
@@ -209,7 +220,7 @@ HABPageServer <- function(id, parentSession) {
                           date_range = input$date_range))
     })
     
-    #### Filter if station changes ####
+    ### Filter if station changes ####
     observeEvent({ # If the selected station changes
       input$station
     },{ # Filter dataframe
@@ -221,7 +232,7 @@ HABPageServer <- function(id, parentSession) {
                           date_range = input$date_range))
     }, ignoreInit = TRUE)
     
-    #### Filter if date range changes ####
+    ### Filter if date range changes ####
     observeEvent({ # If the selected station changes
       input$date_range
     },{ # Filter dataframe
@@ -233,7 +244,7 @@ HABPageServer <- function(id, parentSession) {
                           date_range = input$date_range))
     }, ignoreInit = TRUE)
     
-    #### Create plot ####
+    ### Create plot ####
     output$timePlot <- renderPlotly({
       req(HAB_df())
       #### Have to move this to functions and add an if-else set up so it does not
@@ -255,6 +266,7 @@ HABPageServer <- function(id, parentSession) {
       p <- ggplot(data = HAB_df(), aes(x = date, y = total, color = type)) +
         geom_segment(aes(x = date, xend = date, y = 0, yend = total)) +
         geom_point(size = 2, pch = 1) +
+        scale_color_manual(values = algae_colors) +
         labs(x = "", y = "Total cells/liter") +
         theme_bw() +
         facet_wrap(
@@ -276,6 +288,26 @@ HABPageServer <- function(id, parentSession) {
       gp[["x"]][["layout"]][["annotations"]][[1]][["x"]] <- -0.02
 
       gp
+    })
+    
+    ### Create table ####
+    # Render the table of most recurring species in the area
+    output$HAB_table <- gt::render_gt({
+      req(HAB_df())
+      
+      HAB_df() %>% 
+        ungroup() %>% 
+        filter(type == input$algae_type[1]) %>% 
+        select(date, total) %>% 
+        gt::gt() %>%
+        gt::tab_options(table.font.size = "12pt", heading.title.font.size = "14pt") %>%
+        gt::tab_header(title = paste0(input$station, ": Algae in cells/liter (", input$algae_type[1], ")")) %>%
+        gtExtras::gt_plt_bar(column = total, keep_column = TRUE, color = algae_colors[input$algae_type[1]]) %>% 
+        gt::cols_label(
+          date = "Date",
+          total = "Total",
+          total = "Total"
+        )
     })
     
     observeEvent(input$go_back, {

@@ -11,6 +11,9 @@ if(!require(fs)){ install.packages("fs") } ;  library(fs)
 if(!require(plotly)){ install.packages("plotly") } ;  library(plotly)
 if(!require(shinyWidgets)){ install.packages("shinyWidgets") } ;  library(shinyWidgets)
 if(!require(vroom)){ install.packages("vroom") } ;  library(vroom)
+if(!require(gt)){ install.packages("gt") } ;  library(gt)
+if(!require(gtExtras)){ install.packages("gtExtras") } ;  library(gtExtras)
+if(!require(svglite)){ install.packages("svglite") } ;  library(svglite)
 
 #### Get app.R file dir and set work dir ---------------------
 # find file_name from current working directory
