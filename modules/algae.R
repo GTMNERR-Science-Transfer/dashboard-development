@@ -49,16 +49,23 @@ HABPageUI <- function(id) {
       # First row - explanation
       column(width = 12,
              div(style = "margin-bottom: 20px;",
-                 p(htmltools::HTML('This section provides an overview of harmful algal bloom data.
+                 p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
                  Currently the dashboard is only showing numerical data (not presence / absence). A
                  value of 0 means that the water sample was tested for this algal type, but it was not
-                 detected. <br>
-                 Start by selecting a type of algae you are interested in. <br>
-                 Next, select the stations and date range that you are interested in. <br>
-                 The plot below the map will show total daily values in total cells/liter for each type of algae. <br>
+                 detected. If there are no values for a particular day or month, there was no testing
+                 performed. <br>
                  <br>
-                 Note the different y-axis scales, and also note that high numbers do not necessarily indicate
-                 blooms or toxic conditions [add a link to info here].'))
+                 Start by selecting the <strong>station</strong> and <strong>date range</strong> that you are interested in. <br>
+                 <br>
+                 Then select a <strong>type of algae</strong> you are interested in. The 4 algae types 
+                 available are the types that could potentially cause blooms or toxins [note to users: there
+                 will be an option added in the future to download raw data that shows algae genera and species] <br>
+                 <br>
+                 High numbers do not necessarily indicate blooms or toxic conditions! You can find more information
+                 <a href = "https://shellfish.ifas.ufl.edu/clams_eat/algal-groups.php" target = "new">here</a> about the 4 algae types. <br>
+                 <br>
+                 The plot below the map will show total daily values in total cells/liter for each type of algae.
+                  The tables display monthly average values in cells/liter.'))
              )
       )
     ),
@@ -67,7 +74,8 @@ HABPageUI <- function(id) {
       column(width = 6, 
              selectInput(ns("station"), 
                          label = "What station do you want data for?", 
-                         choices = c(unique(HAB$Site))),
+                         choices = c("", unique(HAB$Site)),
+                         selected = ""),
              #uiOutput(ns("selectStation")),
              sliderInput(
                inputId = ns("date_range"),
@@ -79,10 +87,10 @@ HABPageUI <- function(id) {
                timeFormat = "%m/%d/%Y",
                width = "100%"
              ),
-             selectInput(ns("algae_type"), 
-                         label = "What type of algae do you want data for?", 
-                         choices = c(unique(HAB$type)), 
-                         multiple = TRUE)
+             checkboxGroupInput(ns("algae_type"),
+                                label = "What type of algae do you want data for?", 
+                                choices = c(unique(HAB$type))
+             )
              ),
       # Map occupies 2nd column
       column(width = 6, 
@@ -253,7 +261,7 @@ HABPageServer <- function(id, parentSession) {
     observeEvent({ # If the selected algae type changes
       input$algae_type
     },{ # Filter dataframe
-      req(input$algae_type, input$station, input$date_range)
+      req(input$algae_type, input$station != "", input$date_range)
       selected_type(input$algae_type)
       
       print(paste0("You selected algae type(s) ", selected_type()))
@@ -262,13 +270,16 @@ HABPageServer <- function(id, parentSession) {
                HAB_filter(algae_type = selected_type(),
                           site = input$station,
                           date_range = input$date_range))
-    })
+    }) # , ignoreInit = TRUE
     
     ### Filter if station changes ####
     observeEvent({ # If the selected station changes
       input$station
     },{ # Filter dataframe
-      req(selected_type(), input$station, input$date_range)
+      req(input$algae_type, input$station, input$date_range)
+      selected_type(input$algae_type)
+      
+      print(paste0("Site has been changed to ", input$station))
       
       HAB_df(HAB %>%
                HAB_filter(algae_type = selected_type(),
@@ -280,13 +291,13 @@ HABPageServer <- function(id, parentSession) {
     observeEvent({ # If the selected station changes
       input$date_range
     },{ # Filter dataframe
-      req(selected_type(), input$station, input$date_range)
+      req(selected_type(), input$station != "", input$date_range)
       
       HAB_df(HAB %>%
                HAB_filter(algae_type = selected_type(),
                           site = input$station,
                           date_range = input$date_range))
-    }, ignoreInit = TRUE)
+    })
     
     ### Create plot ####
     output$timePlot <- renderPlotly({
@@ -351,7 +362,8 @@ HABPageServer <- function(id, parentSession) {
           `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
-        as.datatable(escape = FALSE,
+        as.datatable(colnames = c("Site", "Algae type", "Year", "Month", "Monthly average (cells/liter)"),
+                     escape = FALSE,
                      extensions = 'Buttons',
                      options = list(scrollX = TRUE,
                                     dom = 'Blfrtip',
@@ -397,7 +409,8 @@ HABPageServer <- function(id, parentSession) {
           `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
-        as.datatable(escape = FALSE,
+        as.datatable(colnames = c("Site", "Algae type", "Year", "Month", "Monthly average (cells/liter)"),
+                     escape = FALSE,
                      extensions = 'Buttons',
                      options = list(scrollX = TRUE,
                                     dom = 'Blfrtip',
@@ -443,7 +456,8 @@ HABPageServer <- function(id, parentSession) {
           `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
-        as.datatable(escape = FALSE,
+        as.datatable(colnames = c("Site", "Algae type", "Year", "Month", "Monthly average (cells/liter)"),
+                     escape = FALSE,
                      extensions = 'Buttons',
                      options = list(scrollX = TRUE,
                                     dom = 'Blfrtip',
@@ -489,7 +503,8 @@ HABPageServer <- function(id, parentSession) {
           `month_ave` = color_tile("white", caption_color)
         )
       ) %>%
-        as.datatable(escape = FALSE,
+        as.datatable(colnames = c("Site", "Algae type", "Year", "Month", "Monthly average (cells/liter)"),
+                     escape = FALSE,
                      extensions = 'Buttons',
                      options = list(scrollX = TRUE,
                                     dom = 'Blfrtip',
