@@ -274,3 +274,40 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   
   return(fig)
 }
+
+HAB_filter <- function(HAB_data, algae_type, site, date_range = NULL){
+  HAB_data <- HAB_data %>% 
+    filter(type %in% algae_type,
+           Site %in% site,
+           !is.na(`cells/L*`))  %>% 
+    mutate(date = dmy(`Sample Date`)) %>% 
+    mutate(Site_type = paste(Site, type, sep = " - ")) %>% 
+    group_by(Site, date, `Sample Time`, type, Site_type) %>% 
+    summarize(total = sum(`cells/L*`))
+  
+  if(!is.null(date_range)){
+    HAB_data <- filter(HAB_data, between(date, ymd(date_range[1]), ymd(date_range[2])))
+  }
+  
+  return(HAB_data)
+}
+
+#### Create HEX colors to use in html code ####
+# Some R color names do not work inside with CSS/html. This function changes the
+# name to the HEX code, which does work
+get_hex_color <- function(color_name) {
+  rgb_vals <- grDevices::col2rgb(color_name) / 255
+  sprintf("#%02X%02X%02X", round(rgb_vals[1] * 255), round(rgb_vals[2] * 255), round(rgb_vals[3] * 255))
+}
+
+#### Create custom icons etc ####
+# Define custom icons -> move this to a separate script
+# Red map marker icon
+redIcon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41,
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  shadowWidth = 41, shadowHeight = 41,
+  shadowAnchorX = 12, shadowAnchorY = 41
+)

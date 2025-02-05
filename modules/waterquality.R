@@ -6,7 +6,6 @@
 # Email: gklarenberg@ufl.edu
 # Christopher Marais
 # Email: 
-# Last updated: 12 August 2024
 
 library(tidyverse)
 library(shinyWidgets) #not sure if this is necessary? Loaded in global?
@@ -96,15 +95,9 @@ WINPageUI <- function(id) {
              ),
              fluidRow(
                column(width = 12,
-                      actionBttn( # function from shinyWidgets
-                        inputId = ns("make_plot"),
-                        label = "Create plot!", 
-                        style = "fill",
-                        color = "warning",
-                        icon = icon("arrow-trend-up", library = "fa"),
-                        block = TRUE # full-width button
-                      )
-               )
+                      downloadButton(
+                        outputId = ns("downloadCSV"),
+                        label = "Download selected data"))
              )
       ),
       # Column 2: show map
@@ -135,16 +128,6 @@ WINPageUI <- function(id) {
     actionButton(inputId = ns("go_back"), label = "Back to Main Page")
   )
 }
-
-# Define custom icons -> move this to a separate script
-redIcon <- makeIcon(
-  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-  iconWidth = 25, iconHeight = 41,
-  iconAnchorX = 12, iconAnchorY = 41,
-  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  shadowWidth = 41, shadowHeight = 41,
-  shadowAnchorX = 12, shadowAnchorY = 41
-)
 
 #### LIST OF INPUTS ####
 # input$dropdown_ui -> to get variable
@@ -204,14 +187,6 @@ WINPageServer <- function(id, parentSession) {
         addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
     })
     
-    #### Render an empty plot initially ####
-    output$plot <- renderPlotly({
-      plot_ly(type = 'scatter', mode = 'markers') %>%
-        layout(title = "No data selected", xaxis = list(visible = FALSE), yaxis = list(visible = FALSE))
-    })
-    
-    # Note: all the input$... are already reactive values (i.e. they get updated reactively)
-    
     # Reactive to keep track of selected stations from both inputs
     selected_stations <- reactiveVal(character())
     
@@ -261,6 +236,7 @@ WINPageServer <- function(id, parentSession) {
       if (is.null(input$station_list)) {
         selected_stations(character())  # Clear the reactive value
         print("All stations deselected.")
+        print(selected_stations())
         
         # Update all map markers to blue again
         leafletProxy("map") %>%
@@ -285,6 +261,7 @@ WINPageServer <- function(id, parentSession) {
       input$station_list
     }, {
       # Retrieve current selections
+      print(paste("Stations selected before selection:", selected_stations()))
       current_selected_stations <- selected_stations()
         
       # Add all selected stations from the dropdown
@@ -297,6 +274,7 @@ WINPageServer <- function(id, parentSession) {
         
       # Update selected_stations reactive value
       selected_stations(current_selected_stations)
+      print(paste("Stations selected after selection:", selected_stations()))
         
     }, ignoreInit = TRUE)
     
@@ -357,11 +335,19 @@ WINPageServer <- function(id, parentSession) {
                    )
         )
     })
-      
+    
+    #### Filter and update / create plot #####  
     df_filter <- reactiveVal() # Create as a global variable so it is available for plotting
     selected_col <- reactiveVal() # Same
     
-    observeEvent(input$make_plot, { # When user clicks action button: update df_filter
+    # df_filter updates dynamically
+    observe({ # 
+      if (is.null(selected_stations()) || length(selected_stations()) == 0) {
+        # Render empty df_filter
+        df_filter(character())
+        print("df_filter is empty")
+      }
+      
       req(selected_stations(), input$column_selector, input$date_range) # make sure all 3 exist
       
       print(paste("Initiating filter dataframe for", input$column_selector, 
@@ -379,28 +365,53 @@ WINPageServer <- function(id, parentSession) {
       
       # Make reactive input value
       selected_col(input$column_selector)
-      
-      }, ignoreInit = TRUE)
-    
-    # Create plot -> will also only run when button is pressed because it relies on
-    # df_filter()
-    output$plot <- renderPlotly({
-      
-      if (is.null(df_filter()) || nrow(df_filter()) == 0) {
-        # Render empty plot
-        return(plot_ly(type = 'scatter', mode = 'markers') %>%
-                 layout(title = "No data selected", 
-                        xaxis = list(visible = FALSE), 
-                        yaxis = list(visible = FALSE)))
-      }
-
-      req(df_filter(), selected_col(), selected_stations())
-      
-      # Create the plot (has a built in method to show a message if there is no data available)
-      create_plot(df = df_filter(), 
-                  units_df = WQ_data_units, 
-                  selected_column = selected_col())
     })
+    
+    # Plot updates dynamically  
+    observe({   
+      ##### Create plot #### 
+      output$plot <- renderPlotly({
+        print("Running plotting code")
+        req(df_filter(), selected_col(), selected_stations()) # By having this req in here, plot updates every time df_filter is updated....
+        
+        if (is.null(df_filter()) || nrow(df_filter()) == 0) {
+          # Render empty plot
+          return(plot_ly(type = 'scatter', mode = 'markers') %>%
+                   layout(title = "No data selected", 
+                          xaxis = list(visible = FALSE), 
+                          yaxis = list(visible = FALSE)))
+        }
+        
+        # Create the plot (has a built in method to show a message if there is no data available)
+        create_plot(df = df_filter(), 
+                    units_df = WQ_data_units, 
+                    selected_column = selected_col())
+      })
+    })
+    
+    #### Download data ####
+    output$downloadCSV <- downloadHandler(
+      filename = function() {
+        paste0(
+          "Guana-WQ-", input$column_selector, ".csv"
+          # The following option became too long, plus would only add 1 station name
+         #"Guana-WQ-", input$column_selector, "-", input$station_list, input$date_range[1], "-to-", input$date_range[2], ".csv"
+        )
+      },
+      
+      content = function(file) {
+        req(df_filter())
+
+        # Write data
+        vroom::vroom_write(
+          x = df_filter() %>% 
+            dplyr::ungroup() %>% 
+            dplyr::select(-geometry),
+          file = file,
+          delim = ","
+        )
+      }
+    )
     
     #### The 'go back' button ####
     observeEvent(input$go_back, {
