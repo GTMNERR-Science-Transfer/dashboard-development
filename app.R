@@ -20,7 +20,7 @@ library(bslib)
 ui <- page_navbar(
   theme = bs_theme(version=5, # Documentation recommends to hardcode this, in case 
                    # the versions / dependencies change or get updated 
-                   preset = "sandstone", # See https://bootswatch.com/sandstone/ # or cosmo?
+                   bootswatch  = "sandstone", # See https://bootswatch.com/sandstone/ # or cosmo?
                    navbar_bg = "#174A7C",   # Dark blue color (adjust as needed)
                    navbar_fg = "white",      # White text for contrast
                    "navbar-dark" = TRUE),        # Ensures text is styled for dark background
