@@ -100,6 +100,7 @@ explPageServer <- function(id, parentSession) {
   moduleServer(id, function(input, output, session) { # this nested approach is
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
+    ns <- session$ns
     # Define initial view coordinates and zoom level
     initial_lat <- 29.905 
     initial_lng <- -81.289

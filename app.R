@@ -71,7 +71,7 @@ ui <- page_navbar(
 )
 
 server <- function(input, output, session) {
-  moduleServer(id = "main_page", module = mainPageServer, session = session)
+  moduleServer(module = mainPageServer, id = "main_page", session = session)
   explPageServer("explore", parentSession = session)
   HABPageServer("algae", parentSession = session)
   WINPageServer("waterquality", parentSession = session)
