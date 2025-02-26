@@ -56,43 +56,151 @@ all_data_locations <- all_data_locations %>%
 
 
 ### Define the UI -------------------------------------------------------------
+dash_theme <- bs_theme(
+  version = 5,
+  bootswatch = "sandstone"
+) |>
+  bs_add_variables(
+    "navbar-bg" = "$primary",
+    "navbar-color" = "$light",
+    #"progress-bar-bg" = "$secondary",
+    .where = "declarations"
+  ) |>
+  bs_add_rules("
+    .navbar { color: var(--bs-light) !important; }
+    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
+  ")
+
 explPageUI <- function(id) {
-  ns <- NS(id) # This is an important part to add to all subpages so they use the
-  # correct sessions / ID's that connect the ui and server here
-  tagList(
-    h2("Welcome!"),
-    p(htmltools::HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br>
-    <br>
-    There are various data sets available through this dashboard. The dropdown menu 
-    shows you the locations with data availability for different data sets. Clicking
-    on the stations shows you the period of data availability. <br>
-    <br>To explore and view the actual data, pick your data set of interest from
-                      the tabs at the top of your screen (or the tabs in the fold out menu at the top).")),
-    # Dropdown menu for markers is above the map
-    fluidRow(
-      column(width = 8, 
-             selectInput(
-               inputId = ns("datatype_selector"),
-               label = "Select a type of data to see locations with data availability",
-               choices = unique(all_data_locations$type),
-               selected = unique(all_data_locations$type)[1]
-             ), 
-             style = "position:relative;z-index:10000;")
+  ns <- NS(id)
+  
+  page_sidebar(
+    theme = bs_theme(version = 5, bootswatch = "sandstone"),
+    
+    title = "Explore Data",
+    
+    sidebar = sidebar(
+      title = "Data Selection",
+      selectInput(
+        inputId = ns("datatype_selector"),
+        label = "Select a type of data to see locations with data availability",
+        choices = unique(all_data_locations$type),
+        selected = unique(all_data_locations$type)[1]
+      ),
+      actionButton(
+        inputId = ns("reset_view"),
+        label = "Reset map view",
+        icon = icon("rotate-right", library = "fa")
+      ),
+      
+      card(
+        full_screen = TRUE, # Let's you click and enlarge the card to full screen
+        fill = TRUE,
+        height = "800px",
+        card_header("Dataset Summary"),
+        layout_columns(
+          fill = TRUE,
+          col_widths = c(12), # Ensures value boxes stack properly
+          value_box(
+            title = "Total stations",
+            value = textOutput(ns("total_stations")),
+            showcase = div(bsicons::bs_icon("geo-fill", size = 40)),
+            showcase_layout = "top right",
+            theme = "primary"
+          ),
+          value_box(
+            title = "First year of available data",
+            value = textOutput(ns("first_year")),
+            showcase = div(bsicons::bs_icon("calendar-check", size = 40)),
+            showcase_layout = "top right",
+            theme = "info"
+          ),
+          value_box(
+            title = "Last year of available data",
+            value = textOutput(ns("last_year")),
+            showcase = div(bsicons::bs_icon("calendar-x", size = 40)),
+            showcase_layout = "top right",
+            theme = "info"
+          ),
+          value_box(
+            title = "Average measurements per station",
+            value = textOutput(ns("avg_measurements")),
+            showcase = div(bsicons::bs_icon("clipboard2-data", size = 40)),
+            showcase_layout = "top right",
+            theme = "success"
+          )
+        )
+      )
     ),
-    fluidRow(
-      column(width = 12, leafletOutput(ns("map"), height="500px")),
+    
+    # Main content (text and map)
+    layout_columns(
+      col_widths = c(12), # Ensures full width for the header card
+      card(
+        fill = TRUE, # Ensures no scroll bars as long as height is set
+        height = "400px",
+        card_header("Welcome!"),
+        card_body(
+          p(HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br><br>
+          There are various data sets available through this dashboard. The dropdown menu 
+          shows you the locations with data availability for different data sets. Clicking
+          on the stations shows you the period of data availability. <br><br>
+          To explore and view the actual data, pick your data set of interest from
+          the tabs at the top of your screen (or the tabs in the fold-out menu at the top)."))
+        )
+      )
     ),
-    fluidRow(
-      column(width = 4, actionBttn(inputId = ns("reset_view"),
-                                   label = "Reset map view",
-                                   size = "sm",
-                                   style = "simple",
-                                   color = "danger",
-                                   icon = icon("rotate-right", library = "fa"))
+    
+    layout_columns(
+      col_widths = c(12), # full width for the map
+      card(
+        full_screen = TRUE, # Let's you click and enlarge the card to full screen
+        card_header("Map View"),
+        card_body(
+          leafletOutput(ns("map"), height = "800px")
+        )
       )
     )
   )
 }
+
+# explPageUI <- function(id) {
+#   ns <- NS(id) # This is an important part to add to all subpages so they use the
+#   # correct sessions / ID's that connect the ui and server here
+#   tagList(
+#     h2("Welcome!"),
+#     p(htmltools::HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br>
+#     <br>
+#     There are various data sets available through this dashboard. The dropdown menu 
+#     shows you the locations with data availability for different data sets. Clicking
+#     on the stations shows you the period of data availability. <br>
+#     <br>To explore and view the actual data, pick your data set of interest from
+#                       the tabs at the top of your screen (or the tabs in the fold out menu at the top).")),
+#     # Dropdown menu for markers is above the map
+#     fluidRow(
+#       column(width = 8, 
+#              selectInput(
+#                inputId = ns("datatype_selector"),
+#                label = "Select a type of data to see locations with data availability",
+#                choices = unique(all_data_locations$type),
+#                selected = unique(all_data_locations$type)[1]
+#              ), 
+#              style = "position:relative;z-index:10000;")
+#     ),
+#     fluidRow(
+#       column(width = 12, leafletOutput(ns("map"), height="500px")),
+#     ),
+#     fluidRow(
+#       column(width = 4, actionBttn(inputId = ns("reset_view"),
+#                                    label = "Reset map view",
+#                                    size = "sm",
+#                                    style = "simple",
+#                                    color = "danger",
+#                                    icon = icon("rotate-right", library = "fa"))
+#       )
+#     )
+#   )
+# }
 
 ### Define the server logic ----------------------------------------------------
 
@@ -183,27 +291,39 @@ explPageServer <- function(id, parentSession) {
                                         "border-color" = "rgba(0,0,0,0.5)"
                                       )
           )
-        )#%>%
-      # addCircleMarkers(
-      #   data = filtered_data,
-      #   color = ~color_palette(dataset),
-      #   opacity = 1,
-      #   fillOpacity = 0.5,
-      #   fillColor = ~color_palette(dataset),
-      #   fill = TRUE,
-      #   weight = 3,
-      #   radius = 8,
-      # popup = ~paste("Station: ", site_friendly, "<br>",
-      #                                           "Location: ", wbid, "<br>",
-      #                                           "Latest year of sampling: ", maxYear, "<br",
-      #                                           "Sampling start year: ", minYear, "<br")
-      #)
+        )
     }, ignoreInit = FALSE)
     # Add buttons to go to other pages
     # observeEvent(input[[ns("go_to_subpage")]], {
     #   print("Go to subpage button clicked")
     #   updateTabItems(session, "tabs", selected = "subpage")
     # })
+    
+    # Caclculate the stats to add to the value boxes
+    filtered_data <- reactive({
+      req(input$datatype_selector)
+      all_data_locations %>%
+        filter(type == input$datatype_selector)
+    })
+    
+    output$total_stations <- renderText({
+      n_distinct(filtered_data()$site_friendly)
+    })
+    
+    output$first_year <- renderText({
+      min(filtered_data()$minYear, na.rm = TRUE)
+    })
+    
+    output$last_year <- renderText({
+      max(filtered_data()$maxYear, na.rm = TRUE)
+    })
+    
+    output$avg_measurements <- renderText({
+      df <- filtered_data() %>% #### This still needs to be updated, this is currently not a count of obs
+        group_by(site_friendly) %>%
+        summarise(measurements = n(), .groups = "drop")
+      round(mean(df$measurements, na.rm = TRUE), 1)
+    })
     
     # Observe reset button click to restore initial view
     observeEvent(input$reset_view, {
