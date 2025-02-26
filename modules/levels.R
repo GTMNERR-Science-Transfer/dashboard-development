@@ -48,59 +48,28 @@ levelsPageUI <- function(id) {
     
     sidebar = sidebar(
       title = "Data Selection",
-      selectInput(
-        inputId = ns("datatype_selector"),
-        label = "Select a type of data to see locations with data availability",
-        choices = unique(all_data_locations$type),
-        selected = unique(all_data_locations$type)[1]
+      selectInput(ns("station"), 
+                  label = "What station do you want data for?", 
+                  choices = c("", unique(HAB$Site)),
+                  selected = ""),
+      #uiOutput(ns("selectStation")),
+      sliderInput(
+        inputId = ns("date_range"),
+        label = "Select a Date Range",
+        min = min(dmy(HAB$'Sample Date')), #NULL
+        max = max(dmy(HAB$'Sample Date')), #NULL
+        value = c(min(dmy(HAB$'Sample Date')), 
+                  max(dmy(HAB$'Sample Date'))),
+        timeFormat = "%m/%d/%Y",
+        width = "100%"
       ),
-      actionButton(
-        inputId = ns("reset_view"),
-        label = "Reset map view",
-        icon = icon("rotate-right", library = "fa")
-      ),
-      
-      card(
-        full_screen = TRUE, # Let's you click and enlarge the card to full screen
-        fill = TRUE,
-        height = "800px",
-        card_header("Dataset Summary"),
-        layout_columns(
-          fill = TRUE,
-          col_widths = c(12), # Ensures value boxes stack properly
-          value_box(
-            title = "Total stations",
-            value = textOutput(ns("total_stations")),
-            showcase = div(bsicons::bs_icon("geo-fill", size = 40)),
-            showcase_layout = "top right",
-            theme = "primary"
-          ),
-          value_box(
-            title = "First year of available data",
-            value = textOutput(ns("first_year")),
-            showcase = div(bsicons::bs_icon("calendar-check", size = 40)),
-            showcase_layout = "top right",
-            theme = "info"
-          ),
-          value_box(
-            title = "Last year of available data",
-            value = textOutput(ns("last_year")),
-            showcase = div(bsicons::bs_icon("calendar-x", size = 40)),
-            showcase_layout = "top right",
-            theme = "info"
-          ),
-          value_box(
-            title = "Average measurements per station",
-            value = textOutput(ns("avg_measurements")),
-            showcase = div(bsicons::bs_icon("clipboard2-data", size = 40)),
-            showcase_layout = "top right",
-            theme = "success"
-          )
-        )
+      checkboxGroupInput(ns("algae_type"),
+                         label = "What type of algae do you want data for?", 
+                         choices = c(unique(HAB$type))
       )
     ),
     
-    # Main content (text and map)
+    # Main content (text, map, plots)
     layout_columns(
       col_widths = c(12), # Ensures full width for the header card
       card(
