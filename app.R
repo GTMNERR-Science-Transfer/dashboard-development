@@ -12,6 +12,7 @@ source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
 source("modules/explore.R")
+source("modules/levels.R")
 
 dash_theme <- bs_theme(
   version = 5,
