@@ -22,7 +22,7 @@ mainPageUI <- function(id) {
       ),
       column(width = 6, align = "center",
              h1("Guana Estuary Data Dashboard", 
-                style = "font-size: 3em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-top: 20px; margin-bottom: 20px;")
+                style = "font-size: 4em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-top: 20px; margin-bottom: 10px;")
       ),
       column(width = 3, align = "center",
              tags$img(src = "data/noaa_logo.png", height = "150px")
