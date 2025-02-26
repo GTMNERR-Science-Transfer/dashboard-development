@@ -16,21 +16,22 @@ source("modules/explore.R")
 dash_theme <- bs_theme(
   version = 5,
   bootswatch = "sandstone"
-) |>
-  bs_add_variables(
-    "navbar-bg" = "$primary",
-    "navbar-color" = "$light",
-    #"progress-bar-bg" = "$secondary",
-    .where = "declarations"
-  ) |>
-  bs_add_rules("
-    .navbar { color: var(--bs-light) !important; }
-    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
-  ")
+) #|>
+  # bs_add_variables(
+  #   "navbar-bg" = "$primary",
+  #   "navbar-color" = "$light",
+  #   #"progress-bar-bg" = "$secondary",
+  #   .where = "declarations"
+  # ) |>
+  # bs_add_rules("
+  #   .navbar { color: var(--bs-light) !important; }
+  #   .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
+  # ")
 
 ui <- page_navbar(
   theme = dash_theme,
   title = "Guana Estuary Data Dashboard",
+  navbar_options = list(class = "bg-primary", theme = "dark"),
   nav_panel(title = "Home",
             mainPageUI(id = "main_page")
             ),
