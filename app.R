@@ -53,7 +53,7 @@ ui <- page_navbar(
   nav_panel(title = "Water Levels", 
             icon = icon("water", 
                         lib="font-awesome"),
-            "Under construction", 
+            levelsPageUI(id = "levels"),  
   ),
   
   nav_panel(title = "Fish and Shellfish", 
@@ -65,6 +65,7 @@ ui <- page_navbar(
 
 server <- function(input, output, session) {
   moduleServer(module = mainPageServer, id = "main_page", session = session)
+  levelsPageServer("levels", parentSession = session)
   explPageServer("explore", parentSession = session)
   HABPageServer("algae", parentSession = session)
   WINPageServer("waterquality", parentSession = session)
