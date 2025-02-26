@@ -14,6 +14,7 @@ if(!require(vroom)){ install.packages("vroom") } ;  library(vroom)
 if(!require(formattable)){ install.packages("formattable") } ;  library(formattable)
 if(!require(DT)){ install.packages("DT") } ;  library(DT)
 if(!require(bsicons)){ install.packages("bsicons") } ;  library(bsicons)
+if(!require(shinycssloaders)){ install.packages("shinycssloaders") } ;  library(shinycssloaders )
 
 #### Get app.R file dir and set work dir ---------------------
 # find file_name from current working directory

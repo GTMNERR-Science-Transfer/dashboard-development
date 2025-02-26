@@ -157,7 +157,7 @@ explPageUI <- function(id) {
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
         card_header("Map View"),
         card_body(
-          leafletOutput(ns("map"), height = "800px")
+          shinycssloaders::withSpinner(leafletOutput(ns("map"), height = "800px"))
         )
       )
     )
