@@ -11,13 +11,17 @@ source("functions.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
+source("modules/shellfish.R")
 source("modules/explore.R")
 
 dash_theme <- bs_theme(
+            explPageUI(id = "explore")
+                        lib="font-awesome"),
+            icon = icon("binoculars", 
   version = 5,
+  bs_add_variables(
   bootswatch = "sandstone"
 ) |>
-  bs_add_variables(
     "navbar-bg" = "$primary",
     "navbar-color" = "$light",
     "navbar-dark-bg" = "$primary",
@@ -28,17 +32,14 @@ dash_theme <- bs_theme(
     .navbar { color: var(--bs-light) !important; }
     .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
   ")
-
 ui <- page_navbar(
+
   theme = dash_theme,
   title = "Guana Estuary Data Dashboard",
   nav_panel(title = "Home",
             mainPageUI(id = "main_page")
             ),
   nav_panel(title = "Explore",
-            icon = icon("binoculars", 
-                        lib="font-awesome"),
-            explPageUI(id = "explore")
   ),
   nav_panel(title = "Water Quality", 
             icon = icon("flask-vial", 
@@ -69,6 +70,7 @@ server <- function(input, output, session) {
   explPageServer("explore", parentSession = session)
   HABPageServer("algae", parentSession = session)
   WINPageServer("waterquality", parentSession = session)
+  SHELLPageServer("shellfish", parentSession = session)
 }
 
 shinyApp(ui, server)
