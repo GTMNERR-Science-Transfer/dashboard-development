@@ -106,19 +106,19 @@ SHELLPageUI <- function(id) {
       # Map occupies 2nd column
       column(width = 6, 
              div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="350px"))
+                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="350px")))
       )
     ),
     fluidRow(
       # Plot in the next row, below inputs and map
       column(width = 12, 
-             plotOutput(ns("countPlot")), 
+             shinycssloaders::withSpinner(plotOutput(ns("countPlot"))), 
       )
     ),
     fluidRow(
       # Plot in the next row, below inputs and map
       column(width = 12, 
-             plotOutput(ns("areaPlot")), 
+             shinycssloaders::withSpinner(plotOutput(ns("areaPlot"))), 
       )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page"), #All input IDs need to be inside ns()

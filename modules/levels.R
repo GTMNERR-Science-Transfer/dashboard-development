@@ -81,7 +81,7 @@ levelsPageUI <- function(id) {
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
         card_header("Values over time"),
         card_body(
-          plotOutput(ns("timePlot"))
+          shinycssloaders::withSpinner(plotOutput(ns("timePlot")))
         )
 
       ),
@@ -89,7 +89,7 @@ levelsPageUI <- function(id) {
         full_screen = TRUE,
         card_header("Distribution of values"),
         card_body(
-          plotOutput(ns("distribution"))
+          shinycssloaders::withSpinner(plotOutput(ns("distribution")))
         )
       )
     )
