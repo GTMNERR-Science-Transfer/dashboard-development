@@ -29,36 +29,31 @@ dash_theme <- bs_theme(version = 5,
     .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }")
 
 ui <- page_navbar(
+  id = "tabs",  # assign an id to the navbar
   theme = dash_theme,
   title = "Guana Estuary Data Dashboard",
-  nav_panel(title = "Home",
+  nav_panel(title = "Home", value = "main_page",
             mainPageUI(id = "main_page")
-            ),
-  nav_panel(title = "Explore",
-            icon = icon("binoculars", lib="font-awesome"),
+  ),
+  nav_panel(title = "Explore", value = "explore",
+            icon = icon("binoculars", lib = "font-awesome"),
             explPageUI(id = "explore")
   ),
-  nav_panel(title = "Water Quality", 
-            icon = icon("flask-vial", 
-                        lib="font-awesome"), 
+  nav_panel(title = "Water Quality", value = "waterquality",
+            icon = icon("flask-vial", lib = "font-awesome"),
             WINPageUI(id = "waterquality")
-            ),
-  nav_panel(title = "Harmful Algal Blooms",
-            icon = icon("microscope", 
-                        lib = "font-awesome"),
-            HABPageUI(id = "algae"), 
   ),
-  
-  nav_panel(title = "Water Levels", 
-            icon = icon("water", 
-                        lib="font-awesome"),
-            levelsPageUI(id = "levels"),  
+  nav_panel(title = "Harmful Algal Blooms", value = "algae",
+            icon = icon("microscope", lib = "font-awesome"),
+            HABPageUI(id = "algae")
   ),
-  
-  nav_panel(title = "Fish and Shellfish", 
-            icon = icon("fish", 
-                        lib="font-awesome"),
-            SHELLPageUI(id = "shellfish"), 
+  nav_panel(title = "Water Levels", value = "levels",
+            icon = icon("water", lib = "font-awesome"),
+            levelsPageUI(id = "levels")
+  ),
+  nav_panel(title = "Fish and Shellfish", value = "shellfish",
+            icon = icon("fish", lib = "font-awesome"),
+            SHELLPageUI(id = "shellfish")
   )
 )
 

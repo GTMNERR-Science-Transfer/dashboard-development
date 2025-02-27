@@ -121,7 +121,8 @@ SHELLPageUI <- function(id) {
              plotOutput(ns("areaPlot")), 
       )
     ),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page") #All input IDs need to be inside ns()
+    actionButton(inputId = ns("go_back"), label = "Back to Main Page"), #All input IDs need to be inside ns()
+    br()
   )
 }
 
@@ -239,7 +240,7 @@ SHELLPageServer <- function(id, parentSession) {
     })
     
     observeEvent(input$go_back, {
-      updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
+      updateNavbarPage(session = parentSession, inputId = "tabs", selected = "main_page")
     })
   })
 }
