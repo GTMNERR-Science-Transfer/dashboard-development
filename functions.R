@@ -291,3 +291,40 @@ HAB_filter <- function(HAB_data, algae_type, site, date_range = NULL){
   
   return(HAB_data)
 }
+
+reef_filter <- function(reef_data, site, date_range = NULL){
+  reef_data <- reef_data %>% 
+    filter(ReefID %in% site)  %>% 
+    mutate(date = dmy(Date)) %>%
+    group_by(ReefID, date)
+  
+  if(!is.null(date_range)){
+    reef_data <- filter(reef_data, between(date, ymd(date_range[1]), ymd(date_range[2])))
+  }
+  
+  return(reef_data)
+}
+
+blue_icon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41
+)
+
+red_icon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41
+)
+
+#### Create custom icons etc ####
+# Define custom icons -> move this to a separate script
+# Red map marker icon
+redIcon <- makeIcon(
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  iconWidth = 25, iconHeight = 41,
+  iconAnchorX = 12, iconAnchorY = 41,
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  shadowWidth = 41, shadowHeight = 41,
+  shadowAnchorX = 12, shadowAnchorY = 41
+)
