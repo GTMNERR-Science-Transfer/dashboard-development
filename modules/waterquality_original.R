@@ -47,7 +47,7 @@ WINPageUI <- function(id) {
     fluidRow(
       column(width = 8, 
              div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="500px") 
+                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px"))
              )
       ),
       column(width = 4, 
@@ -62,7 +62,7 @@ WINPageUI <- function(id) {
     fluidRow(
       column(width = 12, 
              div(style = "margin-bottom: 20px;",
-                 plotlyOutput(ns("plot"), height="350px")
+                 shinycssloaders::withSpinner(plotlyOutput(ns("plot"), height="350px"))
               )
       )
     ),

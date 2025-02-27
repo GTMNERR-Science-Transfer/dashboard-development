@@ -17,7 +17,7 @@ WQPageUI <- function(id) {
     h2("Water Quality Data"),
     fluidRow(
       # Map occupies 1st column
-      column(width = 7, leafletOutput(ns("map"), height=750)), # make sure to put the input inside ns()
+      column(width = 7, shinycssloaders::withSpinner(leafletOutput(ns("map"), height=750))), # make sure to put the input inside ns()
       # histogram occupies rows in the 2nd column
       column(width = 5, plotOutput(ns("distPlot")),
              sliderInput(ns("bins"), "Number of bins:", 
