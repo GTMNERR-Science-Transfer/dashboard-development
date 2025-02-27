@@ -8,31 +8,32 @@ source("functions.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
+source("modules/shellfish.R")
 #source("modules/win.R")
 
 ui <- dashboardPage(
   dashboardHeader(title = "Guana Estuary Data Dashboard"),
   dashboardSidebar(
     sidebarMenu(id = "tabs",
-      menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
-      menuItem("Water Quality Data", tabName = "waterquality", 
-               icon = icon("flask-vial", lib="font-awesome"),
-               badgeLabel = "UPDATED!", badgeColor = "fuchsia"),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", 
-               icon = icon("microscope", lib = "font-awesome"),
-               badgeLabel = "NEW!", badgeColor = "green"),
-      menuItem("Water Level Data", tabName = "waterlevel", 
-               icon = icon("water", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue"),
-      menuItem("Fish and Shellfish", tabName = "shellfish", 
-               icon = icon("fish", lib="font-awesome"),
-               badgeLabel = "Coming soon", badgeColor = "yellow"),
-      menuItem("Terrestrial Animal Data", tabName = "animal", 
-               icon = icon("paw", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue"),
-      menuItem("Vegetation Data", tabName = "animal", 
-               icon = icon("seedling", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue")
+                menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
+                menuItem("Water Quality Data", tabName = "waterquality", 
+                         icon = icon("flask-vial", lib="font-awesome"),
+                         badgeLabel = "UPDATED!", badgeColor = "fuchsia"),
+                menuItem("Harmful Algal Bloom Data", tabName = "algae", 
+                         icon = icon("microscope", lib = "font-awesome"),
+                         badgeLabel = "NEW!", badgeColor = "green"),
+                menuItem("Water Level Data", tabName = "waterlevel", 
+                         icon = icon("water", lib="font-awesome"),
+                         badgeLabel = "Under construction", badgeColor = "light-blue"),
+                menuItem("Fish and Shellfish", tabName = "shellfish", 
+                         icon = icon("fish", lib="font-awesome"),
+                         badgeLabel = "Coming soon", badgeColor = "yellow"),
+                menuItem("Terrestrial Animal Data", tabName = "animal", 
+                         icon = icon("paw", lib="font-awesome"),
+                         badgeLabel = "Under construction", badgeColor = "light-blue"),
+                menuItem("Vegetation Data", tabName = "animal", 
+                         icon = icon("seedling", lib="font-awesome"),
+                         badgeLabel = "Under construction", badgeColor = "light-blue")
     ),
     # Custom CSS to adjust the vertical position of the menu items
     tags$style(HTML("
@@ -50,7 +51,8 @@ ui <- dashboardPage(
     tabItems(
       tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
       tabItem(tabName = "algae", HABPageUI(id = "algae")),
-      tabItem(tabName = "waterquality", WINPageUI(id = "waterquality"))
+      tabItem(tabName = "waterquality", WINPageUI(id = "waterquality")),
+      tabItem(tabName = "shellfish", SHELLPageUI(id = "shellfish"))
     )
   )
 )
@@ -60,6 +62,7 @@ server <- function(input, output, session) {
   #WQPageServer("waterquality", parentSession = session)
   HABPageServer("algae", parentSession = session)
   WINPageServer("waterquality", parentSession = session)
+  SHELLPageServer("shellfish", parentSession = session)
 }
 
 shinyApp(ui, server)
