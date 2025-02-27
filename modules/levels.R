@@ -79,17 +79,17 @@ levelsPageUI <- function(id) {
       width = 1/2,
       card(
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
-        card_header("Over time"),
+        card_header("Values over time"),
         card_body(
-          plotlyOutput(ns("timePlot"))
+          plotOutput(ns("timePlot"))
         )
 
       ),
       card(
         full_screen = TRUE,
-        card_header = "Distribution",
+        card_header = "Distribution of values",
         card_body(
-          plotlyOutput(ns("distribution"))
+          plotOutput(ns("distribution"))
         )
       )
     )
@@ -182,62 +182,91 @@ levelsPageServer <- function(id, parentSession) {
     }, ignoreInit = TRUE)
 
     ### Create plots ####
-    output$timePlot <- renderPlotly({
+    output$timePlot <- renderPlot({
       req(nrow(plot_data()) > 0, input$aggregation != "")
+      
+      if (input$data_type == "Precipitation"){
+        col_loc <- c("purple", "orange")
+        axis_text <- "Precipitation (inches)"
+      } else if (input$data_type == "Dam levels"){
+        col_loc <- c("royalblue")
+        axis_text <- "Dam level (ft above reference)"
+      }
 
       if (input$aggregation == "Daily"){
         p <- ggplot(data = plot_data(), aes(x = date, y = value, color = location)) +
           geom_point() +
           geom_line()+
-          labs(x = "Date", y = input$input_selector)+
+          labs(x = "Date", y = axis_text)+
+          scale_color_manual(name = "Location", values = col_loc)+
           theme_bw()+
-          theme(legend.position = "top")
+          theme(legend.position = "bottom")
       } else if (input$aggregation == "Monthly average"){
         p <- ggplot(data = plot_data(), aes(x = date, y = mean_vals, color = location)) +
           geom_point() +
           geom_line()+
-          labs(x = "Date", y = input$input_selector)+
+          labs(x = "Date", y = axis_text)+
+          scale_color_manual(name = "Location", values = col_loc)+
           theme_bw()+
-          theme(legend.position = "top")
+          theme(legend.position = "bottom")
       } else if (input$aggregation == "Annual average"){
         p <- ggplot(data = plot_data(), aes(x = year, y = mean_vals, color = location)) +
           geom_point() +
           geom_line()+
-          labs(x = "Year", y = input$input_selector)+
+          labs(x = "Year", y = axis_text)+
+          scale_color_manual(name = "Location", values = col_loc)+
           theme_bw()+
-          theme(legend.position = "top")
+          theme(legend.position = "bottom")
       }
+      
+      p
 
-      gp <- ggplotly(p,
-                     dynamicTicks = TRUE)
-
-      gp
+      # gp <- ggplotly(p,
+      #                dynamicTicks = TRUE)
+      # 
+      # gp
     })
 
-    output$distribution <- renderPlotly({
+    output$distribution <- renderPlot({
       req(nrow(plot_data()) > 0, input$aggregation != "")
+      
+      if (input$data_type == "Precipitation"){
+        col_loc <- c("purple", "orange")
+        axis_text <- "Precipitation (inches)"
+      } else if (input$data_type == "Dam levels"){
+        col_loc <- c("royalblue")
+        axis_text <- "Dam level (ft above reference)"
+      }
 
       if (input$aggregation == "Daily"){
         p <- ggplot(data = plot_data(), aes(x = value, fill = location)) +
           geom_histogram() +
-          labs(x = input$input_selector, y = "Counts")+
-          theme_bw()
+          labs(x = axis_text, y = "Counts")+
+          scale_fill_manual(name = "Location", values = col_loc)+
+          theme_bw()+
+          theme(legend.position = "bottom")
       } else if (input$aggregation == "Monthly average"){
         p <- ggplot(data = plot_data(), aes(x = mean_vals, fill = location)) +
           geom_histogram() +
-          labs(x = input$input_selector, y = "Counts")+
-          theme_bw()
+          labs(x = axis_text, y = "Counts")+
+          scale_fill_manual(name = "Location", values = col_loc)+
+          theme_bw()+
+          theme(legend.position = "bottom")
       } else if (input$aggregation == "Annual average"){
         p <- ggplot(data = plot_data(), aes(x = mean_vals, fill = location)) +
           geom_histogram() +
-          labs(x = input$input_selector, y = "Counts")+
-          theme_bw()
+          labs(x = axis_text, y = "Counts")+
+          scale_fill_manual(name = "Location", values = col_loc)+
+          theme_bw()+
+          theme(legend.position = "bottom")
       }
+      
+      p
 
-      gp <- ggplotly(p,
-                     dynamicTicks = TRUE)
-
-      gp
+      # gp <- ggplotly(p,
+      #                dynamicTicks = TRUE)
+      # 
+      # gp
     })
   })
 }
