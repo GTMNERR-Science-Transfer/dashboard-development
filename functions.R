@@ -304,6 +304,7 @@ reef_filter <- function(reef_data, site, date_range = NULL){
   
   return(reef_data)
 }
+
 #### Create HEX colors to use in html code ####
 # Some R color names do not work inside with CSS/html. This function changes the
 # name to the HEX code, which does work
@@ -311,18 +312,8 @@ get_hex_color <- function(color_name) {
   rgb_vals <- grDevices::col2rgb(color_name) / 255
   sprintf("#%02X%02X%02X", round(rgb_vals[1] * 255), round(rgb_vals[2] * 255), round(rgb_vals[3] * 255))
 }
-)
-  shadowAnchorX = 12, shadowAnchorY = 41
-  shadowWidth = 41, shadowHeight = 41,
-  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
-  iconAnchorX = 12, iconAnchorY = 41,
-  iconWidth = 25, iconHeight = 41,
-  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
-redIcon <- makeIcon(
-# Red map marker icon
-# Define custom icons -> move this to a separate script
-#### Create custom icons etc ####
 
+#### Make marker icons #####
 blue_icon <- makeIcon(
   iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   iconWidth = 25, iconHeight = 41,
@@ -334,3 +325,16 @@ red_icon <- makeIcon(
   iconWidth = 25, iconHeight = 41,
   iconAnchorX = 12, iconAnchorY = 41
 )
+
+
+redIcon <- makeIcon(
+  shadowAnchorX = 12, shadowAnchorY = 41,
+  shadowWidth = 41, shadowHeight = 41,
+  shadowUrl = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png",
+  iconAnchorX = 12, iconAnchorY = 41,
+  iconWidth = 25, iconHeight = 41,
+  iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png")
+
+
+
+
