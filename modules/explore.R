@@ -10,38 +10,6 @@
 # This page shows a map, with a dropdown menu to pick types of 
 # datasets, as well as shapefiles for the area
 
-#### Get WIN data locations
-# I am putting this here right now, but I feel we should move this to a cleaning
-# script so it doesn't need to be run every time someone uses the app (as with
-# WQ locations)
-# WIN_df <- readRDS("./03_Data_for_app/WIN.Rds")
-# 
-# WIN_data_locations = WIN_df %>%
-#   filter(variable %in% c("geometry", 
-#                          "StationCode", 
-#                          "SampleDate",
-#                          "Latitude",
-#                          "Longitude")
-#   ) %>%
-#   select(c(RowID, variable, value)) %>%
-#   distinct(RowID, variable, value) %>%
-#   pivot_wider(
-#     names_from = variable,
-#     values_from = value,
-#     values_fill = list(value = NA)
-#   ) %>%
-#   distinct(geometry, StationCode, SampleDate, Latitude, Longitude) %>%
-#   mutate(
-#     SampleDate = ymd_hms(SampleDate),
-#     Latitude = as.numeric(Latitude),
-#     Longitude = as.numeric(Longitude),
-#     type = "Water quality",
-#     dataset = "Watershed Information Network (DEP)", # Update this so we use data_source
-#     minYear = min(year(SampleDate)),
-#     maxYear = max(year(SampleDate))
-#   ) %>% 
-#   select(-geometry, -SampleDate)
-
 #### Location data ------------------------------------------------
 all_data_locations <- readRDS("./03_Data_for_app/all_data_locations.Rds")
 
@@ -163,44 +131,6 @@ explPageUI <- function(id) {
     )
   )
 }
-
-# explPageUI <- function(id) {
-#   ns <- NS(id) # This is an important part to add to all subpages so they use the
-#   # correct sessions / ID's that connect the ui and server here
-#   tagList(
-#     h2("Welcome!"),
-#     p(htmltools::HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br>
-#     <br>
-#     There are various data sets available through this dashboard. The dropdown menu 
-#     shows you the locations with data availability for different data sets. Clicking
-#     on the stations shows you the period of data availability. <br>
-#     <br>To explore and view the actual data, pick your data set of interest from
-#                       the tabs at the top of your screen (or the tabs in the fold out menu at the top).")),
-#     # Dropdown menu for markers is above the map
-#     fluidRow(
-#       column(width = 8, 
-#              selectInput(
-#                inputId = ns("datatype_selector"),
-#                label = "Select a type of data to see locations with data availability",
-#                choices = unique(all_data_locations$type),
-#                selected = unique(all_data_locations$type)[1]
-#              ), 
-#              style = "position:relative;z-index:10000;")
-#     ),
-#     fluidRow(
-#       column(width = 12, leafletOutput(ns("map"), height="500px")),
-#     ),
-#     fluidRow(
-#       column(width = 4, actionBttn(inputId = ns("reset_view"),
-#                                    label = "Reset map view",
-#                                    size = "sm",
-#                                    style = "simple",
-#                                    color = "danger",
-#                                    icon = icon("rotate-right", library = "fa"))
-#       )
-#     )
-#   )
-# }
 
 ### Define the server logic ----------------------------------------------------
 

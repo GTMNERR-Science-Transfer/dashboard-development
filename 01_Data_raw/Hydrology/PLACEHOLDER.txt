@@ -1,2 +1,0 @@
-REMOVE THIS FILE AFTER ADDING DATA TO THIS FOLDER.
-This is jsut so the folders are saved to Git.
