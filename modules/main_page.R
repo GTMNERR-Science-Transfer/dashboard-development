@@ -51,9 +51,16 @@ mainPageUI <- function(id) {
       tags$p("• ", tags$strong("Interactive Visualization:"), " Explore data on an interactive map and view detailed summary tables."),
       tags$p("• ", tags$strong("Export Data:"), " Export the summary tables in multiple formats (CSV, Excel, PDF) using built-in buttons."),
       h3("Water Levels:"), 
-      tags$p("•", tags$strong("Under Construction:"), "Additional ecological insights will be provided soon."),
+      tags$p("• ", tags$strong("Data Type Selector:"), " Choose between 'Precipitation' and 'Dam levels' to view the corresponding dataset."),
+      tags$p("• ", tags$strong("Date Range Slider:"), " Adjust the slider to focus on a specific time period and examine trends."),
+      tags$p("• ", tags$strong("Aggregation Method:"), " Select Daily, Monthly, or Annual aggregation to summarize the data."),
+      tags$p("• ", tags$strong("Dynamic Plots:"), " View interactive time series and histogram plots that update based on your filters."),
+
       h3("Fish and Shellfish:"), 
-      tags$p("•", tags$strong("Under Construction:"), "Additional ecological insights will be provided soon.")
+      tags$p("• ", tags$strong("Reef ID Dropdown:"), " Select a specific Reef ID to filter the data for that reef."),
+      tags$p("• ", tags$strong("Date Range Slider:"), " Use the slider to narrow down the time period you want to examine."),
+      tags$p("• ", tags$strong("Interactive Map:"), " View reef locations on the map, with the selected reef highlighted."),
+      tags$p("• ", tags$strong("Visualizations:"), " Explore two plots: one for count data (e.g., oysters, barnacles, mussels) and one for reef cover composition over time.")
     ),
     p(tags$strong("Interactive Features:")),
     tags$ul(
