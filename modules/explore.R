@@ -64,7 +64,7 @@ explPageUI <- function(id) {
       card(
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
         fill = TRUE,
-        height = "800px",
+        height = "80vh",
         card_header("Dataset Summary"),
         layout_columns(
           fill = TRUE,
@@ -106,7 +106,7 @@ explPageUI <- function(id) {
       col_widths = c(12), # Ensures full width for the header card
       card(
         fill = TRUE, # Ensures no scroll bars as long as height is set
-        height = "400px",
+        height = "20vh",
         card_header("Welcome!"),
         card_body(
           p(HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br><br>
@@ -125,7 +125,7 @@ explPageUI <- function(id) {
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
         card_header("Map View"),
         card_body(
-          shinycssloaders::withSpinner(leafletOutput(ns("map"), height = "800px"))
+          shinycssloaders::withSpinner(leafletOutput(ns("map"), height = "80vh"))
         )
       )
     )
