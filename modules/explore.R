@@ -53,7 +53,8 @@ explPageUI <- function(id) {
         inputId = ns("datatype_selector"),
         label = "Select a type of data to see locations with data availability",
         choices = unique(all_data_locations$type),
-        selected = unique(all_data_locations$type)[1]
+        selected = unique(all_data_locations$type)[1],
+        width = "100%"
       ),
       actionButton(
         inputId = ns("reset_view"),
@@ -64,7 +65,7 @@ explPageUI <- function(id) {
       card(
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
         fill = TRUE,
-        height = "800px",
+        height = "80vh",
         card_header("Dataset Summary"),
         layout_columns(
           fill = TRUE,
@@ -106,7 +107,7 @@ explPageUI <- function(id) {
       col_widths = c(12), # Ensures full width for the header card
       card(
         fill = TRUE, # Ensures no scroll bars as long as height is set
-        height = "400px",
+        height = "20vh",
         card_header("Welcome!"),
         card_body(
           p(HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br><br>
@@ -120,15 +121,20 @@ explPageUI <- function(id) {
     ),
     
     layout_columns(
-      col_widths = c(12), # full width for the map
+      col_widths = c(12),
       card(
-        full_screen = TRUE, # Let's you click and enlarge the card to full screen
+        full_screen = TRUE,  # Allows full screen mode if needed
+        height = "80vh",     # Card takes up 80% of the viewport height
         card_header("Map View"),
         card_body(
-          shinycssloaders::withSpinner(leafletOutput(ns("map"), height = "800px"))
+          shinycssloaders::withSpinner(
+            leafletOutput(ns("map"), height = "80vh")  # Map fills the card body
+          ),
+          style = "padding: 0; overflow: hidden;"  # Remove extra padding and disable scrolling
         )
       )
-    )
+    ),
+    br()
   )
 }
 

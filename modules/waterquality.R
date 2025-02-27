@@ -125,7 +125,8 @@ WINPageUI <- function(id) {
              )
       )
     ),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page")
+    actionButton(inputId = ns("go_back"), label = "Back to Main Page"),
+    br()
   )
 }
 
@@ -415,7 +416,7 @@ WINPageServer <- function(id, parentSession) {
     
     #### The 'go back' button ####
     observeEvent(input$go_back, {
-      updateTabItems(session = parentSession, inputId = "tabs", selected = "main_page")
+      updateNavbarPage(session = parentSession, inputId = "tabs", selected = "main_page")
     })
   })
 }
