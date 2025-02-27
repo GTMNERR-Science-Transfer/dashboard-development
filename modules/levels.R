@@ -87,7 +87,7 @@ levelsPageUI <- function(id) {
       ),
       card(
         full_screen = TRUE,
-        card_header = "Distribution of values",
+        card_header("Distribution of values"),
         card_body(
           plotOutput(ns("distribution"))
         )
