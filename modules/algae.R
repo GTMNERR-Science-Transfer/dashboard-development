@@ -95,14 +95,14 @@ HABPageUI <- function(id) {
       # Map occupies 2nd column
       column(width = 6, 
              div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="500px"))
+                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px")))
             )
       ),
     fluidRow(
       # Plot in the next row, below inputs and map
       column(width = 12, 
              div(style = "margin-bottom: 20px;",
-                 plotlyOutput(ns("timePlot"))
+                 shinycssloaders::withSpinner(plotlyOutput(ns("timePlot")))
                  )
       )
     ),
@@ -112,25 +112,25 @@ HABPageUI <- function(id) {
              div(style = "margin-bottom: 20px;",
                  conditionalPanel(
                    condition = "input.algae_type.length >= 1",
-                   DTOutput(ns("HAB_table"))
+                   shinycssloaders::withSpinner(DTOutput(ns("HAB_table")))
                  )),
               # Only show this panel if there are 2 algae types selected
              div(style = "margin-bottom: 20px;",
                  conditionalPanel(
                    condition = "input.algae_type.length >= 2",
-                   DTOutput(ns("HAB_table2"))
+                   shinycssloaders::withSpinner(DTOutput(ns("HAB_table2")))
                  )),
              # Only show this panel if there are 3 algae types selected
              div(style = "margin-bottom: 20px;",
                  conditionalPanel(
                    condition = "input.algae_type.length >= 3",
-                   DTOutput(ns("HAB_table3"))
+                   shinycssloaders::withSpinner(DTOutput(ns("HAB_table3")))
                  )),
              # Only show this panel if there are 4 algae types selected
              div(style = "margin-bottom: 20px;",
                  conditionalPanel(
                    condition = "input.algae_type.length >= 4",
-                   DTOutput(ns("HAB_table4"))
+                   shinycssloaders::withSpinner(DTOutput(ns("HAB_table4")))
                  ))
             )
     # ),

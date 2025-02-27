@@ -103,14 +103,14 @@ WINPageUI <- function(id) {
       # Column 2: show map
       column(width = 5, 
              div(style = "margin-bottom: 20px;",
-                 leafletOutput(ns("map"), height="500px"))
+                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px")))
       )
     ),
     # Third row - plot
     fluidRow(
       column(width = 12, 
              div(style = "margin-bottom: 20px;",
-                 plotlyOutput(ns("plot"), height="350px")
+                 shinycssloaders::withSpinner(plotlyOutput(ns("plot"), height="350px"))
              )
       )
     ),

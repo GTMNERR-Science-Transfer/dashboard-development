@@ -1,6 +1,9 @@
 # This is the main app page, which will run and read in all the other pages
 # and modules, and render the dashboard
 
+# 02/14/2025 New version that uses bslib instead of shinydashboard for creating
+# the layout and theme (https://rstudio.github.io/bslib/index.html)
+
 # Note: not necessary to load packages here: this all happens in global.R
 
 source("global.R")
@@ -8,58 +11,64 @@ source("functions.R")
 source("modules/main_page.R")
 source("modules/waterquality.R")
 source("modules/algae.R")
-#source("modules/win.R")
+source("modules/shellfish.R")
+source("modules/explore.R")
+source("modules/levels.R")
 
-ui <- dashboardPage(
-  dashboardHeader(title = "Guana Estuary Data Dashboard"),
-  dashboardSidebar(
-    sidebarMenu(id = "tabs",
-      menuItem("MAIN PAGE", tabName = "main_page", icon = icon("home")),
-      menuItem("Water Quality Data", tabName = "waterquality", 
-               icon = icon("flask-vial", lib="font-awesome"),
-               badgeLabel = "UPDATED!", badgeColor = "fuchsia"),
-      menuItem("Harmful Algal Bloom Data", tabName = "algae", 
-               icon = icon("microscope", lib = "font-awesome"),
-               badgeLabel = "NEW!", badgeColor = "green"),
-      menuItem("Water Level Data", tabName = "waterlevel", 
-               icon = icon("water", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue"),
-      menuItem("Fish and Shellfish", tabName = "shellfish", 
-               icon = icon("fish", lib="font-awesome"),
-               badgeLabel = "Coming soon", badgeColor = "yellow"),
-      menuItem("Terrestrial Animal Data", tabName = "animal", 
-               icon = icon("paw", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue"),
-      menuItem("Vegetation Data", tabName = "animal", 
-               icon = icon("seedling", lib="font-awesome"),
-               badgeLabel = "Under construction", badgeColor = "light-blue")
-    ),
-    # Custom CSS to adjust the vertical position of the menu items
-    tags$style(HTML("
-      .main-sidebar {
-        display: flex;
-        flex-direction: column;
-      }
-      .sidebar-menu > li {
-        margin-top: 10px;
-        margin-bottom: 10px;
-      }
-    "))
+dash_theme <- bs_theme(version = 5,
+                       bootswatch = "sandstone") |> 
+  bs_add_variables(
+    "navbar-bg" = "$primary",
+    "navbar-color" = "$light",
+    "navbar-dark-bg" = "$primary",
+    #"progress-bar-bg" = "$secondary",
+    .where = "declarations"
+  ) |>
+  bs_add_rules("
+    .navbar { color: var(--bs-light) !important; }
+    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }")
+
+ui <- page_navbar(
+  theme = dash_theme,
+  title = "Guana Estuary Data Dashboard",
+  nav_panel(title = "Home",
+            mainPageUI(id = "main_page")
+            ),
+  nav_panel(title = "Explore",
+            icon = icon("binoculars", lib="font-awesome"),
+            explPageUI(id = "explore")
   ),
-  dashboardBody(
-    tabItems(
-      tabItem(tabName = "main_page", mainPageUI(id = "main_page")),
-      tabItem(tabName = "algae", HABPageUI(id = "algae")),
-      tabItem(tabName = "waterquality", WINPageUI(id = "waterquality"))
-    )
+  nav_panel(title = "Water Quality", 
+            icon = icon("flask-vial", 
+                        lib="font-awesome"), 
+            WINPageUI(id = "waterquality")
+            ),
+  nav_panel(title = "Harmful Algal Blooms",
+            icon = icon("microscope", 
+                        lib = "font-awesome"),
+            HABPageUI(id = "algae"), 
+  ),
+  
+  nav_panel(title = "Water Levels", 
+            icon = icon("water", 
+                        lib="font-awesome"),
+            levelsPageUI(id = "levels"),  
+  ),
+  
+  nav_panel(title = "Fish and Shellfish", 
+            icon = icon("fish", 
+                        lib="font-awesome"),
+            SHELLPageUI(id = "shellfish"), 
   )
 )
 
 server <- function(input, output, session) {
   moduleServer(module = mainPageServer, id = "main_page", session = session)
-  #WQPageServer("waterquality", parentSession = session)
+  levelsPageServer("levels", parentSession = session)
+  explPageServer("explore", parentSession = session)
   HABPageServer("algae", parentSession = session)
   WINPageServer("waterquality", parentSession = session)
+  SHELLPageServer("shellfish", parentSession = session)
 }
 
 shinyApp(ui, server)
