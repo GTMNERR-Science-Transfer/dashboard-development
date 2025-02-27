@@ -11,7 +11,7 @@
 
 #### Location data ------------------------------------------------
 precip <- readRDS("./03_Data_for_app/precip.Rds")
-dam_level <- readRDS("./03_Data_for_app/dam_level.Rds")
+dam_levels <- readRDS("./03_Data_for_app/dam_level.Rds")
 
 
 
@@ -48,17 +48,17 @@ levelsPageUI <- function(id) {
       sliderInput(
         inputId = ns("date_range"),
         label = "Select a Date Range",
-        min = min(dmy(precip$date)), #NULL
-        max = max(dmy(precip$date)), #NULL
-        value = c(min(dmy(precip$date)), 
-                  max(dmy(precip$date))),
+        min = min(precip$date), #NULL
+        max = max(precip$date), #NULL
+        value = c(min(precip$date), 
+                  max(precip$date)),
         timeFormat = "%m/%d/%Y",
         width = "100%"
       ),
       selectInput(ns("aggregation"),
                   label = "How do you want the data aggregated?",
                   choices = c("Daily", "Monthly average", "Annual average"),
-                  selected = "Daily")
+                  selected = "")
     ),
     
     # Main content (text, map, plots)
@@ -103,117 +103,140 @@ levelsPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    
+
     # Make the dataframes reactive for plotting
     #precip_df <- reactiveVal()
     #dam_levels_df <- reactiveVal()
-    plot_data <- reactiveVal()
-    
+    plot_data <- reactiveVal(data.frame())
+
     ### Update if dataset changes ####
     observeEvent({ # If the selected algae type changes
       input$data_type
     },{ # Filter dataframe
       req(input$data_type, input$date_range, input$aggregation)
-      
-      if (input$datatype == "Precipitation"){
-        data_to_use <- precip
-      } else if (input$datatype == "Dam levels"){
-        data_to_use <- dam_levels
+
+      if (input$data_type == "Precipitation"){
+        plot_data(precip)
+      } else if (input$data_type == "Dam levels"){
+        plot_data(dam_levels)
       }
+
+      print(paste0("You selected data type(s) ", input$data_type))
       
-      print(paste0("You selected data type(s) ", input$datatype))
-      
+      df <- plot_data()
+
       if (input$aggregation == "Daily"){
-        plot_data() <- data_to_use
+        plot_data(df)
       } else if (input$aggregation == "Monthly average"){
-        plot_data(data_to_use %>% 
-                    group_by(month, location) %>% 
-                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        plot_data(df %>%
+                    group_by(year, month, location) %>%
+                    summarize(mean_vals = mean(value, na.rm=TRUE)) %>%
+                    ungroup() %>% 
+                    mutate(date = dmy(paste("1", month, year)))
         )
       } else if (input$aggregation == "Annual average"){
-        plot_data(data_to_use %>% 
-                    group_by(year, location) %>% 
-                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        plot_data(df %>%
+                    group_by(year, location) %>%
+                    summarize(mean_vals = mean(value, na.rm=TRUE)) %>% 
+                    ungroup()
         )
       }
-    })
-    
+      print(plot_data())
+    }, ignoreInit = TRUE)
+
     ### Update if aggregation changes ####
-    observeEvent({ # If the selected algae type changes
+    observeEvent({ # If the selected aggregation type changes
       input$aggregation
     },{ # Filter dataframe
-      req(input$data_type, input$date_range, input$aggregation)
+      req(input$data_type != "", input$date_range, input$aggregation != "")
       
-      if (input$datatype == "Precipitation"){
-        data_to_use <- precip
-      } else if (input$datatype == "Dam levels"){
-        data_to_use <- dam_levels
+      print(paste0("Aggregation is now ", input$aggregation))
+
+      if (input$data_type == "Precipitation"){
+        plot_data(precip)
+      } else if (input$data_type == "Dam levels"){
+        plot_data(dam_levels)
       }
       
-      print(paste0("You selected data type(s) ", input$datatype))
-      
+      df <- plot_data()
+
+      print(paste0("You selected data type(s) ", input$data_type))
+
       if (input$aggregation == "Daily"){
-        plot_data() <- data_to_use
+        plot_data(df)
       } else if (input$aggregation == "Monthly average"){
-        plot_data(data_to_use %>% 
-                    group_by(month, location) %>% 
-                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        plot_data(df %>%
+                    group_by(year, month, location) %>%
+                    summarize(mean_vals = mean(value, na.rm=TRUE)) %>%
+                    ungroup() %>% 
+                    mutate(date = dmy(paste("1", month, year)))
         )
       } else if (input$aggregation == "Annual average"){
-        plot_data(data_to_use %>% 
-                    group_by(year, location) %>% 
-                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        plot_data(df %>%
+                    group_by(year, location) %>%
+                    summarize(mean_vals = mean(value, na.rm=TRUE)) %>%
+                    ungroup()
         )
       }
+      print(plot_data())
     }, ignoreInit = TRUE)
-    
+
     ### Create plots ####
     output$timePlot <- renderPlotly({
-      req(plot_data(), input$aggregation)
-      
+      req(nrow(plot_data()) > 0, input$aggregation != "")
+
       if (input$aggregation == "Daily"){
         p <- ggplot(data = plot_data(), aes(x = date, y = value, color = location)) +
-          geom_point(size = 2) +
+          geom_point() +
           geom_line()+
-          theme_bw()
+          labs(x = "Date", y = input$input_selector)+
+          theme_bw()+
+          theme(legend.position = "top")
       } else if (input$aggregation == "Monthly average"){
-        p <- ggplot(data = plot_data(), aes(x = month, y = value, color = location)) +
-          geom_point(size = 2) +
+        p <- ggplot(data = plot_data(), aes(x = date, y = mean_vals, color = location)) +
+          geom_point() +
           geom_line()+
-          theme_bw()
+          labs(x = "Date", y = input$input_selector)+
+          theme_bw()+
+          theme(legend.position = "top")
       } else if (input$aggregation == "Annual average"){
-        p <- ggplot(data = plot_data(), aes(x = year, y = value, color = location)) +
-          geom_point(size = 2) +
+        p <- ggplot(data = plot_data(), aes(x = year, y = mean_vals, color = location)) +
+          geom_point() +
           geom_line()+
-          theme_bw()
+          labs(x = "Year", y = input$input_selector)+
+          theme_bw()+
+          theme(legend.position = "top")
       }
-      
+
       gp <- ggplotly(p,
                      dynamicTicks = TRUE)
-      
+
       gp
     })
-    
+
     output$distribution <- renderPlotly({
-      req(plot_data(), input$aggregation)
-      
+      req(nrow(plot_data()) > 0, input$aggregation != "")
+
       if (input$aggregation == "Daily"){
-        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
-          geom_histogram +
+        p <- ggplot(data = plot_data(), aes(x = value, fill = location)) +
+          geom_histogram() +
+          labs(x = input$input_selector, y = "Counts")+
           theme_bw()
       } else if (input$aggregation == "Monthly average"){
-        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
-          geom_histogram +
+        p <- ggplot(data = plot_data(), aes(x = mean_vals, fill = location)) +
+          geom_histogram() +
+          labs(x = input$input_selector, y = "Counts")+
           theme_bw()
       } else if (input$aggregation == "Annual average"){
-        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
+        p <- ggplot(data = plot_data(), aes(x = mean_vals, fill = location)) +
           geom_histogram() +
+          labs(x = input$input_selector, y = "Counts")+
           theme_bw()
       }
-      
+
       gp <- ggplotly(p,
                      dynamicTicks = TRUE)
-      
+
       gp
     })
   })
