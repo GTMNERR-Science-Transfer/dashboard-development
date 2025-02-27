@@ -10,16 +10,9 @@
 # This page displays water level data
 
 #### Location data ------------------------------------------------
-all_data_locations <- readRDS("./03_Data_for_app/all_data_locations.Rds")
+precip <- readRDS("./03_Data_for_app/precip.Rds")
+dam_level <- readRDS("./03_Data_for_app/dam_level.Rds")
 
-# add info for icons and colors
-all_data_locations <- all_data_locations %>%
-  mutate(group_icon = case_when(
-    type == "Water Quality" ~ "flask",
-    type == "Algae" ~ "microscope"),
-    group_color = case_when(
-      type == "Water Quality" ~ "orange",
-      type == "Algae" ~ "purple"))
 
 
 ### Define the UI -------------------------------------------------------------
@@ -44,29 +37,28 @@ levelsPageUI <- function(id) {
   page_sidebar(
     theme = bs_theme(version = 5, bootswatch = "sandstone"),
     
-    title = "Explore Data",
+    title = "Hydrological Data",
     
     sidebar = sidebar(
       title = "Data Selection",
-      selectInput(ns("station"), 
-                  label = "What station do you want data for?", 
-                  choices = c("", unique(HAB$Site)),
+      selectInput(ns("data_type"), 
+                  label = "What kind of hydrological data are you looking for?", 
+                  choices = c("Precipitation", "Dam levels"),
                   selected = ""),
-      #uiOutput(ns("selectStation")),
       sliderInput(
         inputId = ns("date_range"),
         label = "Select a Date Range",
-        min = min(dmy(HAB$'Sample Date')), #NULL
-        max = max(dmy(HAB$'Sample Date')), #NULL
-        value = c(min(dmy(HAB$'Sample Date')), 
-                  max(dmy(HAB$'Sample Date'))),
+        min = min(dmy(precip$date)), #NULL
+        max = max(dmy(precip$date)), #NULL
+        value = c(min(dmy(precip$date)), 
+                  max(dmy(precip$date))),
         timeFormat = "%m/%d/%Y",
         width = "100%"
       ),
-      checkboxGroupInput(ns("algae_type"),
-                         label = "What type of algae do you want data for?", 
-                         choices = c(unique(HAB$type))
-      )
+      selectInput(ns("aggregation"),
+                  label = "How do you want the data aggregated?",
+                  choices = c("Daily", "Monthly average", "Annual average"),
+                  selected = "Daily")
     ),
     
     # Main content (text, map, plots)
@@ -75,25 +67,29 @@ levelsPageUI <- function(id) {
       card(
         fill = TRUE, # Ensures no scroll bars as long as height is set
         height = "400px",
-        card_header("Welcome!"),
+        card_header("Hydrological Data"),
         card_body(
-          p(HTML("This is the overview and exploration page of the Guana Estuary Data Dashboard. <br><br>
-          There are various data sets available through this dashboard. The dropdown menu 
-          shows you the locations with data availability for different data sets. Clicking
-          on the stations shows you the period of data availability. <br><br>
-          To explore and view the actual data, pick your data set of interest from
-          the tabs at the top of your screen (or the tabs in the fold-out menu at the top)."))
+          p(HTML("There is data available for precipitation (inches) at the GTMNERR Welcome
+                 Center, and water level data at the dam (unitless, relative to surveyed elevation"))
         )
       )
     ),
     
-    layout_columns(
-      col_widths = c(12), # full width for the map
+    layout_column_wrap( # two plots: time and histogram
+      width = 1/2,
       card(
         full_screen = TRUE, # Let's you click and enlarge the card to full screen
-        card_header("Map View"),
+        card_header("Over time"),
         card_body(
-          leafletOutput(ns("map"), height = "800px")
+          plotlyOutput(ns("timePlot"))
+        )
+
+      ),
+      card(
+        full_screen = TRUE,
+        card_header = "Distribution",
+        card_body(
+          plotlyOutput(ns("distribution"))
         )
       )
     )
@@ -107,127 +103,118 @@ levelsPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    # Define initial view coordinates and zoom level
-    initial_lat <- 29.905 
-    initial_lng <- -81.289
-    initial_zoom <- 10
     
-    # Create the map
-    output$map <- renderLeaflet({
-      leaflet(options = leafletOptions(minZoom = 9, maxZoom = 18, scrollWheelZoom = TRUE)) %>%
-        setView(lng = initial_lng, lat = initial_lat, zoom = initial_zoom) %>% 
-        # Base map
-        addTiles(group = "Map") %>%  # Add default OpenStreetMap map tiles
-        addProviderTiles(providers$Esri.WorldImagery, group = "Satellite") %>% # Add satellite as an option
-        # addWMSTiles() # Putting this here as a reminder that you can also add
-        # custom third party layers, e.g. Nexrad, see https://rstudio.github.io/leaflet/articles/basemaps.html#wms-tiles
-        # Polygons, add groups
-        addPolygons(data = GTMNERR, color = "purple", fill = NA, 
-                    weight = 2, opacity = 1, group = "GTMNERR boundaries") %>% 
-        addPolygons(data = counties_select, 
-                    color = "black", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "white", fillOpacity = 0.01,
-                    highlightOptions = highlightOptions(color = "white", weight = 2,
-                                                        bringToFront = TRUE),
-                    group = "Counties", popup = ~NAME) %>% 
-        addPolygons(data = mangroves, 
-                    color = "darkgreen", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "darkgreen", fillOpacity = 0.4,
-                    group = "Mangroves") %>% #, popup = ~Area_ha
-        addPolygons(data = ofw, 
-                    color = "darkorange", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "darkorange", fillOpacity = 0.4,
-                    group = "Outstanding Florida Waters") %>%
-        addPolygons(data = saltmarsh, 
-                    color = "darkslateblue", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "darkslateblue", fillOpacity = 0.4,
-                    group = "Salt marshes") %>%
-        addPolygons(data = HUC10, 
-                    color = "royalblue", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "royalblue", fillOpacity = 0.2,
-                    group = "Watershed Basins", popup = ~NAME) %>%
-        addPolygons(data = HUC12, 
-                    color = "darkblue", weight = 2, opacity = 1,
-                    fill = TRUE, fillColor = "darkblue", fillOpacity = 0.2,
-                    group = "Watershed Subbasins", popup = ~NAME) %>%
-        # Layers control (turning layers on and off)
-        addLayersControl(baseGroups = c("Map", "Satellite"),
-                         overlayGroups = c("GTMNERR boundaries", "Counties", 
-                                           "Mangroves", "Outstanding Florida Waters", 
-                                           "Salt marshes", "Watershed Basins",
-                                           "Watershed Subbasins"),
-                         options = layersControlOptions(collapsed = FALSE)) %>%
-        hideGroup(c("Counties", "Mangroves", "Outstanding Florida Waters",
-                    "Salt marshes", "Watershed Basins", "Watershed Subbasins")) %>%
-        addMeasure(primaryLengthUnit = "miles", primaryAreaUnit = "sqmiles") 
-    })
+    # Make the dataframes reactive for plotting
+    #precip_df <- reactiveVal()
+    #dam_levels_df <- reactiveVal()
+    plot_data <- reactiveVal()
     
-    # Select dataset to add markers to the plot
-    observeEvent(input$datatype_selector, {
-      req(input$datatype_selector)
-      # Filter data based on selected group
-      filtered_data <- all_data_locations[all_data_locations$type == input$datatype_selector,]
-      #print(filtered_data)
-      # Add markers to the map
-      print("Adding markers")
-      leafletProxy(ns("map")) %>%
-        clearMarkers() %>%
-        addAwesomeMarkers(
-          data = filtered_data,
-          icon = makeAwesomeIcon(icon = ~group_icon, markerColor = ~group_color, library = "fa",
-                                 iconColor = "black"),
-          options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
-          popup = ~paste("<b>Station:</b> ", site_friendly, "<br>", # popups appear when clicking
-                         "<b>Sampling start year:</b> ", minYear, "<br>",
-                         "<b>Latest year of sampling:</b> ", maxYear, "<br"),
-          label = ~paste("Station: ", site_friendly), # labels appear when hovering
-          labelOptions = labelOptions(direction = "auto",
-                                      style = list(
-                                        "color" = "gray27",
-                                        "font-style" = "italic",
-                                        "font-size" = "12px",
-                                        "border-color" = "rgba(0,0,0,0.5)"
-                                      )
-          )
+    ### Update if dataset changes ####
+    observeEvent({ # If the selected algae type changes
+      input$data_type
+    },{ # Filter dataframe
+      req(input$data_type, input$date_range, input$aggregation)
+      
+      if (input$datatype == "Precipitation"){
+        data_to_use <- precip
+      } else if (input$datatype == "Dam levels"){
+        data_to_use <- dam_levels
+      }
+      
+      print(paste0("You selected data type(s) ", input$datatype))
+      
+      if (input$aggregation == "Daily"){
+        plot_data() <- data_to_use
+      } else if (input$aggregation == "Monthly average"){
+        plot_data(data_to_use %>% 
+                    group_by(month, location) %>% 
+                    summarize(mean_vals = mean(value, na.rm=TRUE))
         )
-    }, ignoreInit = FALSE)
-    # Add buttons to go to other pages
-    # observeEvent(input[[ns("go_to_subpage")]], {
-    #   print("Go to subpage button clicked")
-    #   updateTabItems(session, "tabs", selected = "subpage")
-    # })
-    
-    # Caclculate the stats to add to the value boxes
-    filtered_data <- reactive({
-      req(input$datatype_selector)
-      all_data_locations %>%
-        filter(type == input$datatype_selector)
+      } else if (input$aggregation == "Annual average"){
+        plot_data(data_to_use %>% 
+                    group_by(year, location) %>% 
+                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        )
+      }
     })
     
-    output$total_stations <- renderText({
-      n_distinct(filtered_data()$site_friendly)
+    ### Update if aggregation changes ####
+    observeEvent({ # If the selected algae type changes
+      input$aggregation
+    },{ # Filter dataframe
+      req(input$data_type, input$date_range, input$aggregation)
+      
+      if (input$datatype == "Precipitation"){
+        data_to_use <- precip
+      } else if (input$datatype == "Dam levels"){
+        data_to_use <- dam_levels
+      }
+      
+      print(paste0("You selected data type(s) ", input$datatype))
+      
+      if (input$aggregation == "Daily"){
+        plot_data() <- data_to_use
+      } else if (input$aggregation == "Monthly average"){
+        plot_data(data_to_use %>% 
+                    group_by(month, location) %>% 
+                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        )
+      } else if (input$aggregation == "Annual average"){
+        plot_data(data_to_use %>% 
+                    group_by(year, location) %>% 
+                    summarize(mean_vals = mean(value, na.rm=TRUE))
+        )
+      }
+    }, ignoreInit = TRUE)
+    
+    ### Create plots ####
+    output$timePlot <- renderPlotly({
+      req(plot_data(), input$aggregation)
+      
+      if (input$aggregation == "Daily"){
+        p <- ggplot(data = plot_data(), aes(x = date, y = value, color = location)) +
+          geom_point(size = 2) +
+          geom_line()+
+          theme_bw()
+      } else if (input$aggregation == "Monthly average"){
+        p <- ggplot(data = plot_data(), aes(x = month, y = value, color = location)) +
+          geom_point(size = 2) +
+          geom_line()+
+          theme_bw()
+      } else if (input$aggregation == "Annual average"){
+        p <- ggplot(data = plot_data(), aes(x = year, y = value, color = location)) +
+          geom_point(size = 2) +
+          geom_line()+
+          theme_bw()
+      }
+      
+      gp <- ggplotly(p,
+                     dynamicTicks = TRUE)
+      
+      gp
     })
     
-    output$first_year <- renderText({
-      min(filtered_data()$minYear, na.rm = TRUE)
+    output$distribution <- renderPlotly({
+      req(plot_data(), input$aggregation)
+      
+      if (input$aggregation == "Daily"){
+        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
+          geom_histogram +
+          theme_bw()
+      } else if (input$aggregation == "Monthly average"){
+        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
+          geom_histogram +
+          theme_bw()
+      } else if (input$aggregation == "Annual average"){
+        p <- ggplot(data = plot_data(), aes(y = value, color = location)) +
+          geom_histogram() +
+          theme_bw()
+      }
+      
+      gp <- ggplotly(p,
+                     dynamicTicks = TRUE)
+      
+      gp
     })
-    
-    output$last_year <- renderText({
-      max(filtered_data()$maxYear, na.rm = TRUE)
-    })
-    
-    output$avg_measurements <- renderText({
-      df <- filtered_data() %>% #### This still needs to be updated, this is currently not a count of obs
-        group_by(site_friendly) %>%
-        summarise(measurements = n(), .groups = "drop")
-      round(mean(df$measurements, na.rm = TRUE), 1)
-    })
-    
-    # Observe reset button click to restore initial view
-    observeEvent(input$reset_view, {
-      leafletProxy(ns("map")) %>%
-        setView(lng = initial_lng, lat = initial_lat, zoom = initial_zoom)
-    })
-  }
-  )
+  })
 }
