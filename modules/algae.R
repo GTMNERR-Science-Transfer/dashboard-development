@@ -56,7 +56,6 @@ HABPageUI <- function(id) {
                          label = "What station do you want data for?", 
                          choices = c("", unique(HAB$Site)),
                          selected = ""),
-             #uiOutput(ns("selectStation")),
              sliderInput(
                inputId = ns("date_range"),
                label = "Select a Date Range",
@@ -71,7 +70,7 @@ HABPageUI <- function(id) {
                                 label = "What type of algae do you want data for?", 
                                 choices = c(unique(HAB$type))
              )
-             ),
+      ),
       # Map occupies 2nd column
       column(width = 6, 
              div(style = "margin-bottom: 20px;",
@@ -113,26 +112,6 @@ HABPageUI <- function(id) {
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table4")))
                  ))
             )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table2"))
-    #          #gt::gt_output(ns("HAB_table")), 
-    #   )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table3"))
-    #          #gt::gt_output(ns("HAB_table")), 
-    #   )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table4"))
-    #   )
     ),
     actionButton(inputId = ns("go_back"), label = "Back to Main Page"), #All input IDs need to be inside ns()
     br()
@@ -144,13 +123,7 @@ HABPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    # output$selectStation <- renderUI(selectInput(ns("station"), 
-    #                                              "Select what station you are interested in", 
-    #                                              unique(HAB$Site[HAB$type %in% input$algae_type])))
-    # output$selectDate <- renderUI(sliderInput(ns("date_range"), 
-    #                                           "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
-    #                                           min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
-    # 
+ 
     ### Create the map upon startup -------------------------------
     output$map <- renderLeaflet({
       
@@ -169,7 +142,6 @@ HABPageServer <- function(id, parentSession) {
                                                         bringToFront = TRUE),
                     group = "Counties", popup = ~NAME) %>% 
         addMarkers(data = HAB_locs, # Initialize without reactive dataframe
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
                                   "County: ", County, "<br>"),
                    group = "HAB") %>% 
@@ -207,7 +179,6 @@ HABPageServer <- function(id, parentSession) {
         clearMarkers() %>%
         # Make / keep unselected stations blue
         addMarkers(data = HAB_data_loc_unselected(),
-                   #layerId = unselected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
                                   "<strong>County:</strong> ", County, "<br>")%>%
@@ -216,7 +187,6 @@ HABPageServer <- function(id, parentSession) {
         # Make selected stations red
         addMarkers(data = HAB_data_loc_selected(),
                    icon = redIcon, 
-                   #layerId = selected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
                                   "<strong>County:</strong> ", County, "<br>"
