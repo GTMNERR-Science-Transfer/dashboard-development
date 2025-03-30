@@ -8,7 +8,7 @@
 # Last updated: see commit history
 
 ### Reef Data------------------------------
-reefData <- readRDS("./03_Data_for_app/reefs.Rds")
+reefData <- readRDS("./03_Data_for_app/shellfish/reefs.Rds")
 reefPlotData <- reefData %>%
   group_by(Date, ReefID) %>%
   summarize(
@@ -52,7 +52,7 @@ normalReefData <- checkTotal %>%
   select(-total)
 
 ### Count Data------------------------------
-countData <- readRDS("./03_Data_for_app/counts.Rds")
+countData <- readRDS("./03_Data_for_app/shellfish/counts.Rds")
 
 #Averaging counts across date and reef
 countPlotData <- countData %>%

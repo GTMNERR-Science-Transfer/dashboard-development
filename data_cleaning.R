@@ -14,8 +14,10 @@
 source("global.R") # Load packages needed
 source("functions.R") # Load functions needed
 
-# 1. Location Data (for use in maps)
-source("02_Cleaning_scripts/Create_location_data.R")
+# 1. Shapefiles
+# Run this first if any shapefiles were updated, because some of the subsequent 
+# files depend on them
+source("02_Cleaning_scripts/shapefile_cleanup.R")
 
 # 2. Water Quality Data
 source("02_Cleaning_scripts/WIN_data_clean.R")
@@ -31,5 +33,6 @@ source("02_Cleaning_scripts/SEACAR_ShellfishData.R")
 # 5. Water Levels and Precipitation Data
 source("02_Cleaning_scripts/levels_rain_clean.R")
 
-# 6. Shapefiles
-source("02_Cleaning_scripts/shapefile_cleanup.R")
+# 6. Location Data 
+# Run this last, since it depends on clean data files created from earlier steps
+source("02_Cleaning_scripts/Create_location_data.R")

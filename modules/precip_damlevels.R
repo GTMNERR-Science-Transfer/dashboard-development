@@ -10,8 +10,8 @@
 # This page displays water level data
 
 #### Location data ------------------------------------------------
-precip <- readRDS("./03_Data_for_app/precip.Rds")
-dam_levels <- readRDS("./03_Data_for_app/dam_level.Rds")
+precip <- readRDS("./03_Data_for_app/precip_damlevels/precip.Rds")
+dam_levels <- readRDS("./03_Data_for_app/precip_damlevels/dam_level.Rds")
 
 ### Define the UI -------------------------------------------------------------
 dash_theme <- bs_theme(
