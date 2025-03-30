@@ -13,18 +13,16 @@ library(tidyverse)
 
 #### Water Quality ####
 # import all WQ data
-WQ_df <- readRDS("./03_Data_for_app/locations/WQ_all.Rds")
+WQ_df <- readRDS("./03_Data_for_app/waterquality/WQ_all.Rds")
 
 WQ_years <- WQ_df %>% # site friendly and station code are the names in common
-  filter(variable %in% c("StationCode", "site_friendly",
+  filter(variable %in% c("StationCode", "Site",
                          "geometry", 
                          "SampleDate", # changed, from StartDate - but also not necessary for locations
                          "Latitude",
                          "Longitude",
                          "data_source")
   ) %>%
-  #select(c(RowID, variable, value)) %>% # not necessary
-  #distinct(RowID, variable, value) %>% # not necessary
   pivot_wider(
     names_from = variable,
     values_from = value,
@@ -36,21 +34,19 @@ WQ_years <- WQ_df %>% # site friendly and station code are the names in common
     Latitude = as.numeric(Latitude),
     Longitude = as.numeric(Longitude)
   ) %>% 
-  group_by(Latitude, Longitude, site_friendly) %>% 
+  group_by(Latitude, Longitude, Site) %>% 
   summarize(minYear = min(year(SampleDate)),
             maxYear = max(year(SampleDate)))
 
 # make dataframe for map display and hover data
 WQ_data_locations = WQ_df %>% # site friendly and station code are the names in common
-  filter(variable %in% c("StationCode", "site_friendly",
+  filter(variable %in% c("StationCode", "Site",
                          "geometry", 
                          "SampleDate", # changed, from StartDate - but also not necessary for locations
                          "Latitude",
                          "Longitude",
                          "data_source")
   ) %>%
-  #select(c(RowID, variable, value)) %>% # not necessary
-  #distinct(RowID, variable, value) %>% # not necessary
   pivot_wider(
     names_from = variable,
     values_from = value,
@@ -62,7 +58,7 @@ WQ_data_locations = WQ_df %>% # site friendly and station code are the names in 
     Longitude = as.numeric(Longitude)
   ) %>% 
   select(-SampleDate) %>% 
-  distinct(Latitude, Longitude, geometry, data_source, StationCode, site_friendly)
+  distinct(Latitude, Longitude, geometry, data_source, StationCode, Site)
   
 WQ_data_locations <- WQ_data_locations %>% 
   left_join(WQ_years)
@@ -80,14 +76,12 @@ HAB_df <- readRDS("03_Data_for_app/algae/HAB.Rds")
 HAB_years <- HAB_df %>% 
   mutate(date = dmy(`Sample Date`),
          year = year(date)) %>% 
-  group_by(Latitude, Longitude, Site) %>% 
+  group_by(Latitude, Longitude, Site, County) %>% 
   summarize(minYear = min(year),
-            maxYear = max(year)) %>% 
-  rename(site_friendly = Site)
+            maxYear = max(year))
 
 HAB_data_locations <- HAB_df %>%
   distinct(Latitude, Longitude, Site) %>% 
-  rename(site_friendly = Site) %>% 
   mutate(data_source = "FWC") # or GTMNERR?
 
 HAB_data_locations <- HAB_data_locations %>% 

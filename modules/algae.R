@@ -11,11 +11,8 @@
 ### HAB Data------------------------------
 HAB <- readRDS("./03_Data_for_app/algae/HAB.Rds")
 
-# Get locations
-
-HAB_locs <- HAB %>% 
-  select(Latitude, Longitude, Site, County) %>% 
-  distinct() %>% 
+# Get location data
+HAB_locs <- readRDS("03_Data_for_app/locations/HAB_data_locations.Rds") %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
 
 # Create colors for the algae

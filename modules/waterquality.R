@@ -15,7 +15,7 @@ WQ_df <- readRDS("./03_Data_for_app/waterquality/WQ_all.Rds")
 
 # Location data
 WQ_data_locations <- readRDS("./03_Data_for_app/locations/WQ_data_locations.Rds") %>% 
-  arrange(site_friendly) # Am straightaway ordering site names alphabetically so
+  arrange(Site) # Am straightaway ordering site names alphabetically so
 # they show up alphabetically in the dropdown menu
 
 WQ_data_units <- readRDS("./03_Data_for_app/waterquality/WQ_data_units.Rds")
@@ -58,7 +58,7 @@ WINPageUI <- function(id) {
                         inputId = ns("station_list"),
                         label = "Choose station(s) of interest:", 
                         choices = NULL,
-                        choiceNames = paste0(WQ_data_locations$site_friendly, " (", WQ_data_locations$StationCode, ")"),
+                        choiceNames = paste0(WQ_data_locations$Site, " (", WQ_data_locations$StationCode, ")"),
                         width = "100%",
                         options = list(
                           non_selected_header = "Choose between:",
@@ -144,7 +144,7 @@ WINPageServer <- function(id, parentSession) {
     #### Create the map ####
     
     labels <- paste(
-      "<strong>Station name:</strong> " , WQ_data_locations$site_friendly, "<br>",
+      "<strong>Station name:</strong> " , WQ_data_locations$Site, "<br>",
       "<strong>Station:</strong> ", WQ_data_locations$StationCode) %>%
       lapply(htmltools::HTML)
     
@@ -303,7 +303,7 @@ WINPageServer <- function(id, parentSession) {
                    layerId = unselected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    label = paste(
-                     "<strong>Station name:</strong> " , unselected_coords()$site_friendly, "<br>",
+                     "<strong>Station name:</strong> " , unselected_coords()$Site, "<br>",
                      "<strong>Station:</strong> ", unselected_coords()$StationCode) %>%
                      lapply(htmltools::HTML),
                    # Had to play around with labelOptions to kind of get it in the correct place
@@ -322,7 +322,7 @@ WINPageServer <- function(id, parentSession) {
                    layerId = selected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    label = paste(
-                     "<strong>Station name:</strong> " , selected_coords()$site_friendly, "<br>",
+                     "<strong>Station name:</strong> " , selected_coords()$Site, "<br>",
                      "<strong>Station:</strong> ", selected_coords()$StationCode) %>%
                      lapply(htmltools::HTML),
                    # Had to play around with labelOptions to kind of get it in the correct place

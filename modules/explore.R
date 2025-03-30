@@ -215,10 +215,10 @@ explPageServer <- function(id, parentSession) {
           icon = makeAwesomeIcon(icon = ~group_icon, markerColor = ~group_color, library = "fa",
                                  iconColor = "black"),
           options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
-          popup = ~paste("<b>Station:</b> ", site_friendly, "<br>", # popups appear when clicking
+          popup = ~paste("<b>Station:</b> ", Site, "<br>", # popups appear when clicking
                          "<b>Sampling start year:</b> ", minYear, "<br>",
                          "<b>Latest year of sampling:</b> ", maxYear, "<br"),
-          label = ~paste("Station: ", site_friendly), # labels appear when hovering
+          label = ~paste("Station: ", Site), # labels appear when hovering
           labelOptions = labelOptions(direction = "auto",
                                       style = list(
                                         "color" = "gray27",
@@ -243,7 +243,7 @@ explPageServer <- function(id, parentSession) {
     })
     
     output$total_stations <- renderText({
-      n_distinct(filtered_data()$site_friendly)
+      n_distinct(filtered_data()$Site)
     })
     
     output$first_year <- renderText({
@@ -256,7 +256,7 @@ explPageServer <- function(id, parentSession) {
     
     output$avg_measurements <- renderText({
       df <- filtered_data() %>% #### This still needs to be updated, this is currently not a count of obs
-        group_by(site_friendly) %>%
+        group_by(Site) %>%
         summarise(measurements = n(), .groups = "drop")
       round(mean(df$measurements, na.rm = TRUE), 1)
     })
