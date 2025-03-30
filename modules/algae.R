@@ -21,15 +21,49 @@ algae_colors <- c("Diatoms" = "goldenrod2",
                   "Dinoflagellates" = "indianred1", 
                   "Other" = "darkolivegreen4")
 
+### Define the UI -------------------------------------------------------------
 HABPageUI <- function(id) {
   ns <- NS(id)
-  tagList(
-    h2("Harmful Algal Bloom Data"),
+  
+  page_sidebar(
+    theme = dash_theme, # in functions.R
+    
+    title = "Harmful Algal Bloom Data",
+    
+    sidebar = sidebar(
+      title = "Data Selection",
+      selectInput(ns("station"), 
+                  label = "What station do you want data for?", 
+                  choices = c("", unique(HAB$Site)),
+                  selected = ""),
+      div(style = "padding: 0 10px;",
+          sliderInput(
+            inputId = ns("date_range"),
+            label = "Select a Date Range",
+            min = min(dmy(HAB$'Sample Date')), #NULL
+            max = max(dmy(HAB$'Sample Date')), #NULL
+            value = c(min(dmy(HAB$'Sample Date')), 
+                      max(dmy(HAB$'Sample Date'))),
+            timeFormat = "%m/%d/%Y",
+            width = "100%"
+          )
+      ),
+      checkboxGroupInput(ns("algae_type"),
+                         label = "What type of algae do you want data for?", 
+                         choices = c(unique(HAB$type))
+      )
+    ),
+    
+    # Header card using a relative viewport height
     fluidRow(
-      # First row - explanation
-      column(width = 12,
-             div(style = "margin-bottom: 20px;",
-                 p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
+      column(
+        width = 12,
+        card(
+          fill = TRUE,
+          style = "height:10vh;",
+          card_header("Hydrological Data"),
+          card_body(
+            p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
                  Currently the dashboard is only showing numerical data (not presence / absence). A
                  value of 0 means that the water sample was tested for this algal type, but it was not
                  detected. If there are no values for a particular day or month, there was no testing
@@ -46,75 +80,68 @@ HABPageUI <- function(id) {
                  <br>
                  The plot below the map will show total daily values in total cells/liter for each type of algae.
                   The tables display monthly average values in cells/liter.'))
-             )
+          )
+        )
       )
     ),
+    
+    # Map below the text
     fluidRow(
-      #User inputs in 1st column
-      column(width = 6, 
-             selectInput(ns("station"), 
-                         label = "What station do you want data for?", 
-                         choices = c("", unique(HAB$Site)),
-                         selected = ""),
-             sliderInput(
-               inputId = ns("date_range"),
-               label = "Select a Date Range",
-               min = min(dmy(HAB$'Sample Date')), #NULL
-               max = max(dmy(HAB$'Sample Date')), #NULL
-               value = c(min(dmy(HAB$'Sample Date')), 
-                         max(dmy(HAB$'Sample Date'))),
-               timeFormat = "%m/%d/%Y",
-               width = "100%"
-             ),
-             checkboxGroupInput(ns("algae_type"),
-                                label = "What type of algae do you want data for?", 
-                                choices = c(unique(HAB$type))
-             )
-      ),
-      # Map occupies 2nd column
-      column(width = 6, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px")))
-            )
-      ),
-    fluidRow(
-      # Plot in the next row, below inputs and map
-      column(width = 12, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(plotlyOutput(ns("timePlot")))
-                 )
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Map View"),
+          card_body(
+            shinycssloaders::withSpinner(
+              leafletOutput(ns("map"), height = "80vh")  # Map fills the card body
+              )
+          )
+        )
       )
     ),
+    
+    # Then the plots that are output
+    fluidRow(
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Values over time"),
+          card_body(
+            shinycssloaders::withSpinner(plotlyOutput(ns("timePlot"), height = "70vh"))
+          )
+        )
+      )
+    ),
+    # Then the tables -> make this a setup with tabs for the plot and tabs for the tables!!
     fluidRow(
       # Plot in the next row, below the plot
       column(width = 12,
-             div(style = "margin-bottom: 20px;",
+             card(
+               full_screen = TRUE,
+               card_header("Tabular data"),
+               card_body(
                  conditionalPanel(
                    condition = "input.algae_type.length >= 1",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table")))
-                 )),
-              # Only show this panel if there are 2 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 2",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table2")))
-                 )),
-             # Only show this panel if there are 3 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 3",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table3")))
-                 )),
-             # Only show this panel if there are 4 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 4",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table4")))
-                 ))
-            )
-    ),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page"), #All input IDs need to be inside ns()
-    br()
+                   )
+               )
+             )
+      )
+    )
   )
 }
 
