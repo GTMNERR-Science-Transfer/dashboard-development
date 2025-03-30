@@ -19,7 +19,7 @@ levelsPageUI <- function(id) {
   ns <- NS(id)
   
   page_sidebar(
-    theme = dash_theme,
+    theme = dash_theme, # in functions.R
     
     title = "Hydrological Data",
     
