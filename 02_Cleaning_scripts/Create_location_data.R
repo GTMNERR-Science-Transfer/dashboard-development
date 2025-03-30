@@ -13,7 +13,7 @@ library(tidyverse)
 
 #### Water Quality ####
 # import all WQ data
-WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
+WQ_df <- readRDS("./03_Data_for_app/locations/WQ_all.Rds")
 
 WQ_years <- WQ_df %>% # site friendly and station code are the names in common
   filter(variable %in% c("StationCode", "site_friendly",
@@ -68,13 +68,13 @@ WQ_data_locations <- WQ_data_locations %>%
   left_join(WQ_years)
 
 # Save data
-saveRDS(WQ_data_locations, "03_Data_for_app/WQ_data_locations.Rds")
+saveRDS(WQ_data_locations, "03_Data_for_app/locations/WQ_data_locations.Rds")
 
 WQ_data_locations <- WQ_data_locations %>% 
   select(-geometry)
 
 #### Algae ####
-HAB_df <- readRDS("03_Data_for_app/HAB.Rds")
+HAB_df <- readRDS("03_Data_for_app/algae/HAB.Rds")
 
 # Get min/max years of measurements
 HAB_years <- HAB_df %>% 
@@ -93,7 +93,7 @@ HAB_data_locations <- HAB_df %>%
 HAB_data_locations <- HAB_data_locations %>% 
   left_join(HAB_years)
 
-saveRDS(HAB_data_locations, "03_Data_for_app/HAB_data_locations.Rds")
+saveRDS(HAB_data_locations, "03_Data_for_app/locations/HAB_data_locations.Rds")
 
 
 #### Shellfish ####
@@ -111,5 +111,5 @@ all_data_locations <- WQ_data_locations %>%
   full_join(HAB_data_locations)
 
 # Save
-saveRDS(all_data_locations, "03_Data_for_app/all_data_locations.Rds")
+saveRDS(all_data_locations, "03_Data_for_app/locations/all_data_locations.Rds")
 

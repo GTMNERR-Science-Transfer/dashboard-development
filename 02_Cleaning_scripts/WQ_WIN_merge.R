@@ -11,8 +11,8 @@ library(tidyverse)
 
 # Merge WIN and WQ data into one
 
-WIN <- readRDS("03_Data_for_app/WIN.Rds")
-WQ_GTMNERR <- readRDS("03_Data_for_app/WQ.Rds")
+WIN <- readRDS("03_Data_for_app/waterquality/WIN.Rds")
+WQ_GTMNERR <- readRDS("03_Data_for_app/waterquality/WQ.Rds")
 
 # Make WQ_GTMNERR long format as well, just like WIN
 # Having a column for the dates is advisable though, as it is a separate data
@@ -69,7 +69,7 @@ unique(WQ_all$variable)
 unique(WQ_all$value)
 
 # Read in the WQ vars lookup table and replace variables with the names we need
-lookup_WQ_vars <- read_csv("03_Data_for_app/WQ_lookup_variables.csv")
+lookup_WQ_vars <- read_csv("03_Data_for_app/waterquality/WQ_lookup_variables.csv")
 
 # # I am sure there is a nicer/quicker/tidyverse way of doing this, but whatevs for now
 # for (i in 1:nrow(WQ_all)){
@@ -128,7 +128,7 @@ WQ_all <- WQ_all %>%
 
 
 # Save data
-saveRDS(WQ_all, "03_Data_for_app/WQ_all.Rds")
+saveRDS(WQ_all, "03_Data_for_app/waterquality/WQ_all.Rds")
 
 #### Create a df with the units (for plotting) ####
 # Also move this to cleaning script
@@ -147,4 +147,4 @@ WQ_data_units = WQ_all %>%
   distinct(ComponentLong, Unit, data_source)
 
 # Save data
-saveRDS(WQ_data_units, "03_Data_for_app/WQ_data_units.Rds")
+saveRDS(WQ_data_units, "03_Data_for_app/waterquality/WQ_data_units.Rds")

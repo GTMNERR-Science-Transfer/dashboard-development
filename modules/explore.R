@@ -11,7 +11,7 @@
 # datasets, as well as shapefiles for the area
 
 #### Location data ------------------------------------------------
-all_data_locations <- readRDS("./03_Data_for_app/all_data_locations.Rds")
+all_data_locations <- readRDS("./03_Data_for_app/locations/all_data_locations.Rds")
 
 # add info for icons and colors
 all_data_locations <- all_data_locations %>%

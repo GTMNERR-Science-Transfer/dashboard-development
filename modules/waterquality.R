@@ -11,14 +11,14 @@ library(tidyverse)
 library(shinyWidgets) #not sure if this is necessary? Loaded in global?
 
 # import all WQ data for this page (WIN and Guana spreadsheet)
-WQ_df <- readRDS("./03_Data_for_app/WQ_all.Rds")
+WQ_df <- readRDS("./03_Data_for_app/waterquality/WQ_all.Rds")
 
 # Location data
-WQ_data_locations <- readRDS("./03_Data_for_app/WQ_data_locations.Rds") %>% 
+WQ_data_locations <- readRDS("./03_Data_for_app/locations/WQ_data_locations.Rds") %>% 
   arrange(site_friendly) # Am straightaway ordering site names alphabetically so
 # they show up alphabetically in the dropdown menu
 
-WQ_data_units <- readRDS("./03_Data_for_app/WQ_data_units.Rds")
+WQ_data_units <- readRDS("./03_Data_for_app/waterquality/WQ_data_units.Rds")
 
 #### Run the app #### 
 find_directory_of_file("app.R")

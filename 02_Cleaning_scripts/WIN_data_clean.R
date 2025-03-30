@@ -21,7 +21,7 @@ gps_data <- read_csv("./01_Data_raw/Water_Quality/WIN/WIN_data_merged_20240501.c
                                     `Station ID`, `Station Name`, `Station Type`, `County`,
                                     `Location_1`, `Location_2`))
 
-lookup_names <- read_csv("03_Data_for_app/WQ_lookup_names.csv")
+lookup_names <- read_csv("03_Data_for_app/waterquality/WQ_lookup_names.csv")
 
 # Change column names so we can later merge this with other WQ data
 recode_vec <- setNames(lookup_names$original_name, lookup_names$dashboard_name)
@@ -111,11 +111,6 @@ WIN_df <- WIN_df %>%
   ) 
   # filter(!is.na(value) & value != "") # use this if space is an issue
 
-#### Save data ####
-# Save the filtered data to a new CSV file
-# write.csv(WIN_df, 
-#           "03_Data_for_app/Filtered_WIN_data_merged_20240501.csv", 
-#           row.names = FALSE)
 # Save the filtered data to a .RDs file
 
-saveRDS(WIN_df, "03_Data_for_app/WIN.Rds")
+saveRDS(WIN_df, "03_Data_for_app/waterquality/WIN.Rds")
