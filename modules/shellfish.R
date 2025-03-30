@@ -8,6 +8,7 @@
 # Last updated: see commit history
 
 ### Reef Data------------------------------
+# Move all of this to cleaning script
 reefData <- readRDS("./03_Data_for_app/shellfish/reefs.Rds")
 reefPlotData <- reefData %>%
   group_by(Date, ReefID) %>%
@@ -64,12 +65,15 @@ countPlotData <- countData %>%
     .groups = "drop"
   )
 
+##### Move this to file that creates location data
 reef_locs <- reefData %>% 
   select(Lat, Long, Region, County, ReefID) %>% 
   distinct() %>% 
   st_as_sf(coords = c("Long", "Lat"), crs = 4326, remove = FALSE)
 reef_locs <- reef_locs %>%
   mutate(labelID = paste(Region, ReefID, sep = " "))
+
+#######
 
 SHELLPageUI <- function(id) {
   ns <- NS(id)

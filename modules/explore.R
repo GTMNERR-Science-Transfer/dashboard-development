@@ -22,7 +22,6 @@ all_data_locations <- all_data_locations %>%
       type == "Water Quality" ~ "orange",
       type == "Algae" ~ "purple"))
 
-
 ### Define the UI -------------------------------------------------------------
 dash_theme <- bs_theme(
   version = 5,
