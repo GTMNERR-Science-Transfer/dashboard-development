@@ -14,25 +14,12 @@ precip <- readRDS("./03_Data_for_app/precip_damlevels/precip.Rds")
 dam_levels <- readRDS("./03_Data_for_app/precip_damlevels/dam_level.Rds")
 
 ### Define the UI -------------------------------------------------------------
-dash_theme <- bs_theme(
-  version = 5,
-  bootswatch = "sandstone"
-) |>
-  bs_add_variables(
-    "navbar-bg" = "$primary",
-    "navbar-color" = "$light",
-    .where = "declarations"
-  ) |>
-  bs_add_rules("
-    .navbar { color: var(--bs-light) !important; }
-    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
-  ")
 
 levelsPageUI <- function(id) {
   ns <- NS(id)
   
   page_sidebar(
-    theme = bs_theme(version = 5, bootswatch = "sandstone"),
+    theme = dash_theme,
     
     title = "Hydrological Data",
     

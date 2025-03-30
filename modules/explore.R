@@ -23,26 +23,11 @@ all_data_locations <- all_data_locations %>%
       type == "Algae" ~ "purple"))
 
 ### Define the UI -------------------------------------------------------------
-dash_theme <- bs_theme(
-  version = 5,
-  bootswatch = "sandstone"
-) |>
-  bs_add_variables(
-    "navbar-bg" = "$primary",
-    "navbar-color" = "$light",
-    #"progress-bar-bg" = "$secondary",
-    .where = "declarations"
-  ) |>
-  bs_add_rules("
-    .navbar { color: var(--bs-light) !important; }
-    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
-  ")
-
 explPageUI <- function(id) {
   ns <- NS(id)
   
   page_sidebar(
-    theme = bs_theme(version = 5, bootswatch = "sandstone"),
+    theme = dash_theme,
     
     title = "Explore Data",
     

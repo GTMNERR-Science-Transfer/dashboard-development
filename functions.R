@@ -335,6 +335,19 @@ redIcon <- makeIcon(
   iconWidth = 25, iconHeight = 41,
   iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png")
 
-
+### Define the UI theme --------------------------------------------------------
+dash_theme <- bs_theme(
+  version = 5,
+  bootswatch = "sandstone"
+) |>
+  bs_add_variables(
+    "navbar-bg" = "$primary",
+    "navbar-color" = "$light",
+    .where = "declarations"
+  ) |>
+  bs_add_rules("
+    .navbar { color: var(--bs-light) !important; }
+    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
+  ")
 
 
