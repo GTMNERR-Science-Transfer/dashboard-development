@@ -9,26 +9,9 @@
 # Last updated: see commit history
 
 ### HAB Data------------------------------
-HAB <- readRDS("./03_Data_for_app/HAB.Rds")
+HAB <- readRDS("./03_Data_for_app/algae/HAB.Rds")
 
-# Create long format so it can be used in the Shiny app
-# Only doing this with numeric variables for now
-
-# GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
-#                                    names = c("genus", "species"), too_few = "align_start", too_many = "merge")
-# 
-# 
-# GeneraData$userMessage <- vector(length = length(GeneraData$genus))
-# GeneraData$userMessage[] <- "System Error; please report"
-# 
-# # Move this to the cleaning script. Also rewrite as a vectorized operation (is faster)
-# for(i in 1:length(GeneraData$userMessage)){
-#   if(!is.na(GeneraData$Description[i])){
-#     GeneraData$userMessage[i] = "Algae is Present"  
-#   } else{
-#     GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$'cells/L*'[i]), " cells/L")
-#   }
-# }
+# Get locations
 
 HAB_locs <- HAB %>% 
   select(Latitude, Longitude, Site, County) %>% 
