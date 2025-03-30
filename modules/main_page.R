@@ -18,14 +18,14 @@ mainPageUI <- function(id) {
     # Header with logos and title
     fluidRow(
       column(width = 3, align = "center",
-             tags$img(src = "data/gtm_logo.png", height = "150px")
+             tags$img(src = "data/images/gtm_logo.png", height = "150px")
       ),
       column(width = 6, align = "center",
              h1("Guana Estuary Data Dashboard", 
                 style = "font-size: 4em; text-shadow: 2px 2px 4px rgba(0,0,0,0.3); margin-top: 20px; margin-bottom: 10px;")
       ),
       column(width = 3, align = "center",
-             tags$img(src = "data/noaa_logo.png", height = "150px")
+             tags$img(src = "data/images/noaa_logo.png", height = "150px")
       )
     ),
     hr(),
