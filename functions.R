@@ -1,6 +1,8 @@
 #### FUNCTIONS ####
 
 ##### Find the directory of a file named app.R #####
+# Check with Chris: still necessary?
+
 find_directory_of_file <- function(file_name, start_dir=getwd()) {
   # Recursively list all files starting from the start_dir
   app_dir <- fs::dir_ls(start_dir, recurse = TRUE, glob=file_name)
@@ -15,57 +17,9 @@ find_directory_of_file <- function(file_name, start_dir=getwd()) {
   }
 }
 
-##### Filter df for station (click on plot) and date range, and make wide #####
-# make dataframe for click plots - filter for correct stations
-# and the date picker: so this takes 2 reactive values, stationCode and
-# selected_date_range
-filter_dataframe <- function(df, filter_value = NULL, date_range = NULL) {
-  if (!is.null(filter_value)) {
-    # Step 1: Identify the relevant RowIDs
-    relevant_row_ids <- df %>%
-      filter(value == filter_value) %>%
-      pull(RowID)
-    
-    # Step 2: Filter the entire dataframe to keep only rows with the relevant RowIDs
-    filtered_df <- df %>%
-      filter(RowID %in% relevant_row_ids)
-  } else {
-    # If no filter_value is provided, skip the filtering step
-    filtered_df <- df
-  }
-  
-  # Step 3: Create wide dataframe
-  wide_df <- filtered_df %>%
-    pivot_wider(names_from = variable, values_from = value, values_fn = first) %>%
-    filter(!is.na(ComponentLong)) %>% # stop gap measure because there are NAs from
-    # replacing ComponentLong names in the cleaning script
-    select(SampleDate, # we could also make these arguments for the function?
-           ComponentLong, 
-           Result,
-           geometry, StationCode, Site) %>%
-    pivot_wider(names_from = ComponentLong, 
-                values_from = Result,
-                values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
-    #mutate(SampleDate = ymd_hms(SampleDate)) %>% # 
-    mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
-    mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd,
-    # needed to use this since some datasets only have ymd (no hms) so that makes ymd_hms fail
-    #mutate(across(-c(SampleDate, geometry, StationCode, Site), ~ as.numeric(.))) %>%
-    #mutate(SampleDate = as.Date(SampleDate)) %>%
-    group_by(SampleDate, geometry, StationCode, Site) %>%
-    summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
-  # strictly speaking, but it's nice to keep for if we ever want to adjust this function
-  # to work for more than 1 variable
-  #select(where(~ n_distinct(.) > 2))
-  
-  if(!is.null(date_range)){
-    wide_df <- filter(wide_df, between(SampleDate, date_range[1], date_range[2]))
-  }
-  
-  return(wide_df)
-}
+### Functions for reactively updating app (e.g. filtering, plotting) ---------------
 
-##### Filter df for station (click on plot) and date range, and variable, and make wide #####
+##### WQ: Filter df for station (click on plot) and date range, and variable, and make wide #####
 # Adjusted to filter for more than 1 station
 filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filter_value = NULL) {
   if (!is.null(filter_station)) {
@@ -119,7 +73,8 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
   
   return(wide_df)
 }
-##### Create dropdown with variables to plot #####
+##### WQ: Create dropdown with variables to plot #####
+# Not being used at the moment
 create_dropdown <- function(df, ns) {
   # Get the column names except the dates and column names and geometry
   column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "Site")])
@@ -133,7 +88,8 @@ create_dropdown <- function(df, ns) {
   )
 }
 
-##### Create the date picker #####
+##### WQ: Create the date picker #####
+# Not being used at the moment
 create_date <- function(df, ns) {
   # Get the column names except the dates and column names and geometry
   date_column <- df %>% 
@@ -162,7 +118,7 @@ create_date <- function(df, ns) {
   # )
 }
 
-##### Create plot #####
+##### WQ: Create plot #####
 # Modified create_plot function: takes 1 reactive value: the variable (selected
 # column) 
 create_plot <- function(df, units_df, selected_column) { # The input here 
@@ -229,11 +185,6 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   # Create a named vector for Y-axis titles
   y_axis_titles <- setNames(paste0(units_df$ComponentLong, " (", units_df$Unit, ")"), units_df$ComponentLong)
   
-  # Ensure selected_column is not NULL or empty
-  # if (is.null(selected_column) || selected_column == "") {
-  #   selected_column <- column_names[1]
-  # }
-  
   # Initialize the plot with the x-axis
   fig <- plot_ly()
   
@@ -275,6 +226,7 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   return(fig)
 }
 
+##### Algae: filtering #########
 HAB_filter <- function(HAB_data, algae_type, site, date_range = NULL){
   HAB_data <- HAB_data %>% 
     filter(type %in% algae_type,
@@ -305,7 +257,9 @@ reef_filter <- function(reef_data, site, date_range = NULL){
   return(reef_data)
 }
 
-#### Create HEX colors to use in html code ####
+### Functions for UI purposes ------------------------------------------------
+
+##### Create HEX colors to use in html code ####
 # Some R color names do not work inside with CSS/html. This function changes the
 # name to the HEX code, which does work
 get_hex_color <- function(color_name) {
@@ -313,7 +267,7 @@ get_hex_color <- function(color_name) {
   sprintf("#%02X%02X%02X", round(rgb_vals[1] * 255), round(rgb_vals[2] * 255), round(rgb_vals[3] * 255))
 }
 
-#### Make marker icons #####
+##### Make marker icons #####
 blue_icon <- makeIcon(
   iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
   iconWidth = 25, iconHeight = 41,
@@ -326,7 +280,6 @@ red_icon <- makeIcon(
   iconAnchorX = 12, iconAnchorY = 41
 )
 
-
 redIcon <- makeIcon(
   shadowAnchorX = 12, shadowAnchorY = 41,
   shadowWidth = 41, shadowHeight = 41,
@@ -335,7 +288,7 @@ redIcon <- makeIcon(
   iconWidth = 25, iconHeight = 41,
   iconUrl = "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png")
 
-### Define the UI theme --------------------------------------------------------
+##### Define the UI theme #####
 dash_theme <- bs_theme(
   version = 5,
   bootswatch = "sandstone"
