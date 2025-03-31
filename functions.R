@@ -42,7 +42,7 @@ filter_dataframe <- function(df, filter_value = NULL, date_range = NULL) {
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
            Result,
-           geometry, StationCode, site_friendly) %>%
+           geometry, StationCode, Site) %>%
     pivot_wider(names_from = ComponentLong, 
                 values_from = Result,
                 values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
@@ -50,9 +50,9 @@ filter_dataframe <- function(df, filter_value = NULL, date_range = NULL) {
     mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
     mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd,
     # needed to use this since some datasets only have ymd (no hms) so that makes ymd_hms fail
-    #mutate(across(-c(SampleDate, geometry, StationCode, site_friendly), ~ as.numeric(.))) %>%
+    #mutate(across(-c(SampleDate, geometry, StationCode, Site), ~ as.numeric(.))) %>%
     #mutate(SampleDate = as.Date(SampleDate)) %>%
-    group_by(SampleDate, geometry, StationCode, site_friendly) %>%
+    group_by(SampleDate, geometry, StationCode, Site) %>%
     summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
   # strictly speaking, but it's nice to keep for if we ever want to adjust this function
   # to work for more than 1 variable
@@ -90,7 +90,7 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
     select(SampleDate, # we could also make these arguments for the function?
            ComponentLong, 
            Result,
-           geometry, StationCode, site_friendly) %>%
+           geometry, StationCode, Site) %>%
     pivot_wider(names_from = ComponentLong, 
                 values_from = Result,
                 values_fn = list(Result = ~ mean(as.numeric(.), na.rm = TRUE))) %>%
@@ -98,9 +98,9 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
     mutate(SampleDate = str_extract(SampleDate, "[0-9]{4}-[0-9]{2}-[0-9]{2}")) %>% 
     mutate(SampleDate = ymd(SampleDate)) %>% # these two lines are another option to only get ymd,
     # needed to use this since some datasets only have ymd (no hms) so that makes ymd_hms fail
-    #mutate(across(-c(SampleDate, geometry, StationCode, site_friendly), ~ as.numeric(.))) %>%
+    #mutate(across(-c(SampleDate, geometry, StationCode, Site), ~ as.numeric(.))) %>%
     #mutate(SampleDate = as.Date(SampleDate)) %>%
-    group_by(SampleDate, geometry, StationCode, site_friendly) %>%
+    group_by(SampleDate, geometry, StationCode, Site) %>%
     summarize(across(everything(), ~mean(.x, na.rm = TRUE))) #%>% # across(everything()) is not necessary,
   # strictly speaking, but it's nice to keep for if we ever want to adjust this function
   # to work for more than 1 variable
@@ -113,7 +113,7 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
   if(!is.null(filter_value)){
     if(filter_value %in% names(wide_df)){
       wide_df <- wide_df %>% 
-        select(SampleDate, geometry, StationCode, site_friendly, all_of(filter_value))
+        select(SampleDate, geometry, StationCode, Site, all_of(filter_value))
     }
   }
   
@@ -122,7 +122,7 @@ filter_dataframe2 <- function(df, filter_station = NULL, date_range = NULL, filt
 ##### Create dropdown with variables to plot #####
 create_dropdown <- function(df, ns) {
   # Get the column names except the dates and column names and geometry
-  column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
+  column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "Site")])
   print(paste("Creating dropdown with choices:", paste(column_names, collapse=", ")))
   
   selectInput(
@@ -212,19 +212,19 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   #               # warning, but in Shiny (for some reason), it's an error. So if there
   #               # are less than 3 categories (stations), you should use split. Who knew.
   #                color = if (num_stations > 2){
-  #                  ~factor(StationCode, labels = df$site_friendly[unique(df$StationCode)])
+  #                  ~factor(StationCode, labels = df$Site[unique(df$StationCode)])
   #                } else {
   #                  NULL
   #                }, 
   #                split = if (num_stations <= 2) {
-  #                  ~factor(StationCode, labels = df$site_friendly[unique(df$StationCode)])
+  #                  ~factor(StationCode, labels = df$Site[unique(df$StationCode)])
   #                } else {
   #                  NULL
   #                }
   #                )
   
   # Get the column names except the dates and column names and geometry
-  #column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "site_friendly")])
+  #column_names <- sort(colnames(df)[!colnames(df) %in% c("SampleDate", "geometry", "StationCode", "Site")])
   
   # Create a named vector for Y-axis titles
   y_axis_titles <- setNames(paste0(units_df$ComponentLong, " (", units_df$Unit, ")"), units_df$ComponentLong)
@@ -239,7 +239,7 @@ create_plot <- function(df, units_df, selected_column) { # The input here
   
   # Loop through each station name and add a trace
   unique_stations <- unique(df$StationCode)
-  unique_friendly <- unique(df$site_friendly)
+  unique_friendly <- unique(df$Site)
   for (i in seq_along(unique_stations)) {
     station_data <- df %>% filter(StationCode == unique_stations[i])
     

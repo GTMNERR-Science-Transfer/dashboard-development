@@ -23,17 +23,71 @@ WQ_data_units <- readRDS("./03_Data_for_app/waterquality/WQ_data_units.Rds")
 #### Run the app #### 
 #find_directory_of_file("app.R")
 
-# Updated UI in WINPageUI
+### Define the UI -------------------------------------------------------------
 WINPageUI <- function(id) {
   ns <- NS(id)
-  tagList(
-    h2("Water Quality Data"),
+  
+  page_sidebar(
+    theme = dash_theme, # in functions.R
     
+    title = "Water Quality Data",
+    
+    sidebar = sidebar(
+      title = "Data Selection",
+      
+      # 1. Stations
+      multiInput(
+        inputId = ns("station_list"),
+        label = "Choose station(s) of interest:", 
+        choices = NULL,
+        choiceNames = paste0(WQ_data_locations$Site, " (", WQ_data_locations$StationCode, ")"),
+        width = "100%",
+        options = list(
+          non_selected_header = "Choose between:",
+          selected_header = "You have selected:"
+        ),
+        choiceValues = WQ_data_locations$StationCode
+      ),
+      
+      # 2. Date ranges
+      div(style = "padding: 0 10px;",
+          sliderInput(
+            inputId = ns("date_range"),
+            label = "Select a Date Range",
+            min = ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), #NULL
+            max = ymd(paste0(max(WQ_data_locations$maxYear), "-12-31")), #NULL
+            value = c(ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), 
+                      ymd(paste0(max(WQ_data_locations$maxYear), "-12-31"))),
+            timeFormat = "%m/%d/%Y",
+            width = "100%"
+          )
+      ),
+      
+      # 3. Variables
+      selectInput(
+        inputId = ns("column_selector"),
+        label = "Select a variable of interest",
+        choices = unique(filter(WQ_data_units, !is.na(ComponentLong)) %>% pull (ComponentLong))
+      ),
+      
+      # 4. Download button
+      downloadButton(
+        outputId = ns("downloadCSV"),
+        label = "Download selected data")
+    ),
+    
+    ## Now the rest of the page
+    # Header card using a relative viewport height
     fluidRow(
-      # First row - explanation
-      column(width = 12,
-             div(style = "margin-bottom: 20px;",
-                 p(htmltools::HTML('This section provides an overview of water quality data. 
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          #fill = TRUE,
+          #style = "height:10vh;",
+          card_header("Hydrological Data"),
+          card_body(
+            p(htmltools::HTML('This section provides an overview of water quality data. 
                    You can select one or more stations from the list, or by
                    clicking on stations on the map. <br>
                    You can specify the time range of interest, and the dropdown 
@@ -44,89 +98,57 @@ WINPageUI <- function(id) {
                    which data for the variable are available. Currently you do not
                    (yet) get a warning if data are unavailable for a station - unless
                    the data are unavailable for all selected stations.'))
-             )
+          )
+        )
       )
     ),
+    
+    # Map below the text
     fluidRow(
-      # Second row - inputs and map
-      # Column 1: to define inputs
-      column(width = 7,
-             # 1. Stations
-             fluidRow(
-               column(width = 12,
-                      multiInput(
-                        inputId = ns("station_list"),
-                        label = "Choose station(s) of interest:", 
-                        choices = NULL,
-                        choiceNames = paste0(WQ_data_locations$Site, " (", WQ_data_locations$StationCode, ")"),
-                        width = "100%",
-                        options = list(
-                          non_selected_header = "Choose between:",
-                          selected_header = "You have selected:"
-                        ),
-                        choiceValues = WQ_data_locations$StationCode
-                      )
-               ),
-             ),
-             # 2. Date range
-             fluidRow(
-               column(width = 12, 
-                      sliderInput(
-                        inputId = ns("date_range"),
-                        label = "Select a Date Range",
-                        min = ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), #NULL
-                        max = ymd(paste0(max(WQ_data_locations$maxYear), "-12-31")), #NULL
-                        value = c(ymd(paste0(min(WQ_data_locations$minYear), "-01-01")), 
-                                  ymd(paste0(max(WQ_data_locations$maxYear), "-12-31"))),
-                        timeFormat = "%m/%d/%Y",
-                        width = "100%"
-                      ), style = "position:relative;z-index:10000;" # style is to make sure the dropdown menu shows over the map zoom tools
-               )
-             ),
-             # 3. Variables
-             fluidRow(
-               column(width = 12,
-                      selectInput(
-                        inputId = ns("column_selector"),
-                        label = "Select a variable of interest",
-                        choices = unique(filter(WQ_data_units, !is.na(ComponentLong)) %>% pull (ComponentLong))
-                      ), style = "position:relative;z-index:10000;"
-               )
-             ),
-             fluidRow(
-               column(width = 12,
-                      downloadButton(
-                        outputId = ns("downloadCSV"),
-                        label = "Download selected data"))
-             )
-      ),
-      # Column 2: show map
-      column(width = 5, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px")))
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Map View"),
+          card_body(
+            shinycssloaders::withSpinner(
+              leafletOutput(ns("map"), height = "80vh")  # Map fills the card body
+            )
+          )
+        )
       )
     ),
-    # Third row - plot
+    
+    # Then the plots that are output
     fluidRow(
-      column(width = 12, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(plotlyOutput(ns("plot"), height="350px"))
-             )
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Values over time"),
+          card_body(
+            shinycssloaders::withSpinner(plotlyOutput(ns("plot"), height = "70vh"))
+          )
+        )
       )
     ),
-    # Fourth row - more info
+    
+    # Then more information about the selected variables
     fluidRow(
-      column(width = 12, 
-             div(style = "padding: 20px; background-color: #f9f9f9;",
-                 h3("About [variable] and [station]"),
-                 p("Right now this is just some placeholder text. This will be 
-                   updated to dynamically show information about the station and
-                   the variable that the user has selected.")
-             )
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Information about [variable]"),
+          card_body(
+            p(htmltools::HTML("Right now this is just some placeholder text. This will be 
+                            updated to dynamically show information about the station and
+                            the variable that the user has selected.")
+            )
+          )
+        )
       )
-    ),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page"),
-    br()
+    )
   )
 }
 

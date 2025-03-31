@@ -59,8 +59,9 @@ HABPageUI <- function(id) {
       column(
         width = 12,
         card(
-          fill = TRUE,
-          style = "height:10vh;",
+          full_screen = TRUE,
+          #fill = TRUE,
+          #style = "height:10vh;",
           card_header("Hydrological Data"),
           card_body(
             p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
