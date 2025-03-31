@@ -9,30 +9,10 @@
 # Last updated: see commit history
 
 ### HAB Data------------------------------
-HAB <- readRDS("./03_Data_for_app/HAB.Rds")
+HAB <- readRDS("./03_Data_for_app/algae/HAB.Rds")
 
-# Create long format so it can be used in the Shiny app
-# Only doing this with numeric variables for now
-
-# GeneraData <- separate_wider_delim(data = HAB, cols = Species, delim = " ",
-#                                    names = c("genus", "species"), too_few = "align_start", too_many = "merge")
-# 
-# 
-# GeneraData$userMessage <- vector(length = length(GeneraData$genus))
-# GeneraData$userMessage[] <- "System Error; please report"
-# 
-# # Move this to the cleaning script. Also rewrite as a vectorized operation (is faster)
-# for(i in 1:length(GeneraData$userMessage)){
-#   if(!is.na(GeneraData$Description[i])){
-#     GeneraData$userMessage[i] = "Algae is Present"  
-#   } else{
-#     GeneraData$userMessage[i] = paste("Algae is present at ", toString(GeneraData$'cells/L*'[i]), " cells/L")
-#   }
-# }
-
-HAB_locs <- HAB %>% 
-  select(Latitude, Longitude, Site, County) %>% 
-  distinct() %>% 
+# Get location data
+HAB_locs <- readRDS("03_Data_for_app/locations/HAB_data_locations.Rds") %>% 
   st_as_sf(coords = c("Longitude", "Latitude"), crs = 4326, remove = FALSE)
 
 # Create colors for the algae
@@ -41,15 +21,50 @@ algae_colors <- c("Diatoms" = "goldenrod2",
                   "Dinoflagellates" = "indianred1", 
                   "Other" = "darkolivegreen4")
 
+### Define the UI -------------------------------------------------------------
 HABPageUI <- function(id) {
   ns <- NS(id)
-  tagList(
-    h2("Harmful Algal Bloom Data"),
+  
+  page_sidebar(
+    theme = dash_theme, # in functions.R
+    
+    title = "Harmful Algal Bloom Data",
+    
+    sidebar = sidebar(
+      title = "Data Selection",
+      selectInput(ns("station"), 
+                  label = "What station do you want data for?", 
+                  choices = c("", unique(HAB$Site)),
+                  selected = ""),
+      div(style = "padding: 0 10px;",
+          sliderInput(
+            inputId = ns("date_range"),
+            label = "Select a Date Range",
+            min = min(dmy(HAB$'Sample Date')), #NULL
+            max = max(dmy(HAB$'Sample Date')), #NULL
+            value = c(min(dmy(HAB$'Sample Date')), 
+                      max(dmy(HAB$'Sample Date'))),
+            timeFormat = "%m/%d/%Y",
+            width = "100%"
+          )
+      ),
+      checkboxGroupInput(ns("algae_type"),
+                         label = "What type of algae do you want data for?", 
+                         choices = c(unique(HAB$type))
+      )
+    ),
+    
+    # Header card using a relative viewport height
     fluidRow(
-      # First row - explanation
-      column(width = 12,
-             div(style = "margin-bottom: 20px;",
-                 p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          #fill = TRUE,
+          #style = "height:10vh;",
+          card_header("Hydrological Data"),
+          card_body(
+            p(htmltools::HTML('This section provides an overview of (harmful) algal bloom data.
                  Currently the dashboard is only showing numerical data (not presence / absence). A
                  value of 0 means that the water sample was tested for this algal type, but it was not
                  detected. If there are no values for a particular day or month, there was no testing
@@ -66,96 +81,68 @@ HABPageUI <- function(id) {
                  <br>
                  The plot below the map will show total daily values in total cells/liter for each type of algae.
                   The tables display monthly average values in cells/liter.'))
-             )
+          )
+        )
       )
     ),
+    
+    # Map below the text
     fluidRow(
-      #User inputs in 1st column
-      column(width = 6, 
-             selectInput(ns("station"), 
-                         label = "What station do you want data for?", 
-                         choices = c("", unique(HAB$Site)),
-                         selected = ""),
-             #uiOutput(ns("selectStation")),
-             sliderInput(
-               inputId = ns("date_range"),
-               label = "Select a Date Range",
-               min = min(dmy(HAB$'Sample Date')), #NULL
-               max = max(dmy(HAB$'Sample Date')), #NULL
-               value = c(min(dmy(HAB$'Sample Date')), 
-                         max(dmy(HAB$'Sample Date'))),
-               timeFormat = "%m/%d/%Y",
-               width = "100%"
-             ),
-             checkboxGroupInput(ns("algae_type"),
-                                label = "What type of algae do you want data for?", 
-                                choices = c(unique(HAB$type))
-             )
-             ),
-      # Map occupies 2nd column
-      column(width = 6, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(leafletOutput(ns("map"), height="500px")))
-            )
-      ),
-    fluidRow(
-      # Plot in the next row, below inputs and map
-      column(width = 12, 
-             div(style = "margin-bottom: 20px;",
-                 shinycssloaders::withSpinner(plotlyOutput(ns("timePlot")))
-                 )
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Map View"),
+          card_body(
+            shinycssloaders::withSpinner(
+              leafletOutput(ns("map"), height = "80vh")  # Map fills the card body
+              )
+          )
+        )
       )
     ),
+    
+    # Then the plots that are output
+    fluidRow(
+      column(
+        width = 12,
+        card(
+          full_screen = TRUE,
+          card_header("Values over time"),
+          card_body(
+            shinycssloaders::withSpinner(plotlyOutput(ns("timePlot"), height = "70vh"))
+          )
+        )
+      )
+    ),
+    # Then the tables -> make this a setup with tabs for the plot and tabs for the tables!!
     fluidRow(
       # Plot in the next row, below the plot
       column(width = 12,
-             div(style = "margin-bottom: 20px;",
+             card(
+               full_screen = TRUE,
+               card_header("Tabular data"),
+               card_body(
                  conditionalPanel(
                    condition = "input.algae_type.length >= 1",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table")))
-                 )),
-              # Only show this panel if there are 2 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 2",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table2")))
-                 )),
-             # Only show this panel if there are 3 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 3",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table3")))
-                 )),
-             # Only show this panel if there are 4 algae types selected
-             div(style = "margin-bottom: 20px;",
+                   ),
                  conditionalPanel(
                    condition = "input.algae_type.length >= 4",
                    shinycssloaders::withSpinner(DTOutput(ns("HAB_table4")))
-                 ))
-            )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table2"))
-    #          #gt::gt_output(ns("HAB_table")), 
-    #   )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table3"))
-    #          #gt::gt_output(ns("HAB_table")), 
-    #   )
-    # ),
-    # fluidRow(
-    #   # Plot in the next row, below the plot
-    #   column(width = 12, 
-    #          DTOutput(ns("HAB_table4"))
-    #   )
-    ),
-    actionButton(inputId = ns("go_back"), label = "Back to Main Page"), #All input IDs need to be inside ns()
-    br()
+                   )
+               )
+             )
+      )
+    )
   )
 }
 
@@ -164,13 +151,7 @@ HABPageServer <- function(id, parentSession) {
     # necessary to be able to us the "back" button, otherwise Shiny cannot find
     # the id for "tabs"
     ns <- session$ns
-    # output$selectStation <- renderUI(selectInput(ns("station"), 
-    #                                              "Select what station you are interested in", 
-    #                                              unique(HAB$Site[HAB$type %in% input$algae_type])))
-    # output$selectDate <- renderUI(sliderInput(ns("date_range"), 
-    #                                           "The following dates have data for your selected algae type. Set a range to narrow data on the map", 
-    #                                           min = ymd(min(HAB$`Sample Date`[HAB$type %in% input$algae_type])), max = ymd(max(HAB$`Sample Date`[HAB$type %in% input$algae_type]))))
-    # 
+ 
     ### Create the map upon startup -------------------------------
     output$map <- renderLeaflet({
       
@@ -189,7 +170,6 @@ HABPageServer <- function(id, parentSession) {
                                                         bringToFront = TRUE),
                     group = "Counties", popup = ~NAME) %>% 
         addMarkers(data = HAB_locs, # Initialize without reactive dataframe
-                   #color = ~colorQuantile("YlOrRd",`cells/L*`)(`cells/L*`), #This is currently not working because data is location only
                    popup = ~paste("Site: ", Site, "<br>",
                                   "County: ", County, "<br>"),
                    group = "HAB") %>% 
@@ -227,7 +207,6 @@ HABPageServer <- function(id, parentSession) {
         clearMarkers() %>%
         # Make / keep unselected stations blue
         addMarkers(data = HAB_data_loc_unselected(),
-                   #layerId = unselected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
                                   "<strong>County:</strong> ", County, "<br>")%>%
@@ -236,7 +215,6 @@ HABPageServer <- function(id, parentSession) {
         # Make selected stations red
         addMarkers(data = HAB_data_loc_selected(),
                    icon = redIcon, 
-                   #layerId = selected_coords()$geometry,
                    options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
                    popup = ~paste("<strong>Site:</strong> ", Site, "<br>",
                                   "<strong>County:</strong> ", County, "<br>"

@@ -106,7 +106,7 @@ dam_level$value[which(dam_level$value == max(dam_level$value, na.rm = TRUE))] <-
 ggplot(dam_level, aes(x = date, y = value, color = location))+
   geom_point()
 
-saveRDS(precip, "03_Data_for_app/precip.Rds")
-saveRDS(dam_level, "03_Data_for_app/dam_level.Rds")
+saveRDS(precip, "03_Data_for_app/precip_damlevels/precip.Rds")
+saveRDS(dam_level, "03_Data_for_app/precip_damlevels/dam_level.Rds")
 
 

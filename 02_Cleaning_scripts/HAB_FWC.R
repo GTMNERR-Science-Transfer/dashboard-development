@@ -14,7 +14,7 @@ library(tidyverse)
 HAB <- read_csv("01_Data_raw/Algae/HAB/HAB_FWC.csv")
 
 # Create a file with all unique species names
-write_csv(data.frame(Species = unique(HAB$Species)), "03_Data_for_app/HAB_species_list.csv")
+write_csv(data.frame(Species = unique(HAB$Species)), "03_Data_for_app/algae/HAB_species_list.csv")
 
 # Separate genus and species; add column on type based on lookup table
 HAB <- HAB %>% 
@@ -26,11 +26,11 @@ HAB <- HAB %>%
                        cols_remove = FALSE) 
 
 # Create a file with all unique genus names
-write_csv(data.frame(genus = unique(HAB$genus)), "03_Data_for_app/HAB_genus_list.csv")
+write_csv(data.frame(genus = unique(HAB$genus)), "03_Data_for_app/algae/HAB_genus_list.csv")
 # I (GK) manually added algal types to the genus file (diatoms, cyanobacteria, 
 # dinoflagellates, other)
 # Read in this lookup table
-lookup_genus <- read_csv("03_Data_for_app/HAB_lookup_genus.csv")
+lookup_genus <- read_csv("03_Data_for_app/algae/HAB_lookup_genus.csv")
 
 HAB <- HAB %>% 
   left_join(lookup_genus) # Add those types to the main dataset
@@ -44,5 +44,5 @@ HAB <- HAB %>%
 # HAB$Date <- dmy(HAB$`Sample Date`)
 
 # Save it as an .Rds file so it can be read into the Shiny app
-saveRDS(HAB, "03_Data_for_app/HAB.Rds")
+saveRDS(HAB, "03_Data_for_app/algae/HAB.Rds")
 

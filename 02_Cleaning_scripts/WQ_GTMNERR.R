@@ -28,7 +28,7 @@ WQ_meta <- read_csv("01_Data_raw/Water_Quality/Guana_WQ/guana_data_dictionary_up
 # Some stations have two codes due to a name change (see Word doc with metadata)
 # Don't remove
 
-lookup_names <- read_csv("03_Data_for_app/WQ_lookup_names.csv")
+lookup_names <- read_csv("03_Data_for_app/waterquality/WQ_lookup_names.csv")
 
 # Change column names so we can later merge this with other WQ data
 recode_vec <- setNames(lookup_names$original_name, lookup_names$dashboard_name)
@@ -107,21 +107,22 @@ WQ <- WQ %>%
 # too heavy)
 WQ_locations <- WQ %>% 
   mutate(Year = year(SampleDate)) %>% 
-  select(site_friendly, Year, site_acronym, Latitude, Longitude, wbid, location) %>% 
-  group_by(site_friendly, site_acronym, Latitude, Longitude, wbid, location) %>% 
+  select(Site, Year, site_acronym, Latitude, Longitude, wbid, location) %>% 
+  group_by(Site, site_acronym, Latitude, Longitude, wbid, location) %>% 
   summarize(maxYear = max(Year), minYear = min(Year)) %>% 
   mutate(type = "Water quality",
-         dataset = "Guana Water Quality Monitoring (GTMNERR)")
+         dataset = "Guana Water Quality Monitoring (GTMNERR)") 
 
-WQ_data_available <- WQ %>% 
-  mutate(Year = year(SampleDate)) %>% 
-  select(StationCode, Year, SampleType, ComponentShort, ComponentLong, site_friendly, 
-         site_acronym, Latitude, Longitude, wbid, location) %>% 
-  distinct()
+# WQ_data_available <- WQ %>% 
+#   mutate(Year = year(SampleDate)) %>% 
+#   select(StationCode, Year, SampleType, ComponentShort, ComponentLong, site_friendly, 
+#          site_acronym, Latitude, Longitude, wbid, location) %>% 
+#   distinct() %>% 
+#   rename(Site = site_friendly)
 
 ### 4. Save data ---------------------------------------------------------------
 
 # Save it as an .Rds file so it can be read into the Shiny app
-saveRDS(WQ, "03_Data_for_app/WQ.Rds")
+saveRDS(WQ, "03_Data_for_app/waterquality/WQ.Rds")
 
-saveRDS(WQ_locations, "03_Data_for_app/WQ_locations.Rds")
+saveRDS(WQ_locations, "03_Data_for_app/locations/WQ_locations.Rds")

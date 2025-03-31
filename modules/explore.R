@@ -11,7 +11,7 @@
 # datasets, as well as shapefiles for the area
 
 #### Location data ------------------------------------------------
-all_data_locations <- readRDS("./03_Data_for_app/all_data_locations.Rds")
+all_data_locations <- readRDS("./03_Data_for_app/locations/all_data_locations.Rds")
 
 # add info for icons and colors
 all_data_locations <- all_data_locations %>%
@@ -22,28 +22,12 @@ all_data_locations <- all_data_locations %>%
       type == "Water Quality" ~ "orange",
       type == "Algae" ~ "purple"))
 
-
 ### Define the UI -------------------------------------------------------------
-dash_theme <- bs_theme(
-  version = 5,
-  bootswatch = "sandstone"
-) |>
-  bs_add_variables(
-    "navbar-bg" = "$primary",
-    "navbar-color" = "$light",
-    #"progress-bar-bg" = "$secondary",
-    .where = "declarations"
-  ) |>
-  bs_add_rules("
-    .navbar { color: var(--bs-light) !important; }
-    .navbar .navbar-brand, .navbar .nav-link { color: var(--bs-light) !important; }
-  ")
-
 explPageUI <- function(id) {
   ns <- NS(id)
   
   page_sidebar(
-    theme = bs_theme(version = 5, bootswatch = "sandstone"),
+    theme = dash_theme, # in functions.R
     
     title = "Explore Data",
     
@@ -215,10 +199,10 @@ explPageServer <- function(id, parentSession) {
           icon = makeAwesomeIcon(icon = ~group_icon, markerColor = ~group_color, library = "fa",
                                  iconColor = "black"),
           options = markerOptions(riseOnHover = TRUE), # Brings marker forward when hovering
-          popup = ~paste("<b>Station:</b> ", site_friendly, "<br>", # popups appear when clicking
+          popup = ~paste("<b>Station:</b> ", Site, "<br>", # popups appear when clicking
                          "<b>Sampling start year:</b> ", minYear, "<br>",
                          "<b>Latest year of sampling:</b> ", maxYear, "<br"),
-          label = ~paste("Station: ", site_friendly), # labels appear when hovering
+          label = ~paste("Station: ", Site), # labels appear when hovering
           labelOptions = labelOptions(direction = "auto",
                                       style = list(
                                         "color" = "gray27",
@@ -243,7 +227,7 @@ explPageServer <- function(id, parentSession) {
     })
     
     output$total_stations <- renderText({
-      n_distinct(filtered_data()$site_friendly)
+      n_distinct(filtered_data()$Site)
     })
     
     output$first_year <- renderText({
@@ -256,7 +240,7 @@ explPageServer <- function(id, parentSession) {
     
     output$avg_measurements <- renderText({
       df <- filtered_data() %>% #### This still needs to be updated, this is currently not a count of obs
-        group_by(site_friendly) %>%
+        group_by(Site) %>%
         summarise(measurements = n(), .groups = "drop")
       round(mean(df$measurements, na.rm = TRUE), 1)
     })

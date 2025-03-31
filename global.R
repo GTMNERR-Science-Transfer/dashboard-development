@@ -48,7 +48,7 @@ try({
   print(paste0("Working dir: ", getwd()))
 }, silent = FALSE) # Setting silent = FALSE will print the error message to the console
 
-### Load shapefiles ------------------------------------------------
+### Load shapefiles for maps ------------------------------------------------
 
 ##### GTMNERR shapefile ------------------------------------------------
 GTMNERR <- st_read("./03_Data_for_app/shapefiles_new/GTMNERR_small_nosea.shp")
